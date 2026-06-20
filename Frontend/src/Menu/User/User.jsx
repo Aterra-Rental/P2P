@@ -1,8 +1,10 @@
 import React from 'react'
-
+import '../Global.css'
 const User = () => {
   return (
-    <div>User</div>
+    <div className='Global'> 
+
+    </div>
   )
 }
 

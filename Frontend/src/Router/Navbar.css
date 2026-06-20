@@ -10,7 +10,7 @@ nav{
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    background-color: rgba(142, 3, 3, 0.944);
+    background-color: #301A92;
     position: sticky;
     top: 0;
     z-index: 1000;
@@ -63,15 +63,15 @@ nav{
     }
     .navlink:hover{
         transform: scale(1.1);
-        color:  rgb(255, 255, 255);
-        background:  rgba(193, 3, 3, 0.944);
+        color:  rgba(4, 1, 1, 0.663);
+        background:  #B29CDB;
     }
     .navlink.active {
     color: #fff;
-    background: rgba(193, 3, 3, 0.944);
+    background:   #7E57C2;
 }
     .menu .navlink:focus-visible{
-        outline: 3px solid rgba(193, 3, 3, 0.944) ;
+        outline: 3px solid rgba(3, 193, 76, 0.909) ;
         outline-offset: 2px;
     }
 .toggle{

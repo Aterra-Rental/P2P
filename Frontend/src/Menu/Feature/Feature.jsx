@@ -1,8 +1,8 @@
 import React from 'react'
-
+import '../Global.css'
 const Feature = () => {
   return (
-    <div>Feature</div>
+    <div className='Global'>Feature</div>
   )
 }
 

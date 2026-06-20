@@ -1,8 +1,8 @@
 import React from 'react'
-
+import '../Global.css'
 const FQA = () => {
   return (
-    <div>FQA
+    <div className='Global'>FQA
       <h1>hi</h1>
     </div>
   )

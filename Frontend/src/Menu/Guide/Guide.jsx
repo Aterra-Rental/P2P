@@ -1,8 +1,8 @@
 import React from 'react'
-
+import '../Global.css'
 const Guide = () => {
   return (
-    <div>Guide</div>
+    <div className='Global'>Guide</div>
   )
 }
 
