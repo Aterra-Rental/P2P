@@ -1,10 +1,10 @@
 import React from 'react'
 import { BrowserRouter as Router , Route , Routes } from 'react-router-dom'
-import Home from'../Menu/Home/Home.jsx'
-import Preview from '../Menu/Preview/Preview.jsx'
-import Contact from '../Menu/Contact/Contact.jsx'
-import Service from '../Menu/Service/Service.jsx'
+import Home from '../Menu/Home/Home.jsx'
+import Guide from '../Menu/Guide/Guide.jsx'
+import Feature from '../Menu/Feature/Feature.jsx'
 import Navbar from './Navbar.jsx'
+import FQA from '../Menu/FQA/FQA.jsx'
 import User from '../Menu/User/User.jsx'
 const MenuRouth = () => {
   return (
@@ -13,9 +13,9 @@ const MenuRouth = () => {
         <Routes>
             <Route path='/' element={<Home/>}/>
             <Route path='/Home' element={<Home/>}/>
-            <Route path='/Preview' element={<Preview/>}/>
-            <Route path='/Service' element={<Service/>}/>
-            <Route path='/Contact' element={<Contact/>}/>
+            <Route path='/Guide' element={<Guide/>}/>
+            <Route path='/Feature' element={<Feature/>}/>
+            <Route path='/FQA' element={<FQA/>}/>
             <Route path='/User' element={<User/>}/>
         </Routes>
     </Router>
