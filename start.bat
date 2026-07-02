@@ -18,13 +18,9 @@ start http://127.0.0.1:8000/admin/
 
 // cd "Backend\myproject" 
 
-// username : nang 
-// ps : 87654321
+// username : ps : 
 
-
-
-
-
+// nang 87654321
 // nak 12345678
 
 
@@ -38,13 +34,11 @@ start http://127.0.0.1:8000/admin/
 
 
 
-// Username: admin
-// Email: admin@test.com
-// Password: admin1234
+// Username: Email: Password
+// admin admin@test.com admin1234
 
 
+ 
+// username : admin  ps : 12345678
 
-
-// username : admin 
-// ps : 12345678
 
