@@ -9,3 +9,29 @@ start http://localhost:5173/Login // where it starts the frontend app
 // cd P2P\p2p_deal_app             python app.py
 // cd P2P\Frontend                   npm run dev
 // cd P2P\Backend\myproject     python manage.py runserver
+
+
+// username : nang 
+// ps : 87654321
+
+
+
+
+
+// nak 12345678
+
+
+
+
+
+
+
+
+
+
+
+
+
+// username : admin 
+// ps : 12345678
+
