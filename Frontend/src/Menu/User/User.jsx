@@ -2,8 +2,17 @@ import React, { useState, useEffect } from 'react'
 import '../Global.css'
 import { useNavigate } from 'react-router-dom'
 
+const statusColors = {
+  pending: '#e0a800',
+  active: '#3b82f6',
+  completed: '#22c55e',
+  cancelled: '#ef4444'
+}
+
 const User = () => {
   const [user, setUser] = useState(null)
+  const [deals, setDeals] = useState([])
+  const [dealsLoading, setDealsLoading] = useState(true)
   const [showSettings, setShowSettings] = useState(false)
   const navigate = useNavigate()
 
@@ -13,6 +22,14 @@ const User = () => {
     })
       .then(res => res.json())
       .then(data => setUser(data))
+
+    fetch('/api/user/deals/', {
+      headers: { Authorization: `Bearer ${localStorage.getItem('token')}` }
+    })
+      .then(res => res.json())
+      .then(data => setDeals(data))
+      .catch(() => setDeals([]))
+      .finally(() => setDealsLoading(false))
   }, [])
 
   const handleLogout = () => {
@@ -71,6 +88,47 @@ const User = () => {
       <h1>{user.username}</h1>
       <p>{user.email}</p>
       <p>{user.phone}</p>
+
+      <h2 style={{ marginTop: '32px' }}>Deal History</h2>
+
+      {dealsLoading ? (
+        <p>Loading deals...</p>
+      ) : deals.length === 0 ? (
+        <p style={{ opacity: 0.7 }}>No deals yet.</p>
+      ) : (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
+          {deals.map(deal => (
+            <div
+              key={deal.id}
+              style={{
+                background: '#2b2f4a',
+                borderRadius: '8px',
+                padding: '12px 16px',
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center'
+              }}
+            >
+              <div>
+                <div style={{ fontWeight: 600 }}>{deal.item_name}</div>
+                <div style={{ fontSize: '13px', opacity: 0.7 }}>${deal.price}</div>
+              </div>
+              <span
+                style={{
+                  padding: '4px 10px',
+                  borderRadius: '999px',
+                  fontSize: '12px',
+                  fontWeight: 600,
+                  color: '#fff',
+                  background: statusColors[deal.status] || '#666'
+                }}
+              >
+                {deal.status}
+              </span>
+            </div>
+          ))}
+        </div>
+      )}
     </div>
   )
 }

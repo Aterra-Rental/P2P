@@ -10,6 +10,7 @@ start http://localhost:5173/Login // where it starts the frontend app
 // cd P2P\Frontend                   npm run dev
 // cd P2P\Backend\myproject     python manage.py runserver
 
+// cd "Backend\myproject" 
 
 // username : nang 
 // ps : 87654321
@@ -28,6 +29,12 @@ start http://localhost:5173/Login // where it starts the frontend app
 
 
 
+
+
+
+// Username: admin
+// Email: admin@test.com
+// Password: admin1234
 
 
 
