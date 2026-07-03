@@ -1,7 +1,8 @@
 .root{
     --bg-nav : rgba(142, 3, 3, 0.944);
-    --font-var-color : rgb(161, 161, 161);
-    --focus : #93c5fd;
+    --font-var-color : rgb(0, 0, 0);
+  --background: #06040d;
+    --focus : rgba(24, 16, 40, 0.98);
 }
 *{
     box-sizing: border-box;

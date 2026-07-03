@@ -5,9 +5,9 @@
   margin: 0 auto;
   padding: 4.5rem 1.25rem 4rem;
 }
+
 .Container h1 {
-  color: #FFFFFF !important;
-  opacity: 1 !important;
+  color: var(--foreground);
   text-align: center;
 }
 
@@ -23,10 +23,10 @@
   align-items: center;
   gap: 0.4rem;
   font-size: 0.8rem;
-  font-weight: 600;
-  color: #C8C4D8;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  font-weight: var(--font-weight-medium);
+  color: var(--secondary-foreground);
+  background: var(--muted);
+  border: 1px solid var(--border);
   padding: 0.45rem 1rem;
   border-radius: 999px;
   margin-bottom: 1.5rem;
@@ -36,12 +36,12 @@
   font-size: 3rem;
   line-height: 1.15;
   margin-bottom: 1rem;
-  color: #FFFFFF;
+  color: var(--foreground);
   font-weight: 700;
 }
 
 .fa-highlight {
-  background: linear-gradient(135deg, #3c0765 0%, #3702ab 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   -webkit-background-clip: text;
   background-clip: text;
   color: transparent;
@@ -50,7 +50,7 @@
 .fa-subtitle {
   font-size: 1.1rem;
   line-height: 1.8;
-  color: #ffffff;
+  color: var(--secondary-foreground);
   margin: 0 auto;
   max-width: 520px;
 }
@@ -64,10 +64,10 @@
 .fa-search-input {
   width: 100%;
   box-sizing: border-box;
-  background: #1a0747;
-  color: #ffffff;
-  border: 1px solid rgba(54, 11, 11, 0.277);
-  border-radius: 12px;
+  background: var(--input);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 14px 18px;
   font-size: 0.9rem;
   outline: none;
@@ -75,12 +75,12 @@
 }
 
 .fa-search-input::placeholder {
-  color: #8E8A9F;
+  color: var(--muted-foreground);
 }
 
 .fa-search-input:focus {
-  border-color: #1a0747;
-  box-shadow: 0 0 15px rgba(120, 12, 202, 0.25);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 /* Category filter pills */
@@ -95,27 +95,27 @@
 .fa-cat-btn {
   padding: 0.55rem 1.1rem;
   border-radius: 999px;
-  border: 1px solid rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
   background: transparent;
-  color: #C8C4D8;
+  color: var(--secondary-foreground);
   font-size: 0.85rem;
-  font-weight: 600;
+  font-weight: var(--font-weight-medium);
   cursor: pointer;
   transition: .35s;
   white-space: nowrap;
 }
 
 .fa-cat-btn:hover {
-  border-color: #1a0747;
-  color: #FFFFFF;
-  background: rgba(255, 255, 255, 0.05);
+  border-color: var(--primary);
+  color: var(--foreground);
+  background: var(--muted);
 }
 
 .fa-cat-btn.active {
-  background: linear-gradient(135deg, #1a0747 0%, #4c0192 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   border-color: transparent;
-  color: #FFFFFF;
-  box-shadow: 0 15px 40px rgba(120, 12, 202, 0.15);
+  color: var(--primary-foreground);
+  box-shadow: 0 15px 40px var(--ring);
 }
 
 /* Two-column layout: FAQ list + ask sidebar */
@@ -141,21 +141,21 @@
 }
 
 .fa-item {
-  background: rgba(24, 16, 40, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
   backdrop-filter: blur(20px);
   overflow: hidden;
   transition: .35s;
 }
 
 .fa-item:hover {
-  border-color: #4c0192;
+  border-color: var(--primary);
 }
 
 .fa-item.open {
-  border-color: #4c0192;
-  box-shadow: 0 15px 40px rgba(76, 1, 146, 0.15);
+  border-color: var(--primary);
+  box-shadow: 0 15px 40px var(--ring);
 }
 
 .fa-question {
@@ -169,8 +169,8 @@
   text-align: left;
   padding: 1.1rem 1.4rem;
   font-size: 1rem;
-  font-weight: 600;
-  color: #FFFFFF;
+  font-weight: var(--font-weight-medium);
+  color: var(--card-foreground);
   cursor: pointer;
 }
 
@@ -179,9 +179,9 @@
   width: 26px;
   height: 26px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.05);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  color: #4c0192;
+  background: var(--muted);
+  border: 1px solid var(--border);
+  color: var(--primary);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -191,22 +191,22 @@
 }
 
 .fa-item.open .fa-icon {
-  background: linear-gradient(135deg, #1a0747 0%, #4c0192 100%);
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
   border-color: transparent;
-  color: #FFFFFF;
-  box-shadow: 0 0 15px rgba(120, 12, 202, 0.35), 0 0 40px rgba(76, 1, 146, 0.18);
+  color: var(--primary-foreground);
+  box-shadow: 0 0 15px var(--ring), 0 0 40px rgba(255, 79, 216, 0.18);
 }
 
 .fa-answer {
   padding: 0 1.4rem 1.25rem;
   font-size: 0.9rem;
   line-height: 1.8;
-  color: #C8C4D8;
+  color: var(--secondary-foreground);
 }
 
 .fa-empty {
   font-size: 0.9rem;
-  color: #8E8A9F;
+  color: var(--muted-foreground);
   padding: 1rem 0;
   text-align: center;
 }
@@ -216,9 +216,9 @@
   position: sticky;
   top: 1.5rem;
   padding: 1.75rem;
-  background: rgba(24, 16, 40, 0.92);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 22px;
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-xl);
   backdrop-filter: blur(20px);
   box-sizing: border-box;
 }
@@ -227,14 +227,14 @@
   margin: 0 0 0.5rem 0;
   font-size: 1.5rem;
   font-weight: 700;
-  color: #FFFFFF;
+  color: var(--card-foreground);
 }
 
 .fa-ask-subtitle {
   margin: 0 0 1.2rem 0;
   font-size: 0.85rem;
   line-height: 1.7;
-  color: #C8C4D8;
+  color: var(--secondary-foreground);
 }
 
 .fa-ask-form {
@@ -248,10 +248,10 @@
   resize: vertical;
   min-height: 100px;
   box-sizing: border-box;
-  background: #161024;
-  color: #FFFFFF;
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  border-radius: 12px;
+  background: var(--input);
+  color: var(--foreground);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-md);
   padding: 14px 18px;
   font-size: 0.875rem;
   outline: none;
@@ -259,37 +259,37 @@
 }
 
 .fa-ask-textarea::placeholder {
-  color: #8E8A9F;
+  color: var(--muted-foreground);
 }
 
 .fa-ask-textarea:focus {
-  border-color: #4c0192;
-  box-shadow: 0 0 15px rgba(76, 1, 146, 0.25);
+  border-color: var(--primary);
+  box-shadow: 0 0 0 3px var(--ring);
 }
 
 .fa-ask-submit {
   width: 100%;
-  background: linear-gradient(135deg, #1a0747 0%, #4c0192 100%);
-  color: #FFFFFF;
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  color: var(--primary-foreground);
   padding: 14px 20px;
   border: none;
-  border-radius: 14px;
-  font-weight: 600;
+  border-radius: var(--radius-md);
+  font-weight: var(--font-weight-medium);
   font-size: 0.9rem;
   cursor: pointer;
   transition: .35s;
-  box-shadow: 0 15px 40px rgba(76, 1, 146, 0.15);
+  box-shadow: 0 15px 40px var(--ring);
   box-sizing: border-box;
 }
 
 .fa-ask-submit:hover:not(:disabled) {
   transform: translateY(-3px);
-  box-shadow: 0 0 15px rgba(76, 1, 146, 0.35), 0 0 40px rgba(76, 1, 146, 0.18);
+  box-shadow: 0 0 15px var(--ring), 0 0 40px rgba(255, 79, 216, 0.18);
 }
 
 .fa-ask-submit:disabled {
-  background: rgba(255, 255, 255, 0.06);
-  color: #8E8A9F;
+  background: var(--muted);
+  color: var(--muted-foreground);
   box-shadow: none;
   cursor: not-allowed;
 }
@@ -297,6 +297,6 @@
 .fa-ask-success {
   margin-top: 1rem;
   font-size: 0.8rem;
-  color: #FF95E9;
+  color: var(--accent);
   line-height: 1.5;
 }
