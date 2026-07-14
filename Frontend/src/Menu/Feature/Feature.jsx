@@ -69,7 +69,7 @@ const Feature = () => {
       </section>
 
 
-      <section className=' w-full h-[300px] flex justify-center gap-3 mt-5'>
+      <section className=' w-full h-[400px] flex justify-center gap-3 mt-5'>
         <div className=' Big-box bg-dark'>
            <h1 className=' text-center mt-2'>Security You Can Trust</h1>
            <div className='grid grid-cols-3 sm:grid-cols-2 lg:grid-cols-3 for-mini-box gap-0 p-0 m-0'>
