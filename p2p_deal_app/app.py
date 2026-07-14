@@ -7,9 +7,9 @@ app = Flask(__name__)
 DB_CONFIG = {
     "dbname": "p2p_deal_db",
     "user": "postgres",
-    "password": "320606531",
+    "password": "12345678",
     "host": "localhost",
-    "port": "3620",
+    "port": "3319",
 }
 
 def get_db():

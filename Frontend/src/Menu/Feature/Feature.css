@@ -1,0 +1,31 @@
+.box{
+    background: rgb(209, 120, 209);
+    border-radius: 25%;
+}
+.boxf{
+    background: rgb(209, 120, 209);
+    border-radius: 25%;
+}
+.For-box{
+    width: 100%;
+    align-items: center;
+    place-items: center;
+}
+.Big-box{
+    width: 48%;
+    height: 500px;
+}
+.mini-box{
+    width: 300px;
+    height: 190px;
+    background: rgb(219, 141, 212);
+    border: 0.1px solid black;
+    border-collapse: collapse;
+}
+.for-mini-box{
+    width: 100%;
+    align-items: center;
+    place-items: center;
+    text-align: center;
+    padding: 15px 15px;
+}

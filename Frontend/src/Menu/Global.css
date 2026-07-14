@@ -1,8 +1,239 @@
 @import url('https://fonts.googleapis.com/css2?family=Oswald:wght@200..700&family=Bebas+Neue&display=swap');
+/* .Global{
+width: 100%;
+height: auto;
+background-color: #9FA8DA;
+font-family: 'Oswald', sans-serif;
+color: rgb(217, 219, 221);
+} */
+ /* ==========================================
+ FIRE GLOBAL THEME
+ ========================================== */
+
+:root{
+/* Main Colors */
+--bg-primary: #06040D;
+--bg-secondary: #10081C;
+--bg-card: rgba(24, 16, 40, 0.92);
+
+/* Brand Colors */
+--primary: #B14DFF;
+--primary-light: #D87BFF;
+--secondary: #FF4FD8;
+--secondary-light: #FF95E9;
+
+/* Text */
+--text-primary: #FFFFFF;
+--text-secondary: #C8C4D8;
+--text-muted: #8E8A9F;
+
+/* Border */
+--border: rgba(255,255,255,.08);
+
+/* Effects */
+--shadow:
+0 15px 40px rgba(177,77,255,.15);
+
+--glow:
+0 0 15px rgba(177,77,255,.35),
+0 0 40px rgba(255,79,216,.18);
+
+--gradient-primary:
+linear-gradient(
+135deg,
+#B14DFF 0%,
+#FF4FD8 100%
+);
+
+--gradient-bg:
+radial-gradient(circle at top,
+rgba(177,77,255,.18),
+transparent 35%),
+radial-gradient(circle at bottom,
+rgba(255,79,216,.12),
+transparent 35%),
+#06040D;
+}
+*{
+margin:0;
+padding:0;
+box-sizing:border-box;
+}
+html{
+scroll-behavior:smooth;
+}
 .Global{
-    width: 100%;
-    height: auto;
-    background-color: #9FA8DA;
-    font-family: 'Oswald', sans-serif;
-    color: rgb(217, 219, 221);
+            padding-top: 30px;
+            font-family:
+            "Inter",
+            "Poppins",sans-serif;
+            background:var(--gradient-bg);
+            color:var(--text-primary);
+            overflow-x:hidden;
+}
+        /* Scrollbar */
+::-webkit-scrollbar{
+        width:10px;
+}
+
+::-webkit-scrollbar-track{
+background:#09050F;
+}
+
+::-webkit-scrollbar-thumb{
+background:linear-gradient(
+#B14DFF,
+#FF4FD8
+);
+border-radius:50px;
+}
+
+/* Selection */
+
+::selection{
+background:#B14DFF;
+color:white;
+}
+
+/* ==========================================
+ TYPOGRAPHY
+ ========================================== */
+
+h1,h2,h3,h4,h5,h6{
+color:white;
+font-weight:700;
+}
+
+h1{
+font-size:4rem;
+line-height:1.1;
+}
+
+h2{
+font-size:2.8rem;
+}
+
+h3{
+font-size:2rem;
+}
+
+p{
+color:var(--text-secondary);
+line-height:1.8;
+}
+
+/* ==========================================
+ LINKS
+ ========================================== */
+
+a{
+color:white;
+text-decoration:none;
+transition:.35s;
+}
+
+a:hover{
+color:var(--secondary);
+}
+
+/* ==========================================
+ BUTTONS
+ ========================================== */
+
+.btn-primary{
+
+background:var(--gradient-primary);
+
+color:white;
+
+padding:15px 35px;
+
+border:none;
+
+border-radius:14px;
+
+font-weight:600;
+
+transition:.35s;
+
+box-shadow:var(--shadow);
+
+cursor:pointer;
+}
+
+.btn-primary:hover{
+
+transform:translateY(-4px);
+
+box-shadow:var(--glow);
+}
+
+.btn-outline{
+
+background:transparent;
+
+border:1px solid var(--border);
+
+color:white;
+
+padding:15px 35px;
+
+border-radius:14px;
+
+transition:.35s;
+}
+
+.btn-outline:hover{
+
+background:rgba(255,255,255,.05);
+
+border-color:var(--primary);
+}
+
+
+.card{
+
+background:var(--bg-card);
+
+border:1px solid var(--border);
+
+border-radius:22px;
+
+backdrop-filter:blur(20px);
+
+transition:.35s;
+}
+
+.card:hover{
+
+border-color:var(--primary);
+
+box-shadow:var(--shadow);
+
+transform:translateY(-5px);
+}
+
+
+
+input,
+textarea,
+select{
+background:#161024;
+
+color:white;
+
+border:1px solid var(--border);
+
+border-radius:12px;
+
+padding:14px 18px;
+
+transition:.3s;
+}
+input:focus,
+textarea:focus,
+select:focus{
+outline:none;
+border-color:var(--primary);
+box-shadow:0 0 15px rgba(177,77,255,.25);
 }

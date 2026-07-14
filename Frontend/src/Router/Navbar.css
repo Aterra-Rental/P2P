@@ -10,10 +10,12 @@ nav{
     box-sizing: border-box;
     margin: 0;
     padding: 0;
-    background-color: #301A92;
     position: sticky;
     top: 0;
     z-index: 1000;
+    background-color:rgba(10,7,18,.85);
+    backdrop-filter:blur(18px);
+    border-bottom:1px solid var(--border);
 }
 .nav_inner{
         max-width: 1100px;
@@ -52,7 +54,7 @@ nav{
     }
     
     .navlink{
-        color: rgb(161, 161, 161);
+        color: white;
         text-decoration: none;
         font-size: 23px;
         display: inline-block;
@@ -64,11 +66,12 @@ nav{
     .navlink:hover{
         transform: scale(1.1);
         color:  rgba(4, 1, 1, 0.663);
-        background:  #B29CDB;
+        background: linear-gradient(135deg,#B14DFF 0%,#eeb1e1 80%);;
+
     }
     .navlink.active {
     color: #fff;
-    background:   #7E57C2;
+    background: linear-gradient(135deg,#B14DFF 0%,#FF4FD8 80%);;
 }
     .menu .navlink:focus-visible{
         outline: 3px solid rgba(3, 193, 76, 0.909) ;

@@ -1,6 +1,7 @@
 import React from 'react'
 import { NavLink } from 'react-router-dom'
 import './Navbar.css'
+import '../Menu/Global.css'
 
 
 
@@ -26,7 +27,7 @@ const Navbar = () => {
               <ul  id='primary-menu' className='menu'>
                 <li> <NavLink  to={'/'}></NavLink></li>
                 <li><NavLink  to={'/Home'} className=' navlink text-decoration-none text-2xl  font-TitilliumWeb-BoldItalic ' onClick={closeMenu}>Home</NavLink></li>
-                <li><NavLink className='  navlink text-decoration-none text-2xl ' to={'/Guide'} onClick={closeMenu}  >Guide</NavLink></li>
+                {/* <li><NavLink className='  navlink text-decoration-none text-2xl ' to={'/Guide'} onClick={closeMenu}  >Guide</NavLink></li> */}
                 <li><NavLink className='  navlink text-decoration-none text-2xl  ' to={'/Feature'} onClick={closeMenu}>Feature</NavLink></li>
                 <li><NavLink className=' navlink text-decoration-none text-2xl ' to={'/FQA'} onClick={closeMenu}>FQA</NavLink></li>
                 <li><NavLink className=' navlink text-decoration-none text-2xl user   ' to={'/User'} onClick={closeMenu} >User</NavLink></li>
