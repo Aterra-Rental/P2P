@@ -27,10 +27,15 @@ const Navbar = () => {
               <ul  id='primary-menu' className='menu'>
                 <li> <NavLink  to={'/'}></NavLink></li>
                 <li><NavLink  to={'/Home'} className=' navlink text-decoration-none text-2xl  font-TitilliumWeb-BoldItalic ' onClick={closeMenu}>Home</NavLink></li>
+<<<<<<< HEAD
                 {/* <li><NavLink className='  navlink text-decoration-none text-2xl ' to={'/Guide'} onClick={closeMenu}  >Guide</NavLink></li> */}
                 <li><NavLink className='  navlink text-decoration-none text-2xl  ' to={'/Feature'} onClick={closeMenu}>Feature</NavLink></li>
+=======
+                <li><NavLink className='  navlink text-decoration-none text-2xl ' to={'/Guide'} onClick={closeMenu}  >How It Works</NavLink></li>
+                <li><NavLink className='  navlink text-decoration-none text-2xl  ' to={'/Feature'} onClick={closeMenu}>Features</NavLink></li>
+>>>>>>> 37333847ac472cbef1e14535984aa13d275702cf
                 <li><NavLink className=' navlink text-decoration-none text-2xl ' to={'/FQA'} onClick={closeMenu}>FQA</NavLink></li>
-                <li><NavLink className=' navlink text-decoration-none text-2xl user   ' to={'/User'} onClick={closeMenu} >User</NavLink></li>
+                <li><NavLink className=' navlink text-decoration-none text-2xl user   ' to={'/User'} onClick={closeMenu} >Users</NavLink></li>
               </ul>
       </div>
       </nav>   
