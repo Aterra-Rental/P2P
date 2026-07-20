@@ -6,9 +6,7 @@ start "Django - Backend" cmd /k "cd Backend\myproject && python manage.py runser
 start "Vite - Frontend" cmd /k "cd Frontend && npm run dev"
 timeout /t 3 /nobreak
 
-
-start http://localhost:5173/Login
-start http://localhost:5173/Login
+start http://localhost:5173/
 start http://127.0.0.1:8000/admin/
 
 
