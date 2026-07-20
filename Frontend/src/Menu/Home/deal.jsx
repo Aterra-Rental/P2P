@@ -1,4 +1,4 @@
-import React from 'react'
+
 import { useNavigate } from 'react-router-dom'
 import '../Global.css'
 import './Home.css' // Re-uses your fonts and styles if needed
