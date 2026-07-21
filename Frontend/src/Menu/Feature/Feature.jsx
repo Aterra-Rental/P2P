@@ -1,37 +1,236 @@
-import '../Global.css'
-import Footer from '../../Router/Footer'
-
-const features = [
-  { icon: '🔒', title: 'Escrow Protection', text: 'Payments are held securely and only released once both parties confirm the deal is complete.' },
-  { icon: '🤖', title: 'Automated Rooms', text: 'Every deal gets a private room with a bot that logs terms, timestamps, and confirmations automatically.' },
-  { icon: '⚖️', title: 'Dispute Resolution', text: 'If something goes wrong, either side can open a dispute for a human admin to review the full logged history.' },
-  { icon: '🚩', title: 'Scam Detection', text: 'The bot watches for common scam patterns — like pressure to pay off-platform — and flags them instantly.' },
-  { icon: '⚡', title: 'Fast Releases', text: 'Funds release the moment the buyer confirms, or automatically after a holding window if no dispute is raised.' },
-  { icon: '📜', title: 'Full Transparency', text: 'Every message and offer is logged with a timestamp, so nothing is left to memory or screenshots.' },
-]
-
+import React from "react";
+import "../Global.css";
+import "./Feature.css";
+import Footer from "../../Router/Footer";
 const Feature = () => {
   return (
-    <div className='Global'>
-      <div style={{ maxWidth: '1000px', margin: '0 auto', padding: '4.5rem 1.25rem 4rem' }}>
-        <h1 style={{ textAlign: 'center', marginBottom: '1rem' }}>Features</h1>
-        <p style={{ textAlign: 'center', maxWidth: '520px', margin: '0 auto 3rem' }}>
-          Everything built into the platform to keep your deals safe from start to finish.
-        </p>
+    <div className="Global py-10">
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(260px, 1fr))', gap: '1.25rem' }}>
-          {features.map((f, i) => (
-            <div key={i} className='card' style={{ padding: '1.75rem' }}>
-              <div style={{ fontSize: '2rem', marginBottom: '0.75rem' }}>{f.icon}</div>
-              <h3 style={{ marginBottom: '0.5rem', fontSize: '1.1rem' }}>{f.title}</h3>
-              <p style={{ margin: 0, fontSize: '0.9rem' }}>{f.text}</p>
-            </div>
-          ))}
+      {/* ================= OUR FEATURES ================= */}
+
+      <section className="max-w-7xl mx-auto px-5 mt-5">
+
+        <h1 className="text-center mb-12">Our Features</h1>
+
+        <div className="For-box grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+          <div className="box">
+            <i className="bi bi-shield-lock-fill"></i>
+            <h3>Secure Transactions</h3>
+            <p>
+              Every transaction is securely recorded and protected to ensure a
+              safe trading experience.
+            </p>
+          </div>
+
+          <div className="box">
+            <i className="bi bi-house-lock-fill"></i>
+            <h3>Room-Based Trading</h3>
+            <p>
+              Create private trading rooms and invite only trusted trading
+              partners.
+            </p>
+          </div>
+
+          <div className="box">
+            <i className="bi bi-chat-dots-fill"></i>
+            <h3>Real-Time Chat</h3>
+            <p>
+              Communicate instantly with your trading partner inside every room.
+            </p>
+          </div>
+
+          <div className="box">
+            <i className="bi bi-credit-card-2-front-fill"></i>
+            <h3>Payment Verification</h3>
+            <p>
+              Payments are verified automatically before the transaction
+              proceeds.
+            </p>
+          </div>
+
+          <div className="box">
+            <i className="bi bi-graph-up-arrow"></i>
+            <h3>Transaction Tracking</h3>
+            <p>
+              Follow every stage of your transaction from beginning to end.
+            </p>
+          </div>
+
+          <div className="box">
+            <i className="bi bi-star-fill"></i>
+            <h3>User Ratings</h3>
+            <p>
+              Build trust by rating and reviewing users after each completed
+              transaction.
+            </p>
+          </div>
+
         </div>
-      </div>
-      <Footer />
-    </div>
-  )
-}
 
-export default Feature
+      </section>
+
+      {/* ================= HOW IT WORKS ================= */}
+
+      <section className="max-w-7xl mx-auto px-5 mt-5">
+
+        <h1 className="text-center mb-12">How It Works</h1>
+
+        <div className="For-box grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+          <div className="boxf">
+            <i className="bi bi-plus-circle-fill"></i>
+            <h3>Create Room</h3>
+            <p>Create a secure trading room in just a few seconds.</p>
+          </div>
+
+          <div className="boxf">
+            <i className="bi bi-person-plus-fill"></i>
+            <h3>Invite Partner</h3>
+            <p>Invite the buyer or seller and assign each user's role.</p>
+          </div>
+
+          <div className="boxf">
+            <i className="bi bi-cash-stack"></i>
+            <h3>Confirm Amount</h3>
+            <p>Both parties confirm the agreed transaction amount.</p>
+          </div>
+
+          <div className="boxf">
+            <i className="bi bi-wallet2"></i>
+            <h3>Deposit Money</h3>
+            <p>Buyer deposits funds securely into the platform.</p>
+          </div>
+
+          <div className="boxf">
+            <i className="bi bi-check-circle-fill"></i>
+            <h3>Complete Deal</h3>
+            <p>
+              After confirmation, payment is released safely to the seller.
+            </p>
+          </div>
+
+          <div className="boxf">
+            <i className="bi bi-award-fill"></i>
+            <h3>Leave Review</h3>
+            <p>Both users rate each other after the successful trade.</p>
+          </div>
+
+        </div>
+
+      </section>
+
+      {/* ================= SECURITY & COMPARISON ================= */}
+
+      <section className="max-w-7xl mx-auto px-5 mt-5 flex flex-col xl:flex-row gap-8">
+
+        {/* Left */}
+
+        <div className="security-card flex-1">
+
+          <h2 className="text-center mb-8">Security You Can Trust</h2>
+
+          <div className="grid grid-cols-2 gap-5">
+
+            <div className="mini-box">
+              <i className="bi bi-patch-check-fill"></i>
+              <h4>Verified Accounts</h4>
+              <p>Every user is verified before trading.</p>
+            </div>
+
+            <div className="mini-box">
+              <i className="bi bi-lock-fill"></i>
+              <h4>Encrypted Data</h4>
+              <p>Personal information is encrypted and protected.</p>
+            </div>
+
+            <div className="mini-box">
+              <i className="bi bi-clock-history"></i>
+              <h4>Transaction History</h4>
+              <p>Every transaction is permanently recorded.</p>
+            </div>
+
+            <div className="mini-box">
+              <i className="bi bi-receipt-cutoff"></i>
+              <h4>Payment Proof</h4>
+              <p>Upload payment proof quickly and securely.</p>
+            </div>
+
+            <div className="mini-box">
+              <i className="bi bi-shield-check"></i>
+              <h4>Fraud Prevention</h4>
+              <p>Suspicious activities are automatically detected.</p>
+            </div>
+
+            <div className="mini-box">
+              <i className="bi bi-eye-fill"></i>
+              <h4>Admin Monitoring</h4>
+              <p>Administrators monitor transactions and disputes.</p>
+            </div>
+
+          </div>
+
+        </div>
+
+        {/* Right */}
+
+        <div className="compare-card flex-1">
+
+          <h2 className="text-center mb-8">Why Choose SafeTrade?</h2>
+
+          <table>
+
+            <thead>
+
+              <tr>
+                <th>Traditional Trading</th>
+                <th>SafeTrade</th>
+              </tr>
+
+            </thead>
+
+            <tbody>
+
+              <tr>
+                <td>No transaction history</td>
+                <td>Complete transaction records</td>
+              </tr>
+
+              <tr>
+                <td>High scam risk</td>
+                <td>Verified users & fraud protection</td>
+              </tr>
+
+              <tr>
+                <td>No payment verification</td>
+                <td>Secure payment verification</td>
+              </tr>
+
+              <tr>
+                <td>No dispute support</td>
+                <td>Dedicated admin assistance</td>
+              </tr>
+
+              <tr>
+                <td>Limited transparency</td>
+                <td>Track every trading step</td>
+              </tr>
+
+              <tr>
+                <td>No reputation system</td>
+                <td>User ratings & reviews</td>
+              </tr>
+
+            </tbody>
+
+          </table>
+
+        </div>
+
+      </section>
+    {/* <Footer/> */}
+    </div>
+  );
+};
+
+export default Feature;
