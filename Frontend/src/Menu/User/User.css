@@ -1,214 +1,267 @@
-.UserPage {
-  width: 100%;
-  min-height: 100vh;
-  padding: 40px 24px;
+/* ===== User Profile — uses Global.css theme vars ===== */
+
+.up-container {
+  max-width: 900px;
+  margin: 0 auto;
+  padding: 2rem 1.25rem 4rem;
   position: relative;
 }
 
-.UserPage .settingsBtn {
+/* Settings gear */
+.up-settings-btn {
   position: absolute;
-  top: 24px;
-  right: 24px;
-  background: none;
-  border: none;
-  font-size: 22px;
+  top: 0;
+  right: 1.25rem;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  font-size: 1.1rem;
   cursor: pointer;
-  color: inherit;
+  transition: .3s;
 }
 
-.UserPage .settingsMenu {
+.up-settings-btn:hover {
+  border-color: var(--primary);
+  box-shadow: var(--glow);
+}
+
+.up-settings-menu {
   position: absolute;
-  top: 60px;
-  right: 24px;
-  background: #2b2f4a;
-  border-radius: 8px;
-  padding: 8px;
+  top: 3.2rem;
+  right: 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  backdrop-filter: blur(20px);
+  padding: 0.5rem;
   display: flex;
   flex-direction: column;
-  gap: 4px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  gap: 0.25rem;
   z-index: 10;
+  min-width: 170px;
 }
 
-.UserPage .settingsMenu button {
-  padding: 8px 16px;
-  background: none;
+.up-settings-menu button {
+  padding: 0.6rem 0.9rem;
+  background: transparent;
   border: none;
-  color: #fff;
+  border-radius: 8px;
+  color: var(--text-primary);
   text-align: left;
+  font-size: 0.85rem;
   cursor: pointer;
-  border-radius: 4px;
+  transition: .2s;
 }
 
-.UserPage .settingsMenu button:hover {
-  background: #3a3f66;
+.up-settings-menu button:hover {
+  background: rgba(255,255,255,.05);
+  color: var(--secondary-light);
 }
 
 /* Profile card */
-.profileCard {
-  max-width: 700px;
-  margin: 0 auto 32px;
-  background: #2b2f4a;
-  border-radius: 12px;
-  padding: 28px 32px;
+.up-profile-card {
   display: flex;
   align-items: center;
-  gap: 20px;
-  color: #fff;
+  gap: 1.25rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  backdrop-filter: blur(20px);
+  padding: 1.75rem 2rem;
+  margin: 3rem 0 2.5rem;
 }
 
-.profileAvatar {
+.up-avatar {
+  flex-shrink: 0;
   width: 64px;
   height: 64px;
   border-radius: 50%;
-  background: #9FA8DA;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 26px;
+  font-size: 1.6rem;
   font-weight: 700;
-  color: #1e2138;
-  flex-shrink: 0;
+  color: white;
+  background: var(--gradient-primary);
+  box-shadow: var(--shadow);
 }
 
-.profileInfo h1 {
-  margin: 0 0 4px;
-  font-size: 24px;
+.up-profile-name {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.4rem;
+  font-weight: 700;
+  color: var(--text-primary);
 }
 
-.profileInfo p {
-  margin: 2px 0;
-  opacity: 0.75;
-  font-size: 14px;
+.up-profile-meta {
+  margin: 0.1rem 0;
+  font-size: 0.85rem;
+  color: var(--text-secondary);
 }
 
-/* Section wrapper */
-.section {
-  max-width: 700px;
-  margin: 0 auto 24px;
+/* Section headers */
+.up-section {
+  margin-bottom: 2.5rem;
 }
 
-.section h2 {
-  color: #fff;
-  font-size: 18px;
-  margin-bottom: 12px;
+.up-section-title {
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: var(--text-primary);
+  margin-bottom: 1rem;
 }
 
-/* Create deal toggle */
-.toggleFormBtn {
-  padding: 10px 18px;
+/* Create deal toggle + form */
+.up-toggle-btn {
+  background: var(--gradient-primary);
+  color: white;
   border: none;
-  border-radius: 8px;
-  background: #9FA8DA;
-  color: #1e2138;
+  border-radius: 14px;
+  padding: 0.75rem 1.4rem;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: .35s;
 }
 
-.dealForm {
-  background: #2b2f4a;
-  border-radius: 8px;
-  padding: 20px;
-  margin-top: 12px;
+.up-toggle-btn:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--glow);
+}
+
+.up-deal-form {
+  margin-top: 1rem;
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 22px;
+  backdrop-filter: blur(20px);
+  padding: 1.5rem;
   display: flex;
   flex-direction: column;
-  gap: 10px;
+  gap: 0.85rem;
 }
 
-.dealForm input {
-  padding: 10px 12px;
-  border-radius: 6px;
-  border: 1px solid #444a6e;
-  background: #1e2138;
-  color: #fff;
+.up-deal-form input {
+  width: 100%;
+  box-sizing: border-box;
 }
 
-.dealForm button {
-  padding: 10px;
+.up-deal-form button {
+  background: var(--gradient-primary);
+  color: white;
   border: none;
-  border-radius: 6px;
-  background: #9FA8DA;
-  color: #1e2138;
+  border-radius: 12px;
+  padding: 12px;
   font-weight: 600;
+  font-size: 0.9rem;
   cursor: pointer;
+  box-shadow: var(--shadow);
+  transition: .35s;
 }
 
-.dealForm .msg {
-  color: #9FA8DA;
-  font-size: 13px;
+.up-deal-form button:hover {
+  transform: translateY(-3px);
+  box-shadow: var(--glow);
+}
+
+.up-form-msg {
+  font-size: 0.8rem;
+  color: var(--secondary-light);
   margin: 0;
 }
 
 /* Deal list */
-.dealCard {
-  background: #2b2f4a;
-  border-radius: 8px;
-  padding: 14px 18px;
-  margin-bottom: 10px;
-  color: #fff;
+.up-deal-card {
+  background: var(--bg-card);
+  border: 1px solid var(--border);
+  border-radius: 18px;
+  backdrop-filter: blur(20px);
+  padding: 1rem 1.4rem;
+  margin-bottom: 0.7rem;
   cursor: pointer;
+  transition: .35s;
 }
 
-.dealCard .dealRow {
+.up-deal-card:hover {
+  border-color: var(--primary);
+}
+
+.up-deal-card.open {
+  border-color: var(--primary);
+  box-shadow: var(--shadow);
+}
+
+.up-deal-row {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 1rem;
 }
 
-.dealCard .dealName {
+.up-deal-name {
   font-weight: 600;
+  color: var(--text-primary);
 }
 
-.dealCard .dealPrice {
-  font-size: 13px;
-  opacity: 0.7;
+.up-deal-price {
+  font-size: 0.8rem;
+  color: var(--text-secondary);
 }
 
-.dealBadge {
-  padding: 4px 10px;
+.up-deal-badge {
+  flex-shrink: 0;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
-  font-size: 12px;
+  font-size: 0.75rem;
   font-weight: 600;
   color: #fff;
 }
 
-.dealDetails {
-  margin-top: 12px;
-  padding-top: 12px;
-  border-top: 1px solid #444a6e;
-  font-size: 13px;
+.up-deal-details {
+  margin-top: 0.9rem;
+  padding-top: 0.9rem;
+  border-top: 1px solid var(--border);
   display: flex;
   flex-direction: column;
-  gap: 6px;
+  gap: 0.4rem;
+  font-size: 0.82rem;
 }
 
-.dealDetails .row {
+.up-deal-details .up-row {
   display: flex;
   justify-content: space-between;
-  opacity: 0.85;
+  color: var(--text-secondary);
 }
 
-.dealActions {
+.up-deal-actions {
   display: flex;
-  gap: 8px;
-  margin-top: 12px;
+  gap: 0.6rem;
+  margin-top: 0.9rem;
 }
 
-.dealActions button {
-  padding: 6px 14px;
-  border: none;
-  border-radius: 6px;
-  font-size: 13px;
+.up-deal-actions button {
+  background: rgba(255,255,255,.05);
+  border: 1px solid var(--border);
+  color: var(--text-primary);
+  border-radius: 8px;
+  padding: 0.5rem 1rem;
+  font-size: 0.8rem;
   cursor: pointer;
-  background: #444a6e;
-  color: #fff;
+  transition: .25s;
 }
 
-.dealActions button:hover {
-  background: #565d8c;
+.up-deal-actions button:hover {
+  border-color: var(--primary);
+  color: var(--secondary-light);
 }
 
-.emptyText {
-  opacity: 0.6;
-  color: #fff;
+.up-empty {
+  font-size: 0.9rem;
+  color: var(--text-muted);
+  text-align: center;
+  padding: 1rem 0;
 }

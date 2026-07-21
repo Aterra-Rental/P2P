@@ -1,4 +1,3 @@
-// import React, { useState, useEffect } from 'react'
 import { useState, useEffect } from 'react'
 import '../Global.css'
 import './User.css'
@@ -89,106 +88,108 @@ const User = () => {
   const initial = user.username ? user.username[0].toUpperCase() : '?'
 
   return (
-    <div className='Global UserPage'>
-      <button className='settingsBtn' onClick={() => setShowSettings(!showSettings)}>⚙️</button>
+    <div className='Global'>
+      <div className='up-container'>
+        <button className='up-settings-btn' onClick={() => setShowSettings(!showSettings)}>⚙️</button>
 
-      {showSettings && (
-        <div className='settingsMenu'>
-          <button onClick={handleLogout}>Logout</button>
-          <button onClick={handleLogout}>Switch Account</button>
-        </div>
-      )}
-
-      {/* Profile card */}
-      <div className='profileCard'>
-        <div className='profileAvatar'>{initial}</div>
-        <div className='profileInfo'>
-          <h1>{user.username}</h1>
-          <p>{user.email}</p>
-          {user.phone && <p>{user.phone}</p>}
-        </div>
-      </div>
-
-      {/* Create deal */}
-      <div className='section'>
-        <button className='toggleFormBtn' onClick={() => setShowCreateForm(!showCreateForm)}>
-          {showCreateForm ? 'Cancel' : '+ Create Deal'}
-        </button>
-
-        {showCreateForm && (
-          <div className='dealForm'>
-            <input
-              placeholder='Seller username'
-              value={sellerUsername}
-              onChange={e => setSellerUsername(e.target.value)}
-            />
-            <input
-              placeholder='Item name'
-              value={itemName}
-              onChange={e => setItemName(e.target.value)}
-            />
-            <input
-              placeholder='Price'
-              value={price}
-              onChange={e => setPrice(e.target.value)}
-            />
-            <button onClick={handleCreateDeal}>Submit Deal</button>
-            {createMsg && <p className='msg'>{createMsg}</p>}
+        {showSettings && (
+          <div className='up-settings-menu'>
+            <button onClick={handleLogout}>Logout</button>
+            <button onClick={handleLogout}>Switch Account</button>
           </div>
         )}
-      </div>
 
-      {/* Deal history */}
-      <div className='section'>
-        <h2>Deal History</h2>
+        {/* Profile card */}
+        <div className='up-profile-card'>
+          <div className='up-avatar'>{initial}</div>
+          <div>
+            <h1 className='up-profile-name'>{user.username}</h1>
+            <p className='up-profile-meta'>{user.email}</p>
+            {user.phone && <p className='up-profile-meta'>{user.phone}</p>}
+          </div>
+        </div>
 
-        {dealsLoading ? (
-          <p className='emptyText'>Loading deals...</p>
-        ) : deals.length === 0 ? (
-          <p className='emptyText'>No deals yet — create one above to get started.</p>
-        ) : (
-          deals.map(deal => {
-            const isOpen = expandedDealId === deal.id
-            return (
-              <div
-                key={deal.id}
-                className='dealCard'
-                onClick={() => setExpandedDealId(isOpen ? null : deal.id)}
-              >
-                <div className='dealRow'>
-                  <div>
-                    <div className='dealName'>{deal.item_name}</div>
-                    <div className='dealPrice'>${deal.price}</div>
+        {/* Create deal */}
+        <div className='up-section'>
+          <button className='up-toggle-btn' onClick={() => setShowCreateForm(!showCreateForm)}>
+            {showCreateForm ? 'Cancel' : '+ Create Deal'}
+          </button>
+
+          {showCreateForm && (
+            <div className='up-deal-form'>
+              <input
+                placeholder='Seller username'
+                value={sellerUsername}
+                onChange={e => setSellerUsername(e.target.value)}
+              />
+              <input
+                placeholder='Item name'
+                value={itemName}
+                onChange={e => setItemName(e.target.value)}
+              />
+              <input
+                placeholder='Price'
+                value={price}
+                onChange={e => setPrice(e.target.value)}
+              />
+              <button onClick={handleCreateDeal}>Submit Deal</button>
+              {createMsg && <p className='up-form-msg'>{createMsg}</p>}
+            </div>
+          )}
+        </div>
+
+        {/* Deal history */}
+        <div className='up-section'>
+          <h2 className='up-section-title'>Deal History</h2>
+
+          {dealsLoading ? (
+            <p className='up-empty'>Loading deals...</p>
+          ) : deals.length === 0 ? (
+            <p className='up-empty'>No deals yet — create one above to get started.</p>
+          ) : (
+            deals.map(deal => {
+              const isOpen = expandedDealId === deal.id
+              return (
+                <div
+                  key={deal.id}
+                  className={`up-deal-card${isOpen ? ' open' : ''}`}
+                  onClick={() => setExpandedDealId(isOpen ? null : deal.id)}
+                >
+                  <div className='up-deal-row'>
+                    <div>
+                      <div className='up-deal-name'>{deal.item_name}</div>
+                      <div className='up-deal-price'>${deal.price}</div>
+                    </div>
+                    <span className='up-deal-badge' style={{ background: statusColors[deal.status] || '#666' }}>
+                      {deal.status}
+                    </span>
                   </div>
-                  <span className='dealBadge' style={{ background: statusColors[deal.status] || '#666' }}>
-                    {deal.status}
-                  </span>
+
+                  {isOpen && (
+                    <div className='up-deal-details' onClick={e => e.stopPropagation()}>
+                      <div className='up-row'><span>Deal ID</span><span>#{deal.id}</span></div>
+                      {deal.buyer_id && <div className='up-row'><span>Buyer</span><span>{deal.buyer_id}</span></div>}
+                      {deal.seller_id && <div className='up-row'><span>Seller</span><span>{deal.seller_id}</span></div>}
+                      {deal.middleman_id && <div className='up-row'><span>Middleman</span><span>{deal.middleman_id}</span></div>}
+
+                      {(deal.status === 'pending' || deal.status === 'active') && (
+                        <div className='up-deal-actions'>
+                          {deal.status === 'pending' && (
+                            <button onClick={() => handleStatusChange(deal.id, 'active')}>Accept</button>
+                          )}
+                          {deal.status === 'active' && (
+                            <button onClick={() => handleStatusChange(deal.id, 'completed')}>Mark Completed</button>
+                          )}
+                          <button onClick={() => handleStatusChange(deal.id, 'cancelled')}>Cancel</button>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
-
-                {isOpen && (
-                  <div className='dealDetails' onClick={e => e.stopPropagation()}>
-                    <div className='row'><span>Deal ID</span><span>#{deal.id}</span></div>
-                    {deal.buyer_id && <div className='row'><span>Buyer</span><span>{deal.buyer_id}</span></div>}
-                    {deal.seller_id && <div className='row'><span>Seller</span><span>{deal.seller_id}</span></div>}
-                    {deal.middleman_id && <div className='row'><span>Middleman</span><span>{deal.middleman_id}</span></div>}
-
-                    {(deal.status === 'pending' || deal.status === 'active') && (
-                      <div className='dealActions'>
-                        {deal.status === 'pending' && (
-                          <button onClick={() => handleStatusChange(deal.id, 'active')}>Accept</button>
-                        )}
-                        {deal.status === 'active' && (
-                          <button onClick={() => handleStatusChange(deal.id, 'completed')}>Mark Completed</button>
-                        )}
-                        <button onClick={() => handleStatusChange(deal.id, 'cancelled')}>Cancel</button>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            )
-          })
-        )}
+              )
+            })
+          )}
+        </div>
       </div>
     </div>
   )
