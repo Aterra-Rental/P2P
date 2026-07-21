@@ -26,7 +26,6 @@ const Footer = () => {
             <h4>Platform</h4>
             <ul>
               <li><NavLink to="/Home">Home</NavLink></li>
-              <li><NavLink to="/Guide">Guide</NavLink></li>
               <li><NavLink to="/Feature">Feature</NavLink></li>
             </ul>
           </div>
