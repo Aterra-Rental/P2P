@@ -4,6 +4,7 @@ import '../Global.css'
 import './User.css'
 import { useNavigate } from 'react-router-dom'
 
+
 const statusColors = {
   pending: '#e0a800',
   active: '#3b82f6',
