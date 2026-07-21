@@ -31,7 +31,7 @@ const Home = () => {
   };
 
   return (
-    <div className='Global d-flex flex-column vh-100 overflow-hidden'>
+    <div className='Global d-flex flex-column min-vh-100 overflow-hidden'>
 
       <header className="row sticky-top bg-dark">
         <div className="col-12">
