@@ -1,0 +1,214 @@
+.UserPage {
+  width: 100%;
+  min-height: 100vh;
+  padding: 40px 24px;
+  position: relative;
+}
+
+.UserPage .settingsBtn {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  background: none;
+  border: none;
+  font-size: 22px;
+  cursor: pointer;
+  color: inherit;
+}
+
+.UserPage .settingsMenu {
+  position: absolute;
+  top: 60px;
+  right: 24px;
+  background: #2b2f4a;
+  border-radius: 8px;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.25);
+  z-index: 10;
+}
+
+.UserPage .settingsMenu button {
+  padding: 8px 16px;
+  background: none;
+  border: none;
+  color: #fff;
+  text-align: left;
+  cursor: pointer;
+  border-radius: 4px;
+}
+
+.UserPage .settingsMenu button:hover {
+  background: #3a3f66;
+}
+
+/* Profile card */
+.profileCard {
+  max-width: 700px;
+  margin: 0 auto 32px;
+  background: #2b2f4a;
+  border-radius: 12px;
+  padding: 28px 32px;
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  color: #fff;
+}
+
+.profileAvatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: #9FA8DA;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 26px;
+  font-weight: 700;
+  color: #1e2138;
+  flex-shrink: 0;
+}
+
+.profileInfo h1 {
+  margin: 0 0 4px;
+  font-size: 24px;
+}
+
+.profileInfo p {
+  margin: 2px 0;
+  opacity: 0.75;
+  font-size: 14px;
+}
+
+/* Section wrapper */
+.section {
+  max-width: 700px;
+  margin: 0 auto 24px;
+}
+
+.section h2 {
+  color: #fff;
+  font-size: 18px;
+  margin-bottom: 12px;
+}
+
+/* Create deal toggle */
+.toggleFormBtn {
+  padding: 10px 18px;
+  border: none;
+  border-radius: 8px;
+  background: #9FA8DA;
+  color: #1e2138;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dealForm {
+  background: #2b2f4a;
+  border-radius: 8px;
+  padding: 20px;
+  margin-top: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.dealForm input {
+  padding: 10px 12px;
+  border-radius: 6px;
+  border: 1px solid #444a6e;
+  background: #1e2138;
+  color: #fff;
+}
+
+.dealForm button {
+  padding: 10px;
+  border: none;
+  border-radius: 6px;
+  background: #9FA8DA;
+  color: #1e2138;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.dealForm .msg {
+  color: #9FA8DA;
+  font-size: 13px;
+  margin: 0;
+}
+
+/* Deal list */
+.dealCard {
+  background: #2b2f4a;
+  border-radius: 8px;
+  padding: 14px 18px;
+  margin-bottom: 10px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.dealCard .dealRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.dealCard .dealName {
+  font-weight: 600;
+}
+
+.dealCard .dealPrice {
+  font-size: 13px;
+  opacity: 0.7;
+}
+
+.dealBadge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.dealDetails {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid #444a6e;
+  font-size: 13px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.dealDetails .row {
+  display: flex;
+  justify-content: space-between;
+  opacity: 0.85;
+}
+
+.dealActions {
+  display: flex;
+  gap: 8px;
+  margin-top: 12px;
+}
+
+.dealActions button {
+  padding: 6px 14px;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  cursor: pointer;
+  background: #444a6e;
+  color: #fff;
+}
+
+.dealActions button:hover {
+  background: #565d8c;
+}
+
+.emptyText {
+  opacity: 0.6;
+  color: #fff;
+}

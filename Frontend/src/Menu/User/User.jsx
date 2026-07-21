@@ -1,5 +1,7 @@
-import React, { useState, useEffect } from 'react'
+// import React, { useState, useEffect } from 'react'
+import { useState, useEffect } from 'react'
 import '../Global.css'
+import './User.css'
 import { useNavigate } from 'react-router-dom'
 
 const statusColors = {
@@ -14,6 +16,8 @@ const User = () => {
   const [deals, setDeals] = useState([])
   const [dealsLoading, setDealsLoading] = useState(true)
   const [showSettings, setShowSettings] = useState(false)
+  const [showCreateForm, setShowCreateForm] = useState(false)
+  const [expandedDealId, setExpandedDealId] = useState(null)
   const navigate = useNavigate()
 
   const [sellerUsername, setSellerUsername] = useState('')
@@ -64,8 +68,6 @@ const User = () => {
     }
   }
 
-  if (!user) return <div className='Global'>Loading...</div>
-
   const handleStatusChange = async (dealId, newStatus) => {
     const res = await fetch(`/api/deal/${dealId}/status/`, {
       method: 'PATCH',
@@ -81,129 +83,112 @@ const User = () => {
     }
   }
 
+  if (!user) return <div className='Global'>Loading...</div>
+
+  const initial = user.username ? user.username[0].toUpperCase() : '?'
+
   return (
-    <div className='Global' style={{ padding: '32px', position: 'relative' }}>
-      <button
-        onClick={() => setShowSettings(!showSettings)}
-        style={{
-          position: 'absolute',
-          top: '20px',
-          right: '20px',
-          background: 'none',
-          border: 'none',
-          fontSize: '22px',
-          cursor: 'pointer',
-          color: 'inherit'
-        }}
-      >
-        ⚙️
-      </button>
+    <div className='Global UserPage'>
+      <button className='settingsBtn' onClick={() => setShowSettings(!showSettings)}>⚙️</button>
 
       {showSettings && (
-        <div style={{
-          position: 'absolute',
-          top: '55px',
-          right: '20px',
-          background: '#2b2f4a',
-          borderRadius: '8px',
-          padding: '10px',
-          display: 'flex',
-          flexDirection: 'column',
-          gap: '6px',
-          boxShadow: '0 4px 12px rgba(0,0,0,0.25)'
-        }}>
-          <button
-            onClick={handleLogout}
-            style={{ padding: '8px 16px', background: 'none', border: 'none', color: '#fff', textAlign: 'left', cursor: 'pointer' }}
-          >
-            Logout
-          </button>
-          <button
-            onClick={handleLogout}
-            style={{ padding: '8px 16px', background: 'none', border: 'none', color: '#fff', textAlign: 'left', cursor: 'pointer' }}
-          >
-            Switch Account
-          </button>
+        <div className='settingsMenu'>
+          <button onClick={handleLogout}>Logout</button>
+          <button onClick={handleLogout}>Switch Account</button>
         </div>
       )}
 
-      <h1>{user.username}</h1>
-      <p>{user.email}</p>
-      <p>{user.phone}</p>
+      {/* Profile card */}
+      <div className='profileCard'>
+        <div className='profileAvatar'>{initial}</div>
+        <div className='profileInfo'>
+          <h1>{user.username}</h1>
+          <p>{user.email}</p>
+          {user.phone && <p>{user.phone}</p>}
+        </div>
+      </div>
 
-      <h2 style={{ marginTop: '32px' }}>Create Deal</h2>
-      <input
-        placeholder="Seller username"
-        value={sellerUsername}
-        onChange={e => setSellerUsername(e.target.value)}
-        style={{ display: 'block', marginBottom: '8px', padding: '6px', width: '100%' }}
-      />
-      <input
-        placeholder="Item name"
-        value={itemName}
-        onChange={e => setItemName(e.target.value)}
-        style={{ display: 'block', marginBottom: '8px', padding: '6px', width: '100%' }}
-      />
-      <input
-        placeholder="Price"
-        value={price}
-        onChange={e => setPrice(e.target.value)}
-        style={{ display: 'block', marginBottom: '8px', padding: '6px', width: '100%' }}
-      />
-      <button onClick={handleCreateDeal}>Create Deal</button>
-      {createMsg && <p>{createMsg}</p>}
+      {/* Create deal */}
+      <div className='section'>
+        <button className='toggleFormBtn' onClick={() => setShowCreateForm(!showCreateForm)}>
+          {showCreateForm ? 'Cancel' : '+ Create Deal'}
+        </button>
 
-      <h2 style={{ marginTop: '32px' }}>Deal History</h2>
+        {showCreateForm && (
+          <div className='dealForm'>
+            <input
+              placeholder='Seller username'
+              value={sellerUsername}
+              onChange={e => setSellerUsername(e.target.value)}
+            />
+            <input
+              placeholder='Item name'
+              value={itemName}
+              onChange={e => setItemName(e.target.value)}
+            />
+            <input
+              placeholder='Price'
+              value={price}
+              onChange={e => setPrice(e.target.value)}
+            />
+            <button onClick={handleCreateDeal}>Submit Deal</button>
+            {createMsg && <p className='msg'>{createMsg}</p>}
+          </div>
+        )}
+      </div>
 
-      {dealsLoading ? (
-        <p>Loading deals...</p>
-      ) : deals.length === 0 ? (
-        <p style={{ opacity: 0.7 }}>No deals yet.</p>
-      ) : (
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', marginTop: '12px' }}>
-         {deals.map(deal => (
-            <div
-              key={deal.id}
-              style={{
-                background: '#2b2f4a',
-                borderRadius: '8px',
-                padding: '12px 16px'
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <div>
-                  <div style={{ fontWeight: 600 }}>{deal.item_name}</div>
-                  <div style={{ fontSize: '13px', opacity: 0.7 }}>${deal.price}</div>
+      {/* Deal history */}
+      <div className='section'>
+        <h2>Deal History</h2>
+
+        {dealsLoading ? (
+          <p className='emptyText'>Loading deals...</p>
+        ) : deals.length === 0 ? (
+          <p className='emptyText'>No deals yet — create one above to get started.</p>
+        ) : (
+          deals.map(deal => {
+            const isOpen = expandedDealId === deal.id
+            return (
+              <div
+                key={deal.id}
+                className='dealCard'
+                onClick={() => setExpandedDealId(isOpen ? null : deal.id)}
+              >
+                <div className='dealRow'>
+                  <div>
+                    <div className='dealName'>{deal.item_name}</div>
+                    <div className='dealPrice'>${deal.price}</div>
+                  </div>
+                  <span className='dealBadge' style={{ background: statusColors[deal.status] || '#666' }}>
+                    {deal.status}
+                  </span>
                 </div>
-                <span
-                  style={{
-                    padding: '4px 10px',
-                    borderRadius: '999px',
-                    fontSize: '12px',
-                    fontWeight: 600,
-                    color: '#fff',
-                    background: statusColors[deal.status] || '#666'
-                  }}
-                >
-                  {deal.status}
-                </span>
+
+                {isOpen && (
+                  <div className='dealDetails' onClick={e => e.stopPropagation()}>
+                    <div className='row'><span>Deal ID</span><span>#{deal.id}</span></div>
+                    {deal.buyer_id && <div className='row'><span>Buyer</span><span>{deal.buyer_id}</span></div>}
+                    {deal.seller_id && <div className='row'><span>Seller</span><span>{deal.seller_id}</span></div>}
+                    {deal.middleman_id && <div className='row'><span>Middleman</span><span>{deal.middleman_id}</span></div>}
+
+                    {(deal.status === 'pending' || deal.status === 'active') && (
+                      <div className='dealActions'>
+                        {deal.status === 'pending' && (
+                          <button onClick={() => handleStatusChange(deal.id, 'active')}>Accept</button>
+                        )}
+                        {deal.status === 'active' && (
+                          <button onClick={() => handleStatusChange(deal.id, 'completed')}>Mark Completed</button>
+                        )}
+                        <button onClick={() => handleStatusChange(deal.id, 'cancelled')}>Cancel</button>
+                      </div>
+                    )}
+                  </div>
+                )}
               </div>
-
-              {(deal.status === 'pending' || deal.status === 'active') && (
-                <div style={{ display: 'flex', gap: '8px', marginTop: '10px' }}>
-                  {deal.status === 'pending' && (
-                    <button onClick={() => handleStatusChange(deal.id, 'active')}>Accept</button>
-                  )}
-                  {deal.status === 'active' && (
-                    <button onClick={() => handleStatusChange(deal.id, 'completed')}>Mark Completed</button>
-                  )}
-                  <button onClick={() => handleStatusChange(deal.id, 'cancelled')}>Cancel</button>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-      )}
+            )
+          })
+        )}
+      </div>
     </div>
   )
 }
