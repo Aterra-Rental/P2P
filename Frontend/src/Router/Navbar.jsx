@@ -1,4 +1,3 @@
-
 import React from "react";
 import { NavLink } from "react-router-dom";
 import { Flame } from "lucide-react";
@@ -13,21 +12,13 @@ const Navbar = () => {
   return (
     <nav className="navbar" aria-label="Primary Navigation">
       <div className="nav_inner">
-
-        {/* ===== Logo ===== */}
         <div className="brand">
-          <NavLink
-            to="/Home"
-            className="footer-brand-link"
-            onClick={closeMenu}
-          >
+          <NavLink to="/Home" className="footer-brand-link" onClick={closeMenu}>
             <div className="footer-brand-icon">
               <Flame size={18} />
             </div>
 
-            <span className="footer-brand-text">
-              P2P
-            </span>
+            <span className="footer-brand-text">P2P</span>
           </NavLink>
         </div>
 
@@ -51,49 +42,30 @@ const Navbar = () => {
 
         {/* ===== Navigation ===== */}
         <ul id="primary-menu" className="menu">
-
           <li>
-            <NavLink
-              to="/Home"
-              className="navlink"
-              onClick={closeMenu}
-            >
+            <NavLink to="/Home" className="navlink" onClick={closeMenu}>
               Home
             </NavLink>
           </li>
 
           <li>
-            <NavLink
-              to="/Feature"
-              className="navlink"
-              onClick={closeMenu}
-            >
+            <NavLink to="/Feature" className="navlink" onClick={closeMenu}>
               Features
             </NavLink>
           </li>
 
           <li>
-            <NavLink
-              to="/FQA"
-              className="navlink"
-              onClick={closeMenu}
-            >
+            <NavLink to="/FQA" className="navlink" onClick={closeMenu}>
               FAQ
             </NavLink>
           </li>
 
           <li>
-            <NavLink
-              to="/User"
-              className="navlink"
-              onClick={closeMenu}
-            >
+            <NavLink to="/User" className="navlink" onClick={closeMenu}>
               User
             </NavLink>
           </li>
-
         </ul>
-
       </div>
     </nav>
   );
