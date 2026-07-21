@@ -4,6 +4,7 @@ import { useNavigate } from 'react-router-dom'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts'
 import '../Global.css'
 import './Home.css'
+import Footer from '../../Router/Footer'
 const Home = () => {
   const navigate = useNavigate();
 
@@ -28,7 +29,7 @@ const Home = () => {
     <div className='Global'>
  
       
-      
+        <Footer />
       </div>
   )
 }
