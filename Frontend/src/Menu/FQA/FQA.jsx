@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import "../Global.css";
 import "./FQA.css";
+import Footer from '../../Router/Footer'
 
 const CATEGORIES = [
   { id: "all", label: "All" },
@@ -134,6 +135,8 @@ const FQA = () => {
           </aside>
         </div>
       </div>
+
+      <Footer />
     </div>
   );
 };
