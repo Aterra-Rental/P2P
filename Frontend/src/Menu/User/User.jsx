@@ -192,7 +192,6 @@ const User = () => {
         </div>
       </div>
 
-      {/* <Footer /> */}
     </div>
   )
 }
