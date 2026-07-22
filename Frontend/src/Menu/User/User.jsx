@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react'
 import '../Global.css'
 import './User.css'
 import { useNavigate } from 'react-router-dom'
-import Footer from '../../Router/Footer'
+
 
 const statusColors = {
   pending: '#e0a800',
