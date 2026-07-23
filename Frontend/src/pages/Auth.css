@@ -1,4 +1,4 @@
-.AuthPage {
+/* .AuthPage {
   width: 100%;
   min-height: 100vh;
   display: flex;
@@ -86,4 +86,305 @@
   color: #ffffff;
   text-decoration: underline;
   cursor: pointer;
+} */
+
+/* ==========================================
+   AUTH PAGE
+========================================== */
+
+.AuthPage {
+  min-height: 100vh;
+
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  padding: 40px 20px;
+
+  background: var(--gradient-bg);
+
+  font-family: "Inter", "Poppins", sans-serif;
+}
+
+/* ==========================================
+   CARD
+========================================== */
+
+.AuthCard {
+  width: 100%;
+  max-width: 460px;
+
+  padding: 45px 40px;
+
+  background: var(--bg-card);
+
+  border: 1px solid var(--border);
+
+  border-radius: 24px;
+
+  backdrop-filter: blur(20px);
+
+  box-shadow: var(--shadow);
+
+  transition: 0.35s;
+}
+
+.AuthCard:hover {
+  border-color: var(--primary);
+
+  box-shadow: var(--glow);
+}
+
+/* ==========================================
+   LOGO
+========================================== */
+
+/* ==========================================
+   LOGO
+========================================== */
+
+.AuthLogo {
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  gap: 14px;
+
+  margin-bottom: 30px;
+}
+
+.AuthLogoIcon {
+  width: 55px;
+  height: 55px;
+
+  display: flex;
+
+  justify-content: center;
+
+  align-items: center;
+
+  background: var(--gradient-primary);
+
+  clip-path: polygon(50% 0%, 100% 50%, 50% 100%, 0% 50%);
+
+  box-shadow: 0 0 22px rgba(177, 77, 255, 0.35);
+}
+
+.AuthLogoIcon svg {
+  color: white;
+}
+
+.AuthLogoText {
+  font-size: 2rem;
+
+  font-weight: 800;
+
+  color: white;
+
+  letter-spacing: 0.05em;
+}
+
+/* ==========================================
+   TEXT
+========================================== */
+
+.AuthCard h1 {
+  text-align: center;
+
+  margin-bottom: 10px;
+
+  color: white;
+
+  font-size: 2rem;
+
+  font-weight: 700;
+}
+
+.AuthSubtitle {
+  text-align: center;
+
+  color: var(--text-secondary);
+
+  margin-bottom: 35px;
+
+  line-height: 1.6;
+}
+
+/* ==========================================
+   FORM
+========================================== */
+
+.AuthCard form {
+  display: flex;
+  flex-direction: column;
+
+  gap: 22px;
+}
+
+.InputGroup {
+  display: flex;
+  flex-direction: column;
+
+  gap: 8px;
+}
+
+.InputGroup label {
+  color: white;
+
+  font-size: 0.95rem;
+
+  font-weight: 600;
+}
+
+.InputGroup input {
+  width: 100%;
+
+  padding: 14px 18px;
+
+  border-radius: 14px;
+
+  border: 1px solid var(--border);
+
+  background: #161024;
+
+  color: white;
+
+  font-size: 0.95rem;
+
+  transition: 0.3s;
+}
+
+.InputGroup input::placeholder {
+  color: var(--text-muted);
+}
+
+.InputGroup input:focus {
+  outline: none;
+
+  border-color: var(--primary);
+
+  box-shadow: 0 0 15px rgba(177, 77, 255, 0.25);
+}
+
+/* ==========================================
+   BUTTON
+========================================== */
+
+.AuthCard button {
+  width: 100%;
+
+  margin-top: 10px;
+
+  padding: 15px;
+
+  border: none;
+
+  border-radius: 14px;
+
+  background: var(--gradient-primary);
+
+  color: white;
+
+  font-size: 1rem;
+
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.35s;
+
+  box-shadow: var(--shadow);
+}
+
+.AuthCard button:hover {
+  transform: translateY(-3px);
+
+  box-shadow: var(--glow);
+}
+
+.AuthCard button:disabled {
+  opacity: 0.7;
+
+  cursor: not-allowed;
+
+  transform: none;
+}
+
+/* ==========================================
+   ERROR
+========================================== */
+
+.error {
+  color: #ff7b7b;
+
+  text-align: center;
+
+  font-size: 0.9rem;
+}
+
+/* ==========================================
+   LINKS
+========================================== */
+
+.switchLink {
+  margin-top: 28px;
+
+  text-align: center;
+
+  color: var(--text-secondary);
+}
+
+.switchLink a {
+  margin-left: 6px;
+
+  color: var(--primary-light);
+
+  font-weight: 600;
+
+  text-decoration: none;
+}
+
+.switchLink a:hover {
+  color: white;
+}
+
+.backHome {
+  margin-top: 20px;
+
+  text-align: center;
+}
+
+.backHome a {
+  color: var(--text-secondary);
+
+  text-decoration: none;
+
+  transition: 0.3s;
+}
+
+.backHome a:hover {
+  color: white;
+}
+
+/* ==========================================
+   RESPONSIVE
+========================================== */
+
+@media (max-width: 768px) {
+  .AuthCard {
+    padding: 35px 25px;
+  }
+
+  .AuthLogo {
+    width: 60px;
+    height: 60px;
+
+    font-size: 1.7rem;
+  }
+
+  .AuthCard h1 {
+    font-size: 1.8rem;
+  }
 }

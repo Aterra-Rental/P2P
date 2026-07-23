@@ -31,7 +31,7 @@ const Home = () => {
   };
 
   return (
-    <div className='Global d-flex flex-column vh-100 overflow-hidden'>
+    <div className='Global d-flex flex-column min-vh-100 overflow-hidden'>
 
       <header className="row sticky-top bg-dark">
         <div className="col-12">
@@ -47,29 +47,23 @@ const Home = () => {
             <div className="underwelcome">
               <h2>Automate your deals with step-by-step escrow designed to protect both parties from payment to release</h2>
             </div>
-            <div className="mt-5">
+            <div className="mt-5 flex justify-content-center gap-3">
               <button type="button" id="Create_deal" className="btn-primary btn-1 button_under1" onClick={handleCreateDealClick}>
                 Create Deals <i className="fa-solid fa-arrow-up-long rotatearrow"></i>
               </button>
-              <button
-                className="button_under2"
-                onClick={handleHowItWorksClick}
-              >
+              <butto className="button_under2" onClick={handleHowItWorksClick}>
                 How it works <i className="fa-solid fa-arrow-up-long rotatearrow"></i>
-              </button>
+              </butto>
             </div>
           </div>
 
           <div className="col-6 pe-0">
             <div className="rightsidehomepage p-5 pt-5">
-
               <div className="dashboard-header mb-4">
                 <h3 className="text-white fw-semibold mb-2">Welcome Back, John</h3>
                 <p className="text-gray small mb-0 ms-4">View your current details and whats going on</p>
               </div>
-
               <div className="row g-3">
-
                 <div className="col-6">
                   <div className="stat-card">
                     <div className="stat-label">
@@ -137,7 +131,7 @@ const Home = () => {
         </div>
       </main>
 
-      <Footer />
+      {/* <Footer /> */}
     </div>
   )
 }

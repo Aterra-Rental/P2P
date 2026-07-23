@@ -5,7 +5,8 @@ import './Footer.css'
 
 const Footer = () => {
   return (
-    <footer className="site-footer">
+    <div className='Global'>
+      <footer className="site-footer">
       <div className="footer-inner">
         <div className="footer-brand">
           <NavLink to="/" className="footer-brand-link">
@@ -25,7 +26,6 @@ const Footer = () => {
             <h4>Platform</h4>
             <ul>
               <li><NavLink to="/Home">Home</NavLink></li>
-              <li><NavLink to="/Guide">Guide</NavLink></li>
               <li><NavLink to="/Feature">Feature</NavLink></li>
             </ul>
           </div>
@@ -54,6 +54,8 @@ const Footer = () => {
         <span className="footer-copyright">© 2026 P2P. All rights reserved.</span>
       </div>
     </footer>
+    </div>
+    
   )
 }
 

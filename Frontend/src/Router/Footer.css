@@ -4,7 +4,6 @@
     backdrop-filter: blur(20px);
     -webkit-backdrop-filter: blur(20px);
 }
-
 .site-footer::before{
     content: "";
     position: absolute;

@@ -83,13 +83,13 @@ const User = () => {
     }
   }
 
-  if (!user) return <div className='Global'>Loading...</div>
+  if (!user) return <div className='Global' style={{ minHeight: '100vh' }}>Loading...</div>
 
   const initial = user.username ? user.username[0].toUpperCase() : '?'
 
   return (
-    <div className='Global'>
-      <div className='up-container'>
+    <div className='Global' style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column' }}>
+      <div className='up-container' style={{ flex: 1 }}>
         <button className='up-settings-btn' onClick={() => setShowSettings(!showSettings)}>⚙️</button>
 
         {showSettings && (
@@ -191,6 +191,7 @@ const User = () => {
           )}
         </div>
       </div>
+
     </div>
   )
 }

@@ -1,41 +1,74 @@
-import React from 'react'
-import { NavLink } from 'react-router-dom'
-import './Navbar.css'
-import './MenuRouth'
-
-
-
+import React from "react";
+import { NavLink } from "react-router-dom";
+import { Flame } from "lucide-react";
+import "./Navbar.css";
 
 const Navbar = () => {
-     const closeMenu = () =>{
-  const toggle = document.getElementById('nav-toggle')
-  if(toggle) toggle.checked = false
-     }
-  return (
-     <div>
-    <nav className='navbar ' aria-label='Primary' >
-      <div className='nav_inner'>
-        <div className='brand' >
-              {/* <img src={F1} alt="F1_logo" className='F1_logo w-full  ' /> */}
-        </div>
-              <input type="checkbox" aria-controls='primary-menu' aria-expanded="false" id='nav-toggle' className='toggle'/>
-              <label htmlFor='nav-toggle' className='toggle-label' aria-label='Toggle navigation'>
-                <span></span>
-                <span></span>
-                <span></span>
-              </label>
-              <ul  id='primary-menu' className='menu'>
-                <li> <NavLink  to={'/'}></NavLink></li>
-                <li><NavLink  to={'/Home'} className=' navlink text-decoration-none text-2xl  font-TitilliumWeb-BoldItalic ' onClick={closeMenu}>Home</NavLink></li>
-                <li><NavLink className='  navlink text-decoration-none text-2xl ' to={'/Guide'} onClick={closeMenu}  >How It Works</NavLink></li>
-                <li><NavLink className='  navlink text-decoration-none text-2xl  ' to={'/Feature'} onClick={closeMenu}>Features</NavLink></li>
-                <li><NavLink className=' navlink text-decoration-none text-2xl ' to={'/FQA'} onClick={closeMenu}>FQA</NavLink></li>
-                <li><NavLink className=' navlink text-decoration-none text-2xl user   ' to={'/User'} onClick={closeMenu} >User</NavLink></li>
-              </ul>
-      </div>
-      </nav>   
-    </div>
-  )
-}
+  const closeMenu = () => {
+    const toggle = document.getElementById("nav-toggle");
+    if (toggle) toggle.checked = false;
+  };
 
-export default Navbar
+  return (
+    <nav className="navbar" aria-label="Primary Navigation">
+      <div className="nav_inner">
+        <div className="brand">
+          <NavLink to="/Home" className="footer-brand-link" onClick={closeMenu}>
+            <div className="footer-brand-icon">
+              <Flame size={18} />
+            </div>
+
+            <span className="footer-brand-text">P2P</span>
+          </NavLink>
+        </div>
+
+        {/* ===== Mobile Toggle ===== */}
+        <input
+          type="checkbox"
+          id="nav-toggle"
+          className="toggle"
+          aria-controls="primary-menu"
+        />
+
+        <label
+          htmlFor="nav-toggle"
+          className="toggle-label"
+          aria-label="Toggle navigation"
+        >
+          <span></span>
+          <span></span>
+          <span></span>
+        </label>
+
+        {/* ===== Navigation ===== */}
+        <ul id="primary-menu" className="menu">
+          <li>
+            <NavLink to="/Home" className="navlink" onClick={closeMenu}>
+              Home
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink to="/Feature" className="navlink" onClick={closeMenu}>
+              Features
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink to="/FQA" className="navlink" onClick={closeMenu}>
+              FAQ
+            </NavLink>
+          </li>
+
+          <li>
+            <NavLink to="/User" className="navlink" onClick={closeMenu}>
+              User
+            </NavLink>
+          </li>
+        </ul>
+      </div>
+    </nav>
+  );
+};
+
+export default Navbar;

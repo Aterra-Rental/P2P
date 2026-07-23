@@ -1,0 +1,102 @@
+from flask import Blueprint, request, jsonify
+from database import get_db
+import bcrypt
+
+auth_bp = Blueprint("auth", __name__)
+@auth_bp.route("/register", methods=["POST"])
+def register():
+    data = request.get_json()
+
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"message": "Email and password are required"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        # Check if email already exists
+        cursor.execute(
+            "SELECT user_id FROM user_login WHERE email = %s",
+            (email,)
+        )
+
+        if cursor.fetchone():
+            return jsonify({"message": "Email already exists"}), 409
+
+        # Hash password
+        password_hash = bcrypt.hashpw(
+            password.encode("utf-8"),
+            bcrypt.gensalt()
+        ).decode("utf-8")
+
+        # Insert new user
+        cursor.execute(
+            """
+            INSERT INTO user_login (email, passwordhash)
+            VALUES (%s, %s)
+            """,
+            (email, password_hash)
+        )
+
+        conn.commit()
+
+        return jsonify({"message": "Registration successful"}), 201
+
+    except Exception as e:
+        conn.rollback()
+        return jsonify({"message": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+@auth_bp.route("/login", methods=["POST"])
+def login():
+    data = request.get_json()
+
+    email = data.get("email")
+    password = data.get("password")
+
+    if not email or not password:
+        return jsonify({"message": "Email and password are required"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            """
+            SELECT user_id, email, passwordhash
+            FROM user_login
+            WHERE email = %s
+            """,
+            (email,)
+        )
+
+        user = cursor.fetchone()
+
+        if not user:
+            return jsonify({"message": "Invalid email or password"}), 401
+
+        user_id, user_email, password_hash = user
+
+        if not bcrypt.checkpw(
+            password.encode("utf-8"),
+            password_hash.encode("utf-8")
+        ):
+            return jsonify({"message": "Invalid email or password"}), 401
+
+        return jsonify({
+            "message": "Login successful",
+            "user_id": user_id,
+            "email": user_email
+        }), 200
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+
+    finally:
+        cursor.close()
+        conn.close()

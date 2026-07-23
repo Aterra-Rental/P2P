@@ -1,48 +1,128 @@
-import React, { useState } from 'react'
-import './Auth.css'
-import { useNavigate, Link } from 'react-router-dom'
+import React, { useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
+import { Flame } from "lucide-react";
+import "./Auth.css";
 
 const Login = () => {
-  const [username, setUsername] = useState('')
-  const [password, setPassword] = useState('')
-  const [error, setError] = useState('')
-  const navigate = useNavigate()
+  const navigate = useNavigate();
+
+  const [formData, setFormData] = useState({
+    email: "",
+    password: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  const handleChange = (e) => {
+    setFormData({
+      ...formData,
+      [e.target.name]: e.target.value,
+    });
+
+    if (error) setError("");
+  };
 
   const handleSubmit = async (e) => {
-    e.preventDefault()
-    setError('')
+    e.preventDefault();
 
-    const res = await fetch('/api/login/', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ username, password })
-    })
+    setLoading(true);
+    setError("");
 
-    const data = await res.json()
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/login", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(formData),
+      });
 
-    if (!res.ok) {
-      setError(data.error || 'login failed')
-      return
+      const data = await response.json();
+
+      if (!response.ok) {
+        setError(data.message || "Login failed.");
+        return;
+      }
+
+      // Save user information
+      localStorage.setItem("user_id", data.user_id);
+      localStorage.setItem("email", data.email);
+
+      alert("Login Successful!");
+
+      navigate("/User");
+    } catch (err) {
+      console.error(err);
+      setError("Unable to connect to the server.");
+    } finally {
+      setLoading(false);
     }
-
-    localStorage.setItem('token', data.token)
-    navigate('/User')
-  }
+  };
 
   return (
-    <div className='AuthPage'>
-      <div className='AuthCard'>
-        <h1>Login</h1>
+    <div className="AuthPage">
+      <div className="AuthCard">
+
+        <div className="AuthLogo">
+          <div className="AuthLogoIcon">
+            <Flame size={30} />
+          </div>
+          <span className="AuthLogoText">P2P</span>
+        </div>
+
+        <h1>Welcome Back</h1>
+
+        <p className="AuthSubtitle">
+          Sign in to continue using your P2P account.
+        </p>
+
         <form onSubmit={handleSubmit}>
-          <input placeholder='Username' value={username} onChange={e => setUsername(e.target.value)} />
-          <input type='password' placeholder='Password' value={password} onChange={e => setPassword(e.target.value)} />
-          {error && <p className='error'>{error}</p>}
-          <button type='submit'>Login</button>
+
+          <div className="InputGroup">
+            <label>Email</label>
+            <input
+              type="email"
+              name="email"
+              placeholder="example@email.com"
+              value={formData.email}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          <div className="InputGroup">
+            <label>Password</label>
+            <input
+              type="password"
+              name="password"
+              placeholder="Enter your password"
+              value={formData.password}
+              onChange={handleChange}
+              required
+            />
+          </div>
+
+          {error && <p className="error">{error}</p>}
+
+          <button type="submit" disabled={loading}>
+            {loading ? "Signing In..." : "Login"}
+          </button>
+
         </form>
-        <p className='switchLink'>No account? <Link to='/Register'>Register</Link></p>
+
+        <div className="switchLink">
+          Don't have an account?{" "}
+          <Link to="/Register">Register</Link>
+        </div>
+
+        <div className="backHome">
+          <Link to="/Home">← Back to Home</Link>
+        </div>
+
       </div>
     </div>
-  )
-}
+  );
+};
 
-export default Login
+export default Login;
