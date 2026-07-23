@@ -8,7 +8,7 @@ import FQA from '../Menu/FQA/FQA.jsx'
 import User from '../Menu/User/User.jsx'
 import Register from '../pages/Register.jsx'
 import Login from '../pages/Login.jsx'
-import Deal from '../Menu/Home/deal'
+import Deal from '../Menu/Home/DealRoom.jsx'
 
 const Layout = () => {
   const location = useLocation()
