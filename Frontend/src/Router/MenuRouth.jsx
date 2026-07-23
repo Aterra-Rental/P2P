@@ -8,7 +8,7 @@ import FQA from '../Menu/FQA/FQA.jsx'
 import User from '../Menu/User/User.jsx'
 import Register from '../pages/Register.jsx'
 import Login from '../pages/Login.jsx'
-import Deal from '../Menu/Home/deal'
+import DealRoom from '../Menu/Home/DealRoom.jsx'
 
 const Layout = () => {
   const location = useLocation()
@@ -26,7 +26,7 @@ const Layout = () => {
         <Route path='/User' element={<User/>}/>
         <Route path='/Register' element={<Register/>}/>
         <Route path='/Login' element={<Login/>}/>
-        <Route path='/create-deal' element={<Deal/>}/>
+        <Route path="/create-deal" element={<DealRoom />}/>
       </Routes>
     </>
   )
