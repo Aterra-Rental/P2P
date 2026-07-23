@@ -46,7 +46,6 @@ const Login = () => {
       }
 
       // Save user information
-      // Save user information
 localStorage.setItem("user_id", data.user_id);
 localStorage.setItem("email", data.email);
 
@@ -58,7 +57,7 @@ try {
 
   if (profileResponse.ok) {
     alert("Login Successful!");
-    navigate("/User");
+    navigate("/Dashboard");
   } else if (profileResponse.status === 404) {
     alert("Please complete your profile first.");
     navigate("/CompleteProfile");

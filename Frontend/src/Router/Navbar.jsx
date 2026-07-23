@@ -61,7 +61,7 @@ const Navbar = () => {
           </li>
 
           <li>
-            <NavLink to="/User" className="navlink" onClick={closeMenu}>
+            <NavLink to="/Dashboard" className="navlink" onClick={closeMenu}>
               User
             </NavLink>
           </li>

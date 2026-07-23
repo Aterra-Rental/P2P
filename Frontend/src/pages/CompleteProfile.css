@@ -163,3 +163,7 @@ form {
         text-align: center;
     }
 }
+.form-control-phone{
+    background: rgba(255, 255, 255, 0.06);
+    color: white;
+}

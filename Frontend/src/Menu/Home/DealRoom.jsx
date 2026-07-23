@@ -714,7 +714,7 @@ const DealRoom = () => {
               <div>Room #{roomCode} — closed</div>
               <div>You & @{partnerId.trim()} both confirmed</div>
             </div>
-            <button style={{ ...styles.primaryBtn(false), marginTop: '1.25rem' }} onClick={() => navigate('/User')}>
+            <button style={{ ...styles.primaryBtn(false), marginTop: '1.25rem' }} onClick={() => navigate('/Dashboard')}>
               Back to Dashboard
             </button>
           </div>

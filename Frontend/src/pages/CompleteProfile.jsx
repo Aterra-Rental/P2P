@@ -24,6 +24,39 @@ const CompleteProfile = () => {
       return;
     }
 
+    // -----------------------------
+    // Frontend Validation
+    // -----------------------------
+
+    const nameRegex = /^[A-Za-z\s]{2,50}$/;
+    const phoneRegex = /^\d{8,9}$/;
+    const nationalIdRegex = /^\d{9}$/;
+
+    if (!nameRegex.test(firstname.trim())) {
+      alert("First name must contain at least 2 letters.");
+      return;
+    }
+
+    if (!nameRegex.test(lastname.trim())) {
+      alert("Last name must contain at least 2 letters.");
+      return;
+    }
+
+    if (!phoneRegex.test(phonenumber)) {
+      alert("Phone number must contain 8 or 9 digits.");
+      return;
+    }
+
+    if (!nationalIdRegex.test(nationalidentityId)) {
+      alert("National ID must contain exactly 9 digits.");
+      return;
+    }
+
+    if (address.trim().length < 5) {
+      alert("Address must be at least 5 characters.");
+      return;
+    }
+
     try {
       const response = await fetch("http://127.0.0.1:8000/api/profile", {
         method: "POST",
@@ -32,12 +65,12 @@ const CompleteProfile = () => {
         },
         body: JSON.stringify({
           user_id,
-          firstname,
-          lastname,
+          firstname: firstname.trim(),
+          lastname: lastname.trim(),
           phonenumber,
           nationalidentity_id: nationalidentityId,
           dob,
-          address,
+          address: address.trim(),
         }),
       });
 
@@ -45,7 +78,7 @@ const CompleteProfile = () => {
 
       if (response.ok) {
         alert("Profile completed successfully!");
-        navigate("/User");
+        navigate("/Dashboard");
       } else {
         alert(data.message || "Failed to create profile.");
       }
@@ -58,7 +91,6 @@ const CompleteProfile = () => {
   return (
     <div className="AuthPage">
       <div className="AuthCard">
-
         <div className="AuthLogo">
           <div className="AuthLogoIcon">
             <Flame size={30} />
@@ -77,51 +109,79 @@ const CompleteProfile = () => {
         </p>
 
         <form onSubmit={handleSubmit}>
-
+          {/* First Name */}
           <div className="InputGroup">
             <label>First Name</label>
             <input
               type="text"
               placeholder="Enter first name"
               value={firstname}
-              onChange={(e) => setFirstname(e.target.value)}
+              maxLength={50}
+              onChange={(e) =>
+                setFirstname(e.target.value.replace(/[^A-Za-z\s]/g, ""))
+              }
               required
             />
           </div>
 
+          {/* Last Name */}
           <div className="InputGroup">
             <label>Last Name</label>
             <input
               type="text"
               placeholder="Enter last name"
               value={lastname}
-              onChange={(e) => setLastname(e.target.value)}
+              maxLength={50}
+              onChange={(e) =>
+                setLastname(e.target.value.replace(/[^A-Za-z\s]/g, ""))
+              }
               required
             />
           </div>
 
+          {/* Phone Number */}
           <div className="InputGroup">
             <label>Phone Number</label>
-            <input
-              type="text"
-              placeholder="012345678"
-              value={phonenumber}
-              onChange={(e) => setPhonenumber(e.target.value)}
-              required
-            />
+
+            <div className="input-group">
+              <span className="input-group-text">+855</span>
+
+              <input
+                type="text"
+                className="form-control"
+                placeholder="971234567"
+                value={phonenumber}
+                maxLength={9}
+                onChange={(e) => {
+                  const value = e.target.value.replace(/\D/g, "");
+                  if (value.length <= 9) {
+                    setPhonenumber(value);
+                  }
+                }}
+                required
+              />
+            </div>
           </div>
 
+          {/* National ID */}
           <div className="InputGroup">
             <label>National ID</label>
             <input
               type="text"
               placeholder="Enter National ID"
               value={nationalidentityId}
-              onChange={(e) => setNationalidentityId(e.target.value)}
+              maxLength={9}
+              onChange={(e) => {
+                const value = e.target.value.replace(/\D/g, "");
+                if (value.length <= 9) {
+                  setNationalidentityId(value);
+                }
+              }}
               required
             />
           </div>
 
+          {/* Date of Birth */}
           <div className="InputGroup">
             <label>Date of Birth</label>
             <input
@@ -132,6 +192,7 @@ const CompleteProfile = () => {
             />
           </div>
 
+          {/* Address */}
           <div className="InputGroup">
             <label>Address</label>
             <textarea
@@ -146,9 +207,7 @@ const CompleteProfile = () => {
           <button className="PrimaryButton" type="submit">
             Complete Profile
           </button>
-
         </form>
-
       </div>
     </div>
   );
