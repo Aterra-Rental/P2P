@@ -46,12 +46,30 @@ const Login = () => {
       }
 
       // Save user information
-      localStorage.setItem("user_id", data.user_id);
-      localStorage.setItem("email", data.email);
+      // Save user information
+localStorage.setItem("user_id", data.user_id);
+localStorage.setItem("email", data.email);
 
-      alert("Login Successful!");
+try {
+  // Check whether the user has completed their profile
+  const profileResponse = await fetch(
+    `http://127.0.0.1:8000/api/profile/${data.user_id}`
+  );
 
-      navigate("/User");
+  if (profileResponse.ok) {
+    alert("Login Successful!");
+    navigate("/User");
+  } else if (profileResponse.status === 404) {
+    alert("Please complete your profile first.");
+    navigate("/CompleteProfile");
+  } else {
+    setError("Unable to verify your profile.");
+  }
+
+} catch (err) {
+  console.error(err);
+  setError("Unable to connect to the server.");
+}
     } catch (err) {
       console.error(err);
       setError("Unable to connect to the server.");

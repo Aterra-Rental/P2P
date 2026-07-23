@@ -10,6 +10,7 @@ import Register from '../pages/Register.jsx'
 import Login from '../pages/Login.jsx'
 import Deal from '../Menu/Home/deal'
 import Footer from './Footer.jsx'
+import CompleteProfile from '../pages/CompleteProfile.jsx'
 // import Footer from './Footer.jsx'
 const Layout = () => {
   const location = useLocation()
@@ -26,6 +27,7 @@ const Layout = () => {
         <Route path='/User' element={<User/>}/>
         <Route path='/Register' element={<Register/>}/>
         <Route path='/Login' element={<Login/>}/>
+        <Route path='/CompleteProfile' element={<CompleteProfile/>} />
         <Route path='/create-deal' element={<Deal/>}/>
       </Routes>
       {!hideNavbar && <Footer/>}

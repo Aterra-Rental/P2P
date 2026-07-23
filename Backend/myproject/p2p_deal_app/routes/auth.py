@@ -14,7 +14,11 @@ def register():
         return jsonify({"message": "Email and password are required"}), 400
 
     conn = get_db()
+    print("DSN:", conn.dsn)
     cursor = conn.cursor()
+
+    cursor.execute("SELECT current_database(), current_schema(), version();")
+    print(cursor.fetchone())
 
     try:
         # Check if email already exists
@@ -43,15 +47,27 @@ def register():
 
         conn.commit()
 
+        cursor.execute("SELECT COUNT(*) FROM user_login")
+        print("Rows:", cursor.fetchone()[0])
+
+        cursor.execute("""
+            SELECT user_id, email
+            FROM user_login
+            ORDER BY user_id DESC
+            LIMIT 5
+        """)
+        print(cursor.fetchall())
+                
+
         return jsonify({"message": "Registration successful"}), 201
 
     except Exception as e:
-        conn.rollback()
-        return jsonify({"message": str(e)}), 500
+                conn.rollback()
+                return jsonify({"message": str(e)}), 500
 
     finally:
-        cursor.close()
-        conn.close()
+            cursor.close()
+            conn.close()
 @auth_bp.route("/login", methods=["POST"])
 def login():
     data = request.get_json()
