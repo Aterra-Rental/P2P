@@ -9,15 +9,12 @@ import Footer from './Footer.jsx'
 import User from '../Menu/User/User.jsx'
 import Register from '../pages/Register.jsx'
 import Login from '../pages/Login.jsx'
-<<<<<<< HEAD
 import Deal from '../Menu/Home/deal'
 import Footer from './Footer.jsx'
 import CompleteProfile from '../pages/CompleteProfile.jsx'
 // import Footer from './Footer.jsx'
-=======
 import DealRoom from '../Menu/Home/DealRoom.jsx'
 
->>>>>>> d138399dd495003658f0072e1a98a28f378afa56
 const Layout = () => {
   const location = useLocation()
   const hideNavbar = ['/Register', '/Login'].includes(location.pathname)
