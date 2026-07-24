@@ -2,8 +2,27 @@ from flask import Blueprint, request, jsonify
 from database import get_db
 import traceback
 import re
+import os
+from werkzeug.utils import secure_filename
 
 profile_bp = Blueprint("profile", __name__)
+
+UPLOAD_FOLDER = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)),
+    "uploads",
+    "national_ids"
+)
+
+os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+
+ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
+
+
+def allowed_file(filename):
+    return (
+        "." in filename
+        and filename.rsplit(".", 1)[1].lower() in ALLOWED_EXTENSIONS
+    )
 
 
 # ==========================
@@ -11,15 +30,17 @@ profile_bp = Blueprint("profile", __name__)
 # ==========================
 @profile_bp.route("/profile", methods=["POST"])
 def create_profile():
-    data = request.get_json()
 
-    user_id = data.get("user_id")
-    firstname = data.get("firstname", "").strip()
-    lastname = data.get("lastname", "").strip()
-    phonenumber = data.get("phonenumber", "").strip()
-    nationalidentity_id = data.get("nationalidentity_id", "").strip()
-    dob = data.get("dob")
-    address = data.get("address", "").strip()
+    user_id = request.form.get("user_id")
+    firstname = request.form.get("firstname", "").strip()
+    lastname = request.form.get("lastname", "").strip()
+    phonenumber = request.form.get("phonenumber", "").strip()
+    nationalidentity_id = request.form.get("nationalidentity_id", "").strip()
+    dob = request.form.get("dob")
+    address = request.form.get("address", "").strip()
+
+    national_id_front = request.files.get("national_id_front")
+    national_id_back = request.files.get("national_id_back")
 
     # --------------------------
     # Validation
@@ -28,38 +49,34 @@ def create_profile():
     if not user_id:
         return jsonify({"message": "User ID is required"}), 400
 
-    # First Name
     if len(firstname) < 2 or not firstname.replace(" ", "").isalpha():
-        return jsonify({
-            "message": "First name must contain at least 2 letters."
-        }), 400
+        return jsonify({"message": "First name must contain at least 2 letters."}), 400
 
-    # Last Name
     if len(lastname) < 2 or not lastname.replace(" ", "").isalpha():
-        return jsonify({
-            "message": "Last name must contain at least 2 letters."
-        }), 400
+        return jsonify({"message": "Last name must contain at least 2 letters."}), 400
 
-    # Phone Number (8-9 digits after +855)
     if not re.fullmatch(r"\d{8,9}", phonenumber):
-        return jsonify({
-            "message": "Phone number must contain 8 or 9 digits."
-        }), 400
+        return jsonify({"message": "Phone number must contain 8 or 9 digits."}), 400
 
-    # Save with +855
     phonenumber = "+855" + phonenumber
 
-    # National Identity ID (exactly 9 digits)
     if not re.fullmatch(r"\d{9}", nationalidentity_id):
-        return jsonify({
-            "message": "National Identity ID must contain exactly 9 digits."
-        }), 400
+        return jsonify({"message": "National Identity ID must contain exactly 9 digits."}), 400
 
-    # Address
     if len(address) < 5:
-        return jsonify({
-            "message": "Address must be at least 5 characters."
-        }), 400
+        return jsonify({"message": "Address must be at least 5 characters."}), 400
+
+    if national_id_front is None or national_id_front.filename == "":
+        return jsonify({"message": "Front National ID image is required."}), 400
+
+    if national_id_back is None or national_id_back.filename == "":
+        return jsonify({"message": "Back National ID image is required."}), 400
+
+    if not allowed_file(national_id_front.filename):
+        return jsonify({"message": "Front image must be PNG, JPG or JPEG."}), 400
+
+    if not allowed_file(national_id_back.filename):
+        return jsonify({"message": "Back image must be PNG, JPG or JPEG."}), 400
 
     conn = get_db()
     cursor = conn.cursor()
@@ -83,6 +100,25 @@ def create_profile():
         if cursor.fetchone() is not None:
             return jsonify({"message": "Profile already exists"}), 409
 
+        # Save front image
+        front_filename = secure_filename(
+            f"user_{user_id}_front_{national_id_front.filename}"
+        )
+
+        front_filepath = os.path.join(UPLOAD_FOLDER, front_filename)
+        national_id_front.save(front_filepath)
+
+        # Save back image
+        back_filename = secure_filename(
+            f"user_{user_id}_back_{national_id_back.filename}"
+        )
+
+        back_filepath = os.path.join(UPLOAD_FOLDER, back_filename)
+        national_id_back.save(back_filepath)
+
+        front_path = f"uploads/national_ids/{front_filename}"
+        back_path = f"uploads/national_ids/{back_filename}"
+
         # Insert profile
         cursor.execute(
             """
@@ -95,9 +131,11 @@ def create_profile():
                 nationalidentity_id,
                 dob,
                 address,
+                national_id_front,
+                national_id_back,
                 verify_status
             )
-            VALUES (%s,%s,%s,%s,%s,%s,%s,%s)
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
             """,
             (
                 user_id,
@@ -107,6 +145,8 @@ def create_profile():
                 nationalidentity_id,
                 dob,
                 address,
+                front_path,
+                back_path,
                 "Pending"
             )
         )
@@ -135,6 +175,7 @@ def create_profile():
 # ==========================
 @profile_bp.route("/profile/<int:user_id>", methods=["GET"])
 def get_profile(user_id):
+
     conn = get_db()
     cursor = conn.cursor()
 
@@ -148,6 +189,8 @@ def get_profile(user_id):
                 nationalidentity_id,
                 dob::text,
                 address,
+                national_id_front,
+                national_id_back,
                 verify_status
             FROM user_details
             WHERE user_id = %s
@@ -169,7 +212,9 @@ def get_profile(user_id):
             "nationalidentity_id": profile[3],
             "dob": profile[4],
             "address": profile[5],
-            "verify_status": profile[6]
+            "national_id_front": profile[6],
+            "national_id_back": profile[7],
+            "verify_status": profile[8]
         }), 200
 
     except Exception as e:

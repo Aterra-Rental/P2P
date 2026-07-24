@@ -2,7 +2,8 @@ import { useNavigate } from 'react-router-dom'
 import { ResponsiveContainer, AreaChart, Area, XAxis, YAxis, Tooltip } from 'recharts'
 import '../Global.css'
 import './Home.css'
-import Footer from '../../Router/Footer'
+import { useEffect, useState } from 'react';
+import { getUserProfile } from '../../lib/profile'
 
 const rielData = [
   { date: 'Feb 1', value: 1200000 },
@@ -14,6 +15,8 @@ const rielData = [
 ];
 
 const Home = () => {
+  const [profile, setProfile] = useState(null);
+  
   const navigate = useNavigate();
 
   const handleCreateDealClick = () => {
@@ -29,6 +32,19 @@ const Home = () => {
     if (value >= 1000) return `${(value / 1000).toFixed(0)}K ៛`;
     return `${value} ៛`;
   };
+
+  useEffect(() => {
+  const loadProfile = async () => {
+    try {
+      const data = await getUserProfile();
+      setProfile(data);
+    } catch (error) {
+      console.error(error);
+    }
+  };
+
+  loadProfile();
+}, []);
 
   return (
     <div className='Global d-flex flex-column min-vh-100 overflow-hidden'>
@@ -60,7 +76,9 @@ const Home = () => {
           <div className="col-6 pe-0">
             <div className="rightsidehomepage p-5 pt-5">
               <div className="dashboard-header mb-4">
-                <h3 className="text-white fw-semibold mb-2">Welcome Back, John</h3>
+                <h3 className="text-white fw-semibold mb-2">
+                Welcome Back, {profile?.firstname || "User"}
+                </h3>
                 <p className="text-gray small mb-0 ms-4">View your current details and whats going on</p>
               </div>
               <div className="row g-3">

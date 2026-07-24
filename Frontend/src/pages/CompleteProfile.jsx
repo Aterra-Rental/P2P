@@ -13,6 +13,9 @@ const CompleteProfile = () => {
   const [dob, setDob] = useState("");
   const [address, setAddress] = useState("");
 
+  const [nationalIdFront, setNationalIdFront] = useState(null);
+  const [nationalIdBack, setNationalIdBack] = useState(null);
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -57,22 +60,36 @@ const CompleteProfile = () => {
       return;
     }
 
+    if (!nationalIdFront) {
+      alert("Please upload the FRONT of your National ID.");
+      return;
+    }
+
+    if (!nationalIdBack) {
+      alert("Please upload the BACK of your National ID.");
+      return;
+    }
+
     try {
-      const response = await fetch("http://127.0.0.1:8000/api/profile", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          user_id,
-          firstname: firstname.trim(),
-          lastname: lastname.trim(),
-          phonenumber,
-          nationalidentity_id: nationalidentityId,
-          dob,
-          address: address.trim(),
-        }),
-      });
+      const formData = new FormData();
+
+      formData.append("user_id", user_id);
+      formData.append("firstname", firstname.trim());
+      formData.append("lastname", lastname.trim());
+      formData.append("phonenumber", phonenumber);
+      formData.append("nationalidentity_id", nationalidentityId);
+      formData.append("dob", dob);
+      formData.append("address", address.trim());
+      formData.append("national_id_front", nationalIdFront);
+      formData.append("national_id_back", nationalIdBack);
+
+      const response = await fetch(
+        "http://127.0.0.1:8000/api/profile",
+        {
+          method: "POST",
+          body: formData,
+        }
+      );
 
       const data = await response.json();
 
@@ -109,6 +126,7 @@ const CompleteProfile = () => {
         </p>
 
         <form onSubmit={handleSubmit}>
+
           {/* First Name */}
           <div className="InputGroup">
             <label>First Name</label>
@@ -166,6 +184,7 @@ const CompleteProfile = () => {
           {/* National ID */}
           <div className="InputGroup">
             <label>National ID</label>
+
             <input
               type="text"
               placeholder="Enter National ID"
@@ -181,9 +200,34 @@ const CompleteProfile = () => {
             />
           </div>
 
+          {/* National ID Front */}
+          <div className="InputGroup">
+            <label>National ID (Front)</label>
+
+            <input
+              type="file"
+              accept=".jpg,.jpeg,.png"
+              onChange={(e) => setNationalIdFront(e.target.files[0])}
+              required
+            />
+          </div>
+
+          {/* National ID Back */}
+          <div className="InputGroup">
+            <label>National ID (Back)</label>
+
+            <input
+              type="file"
+              accept=".jpg,.jpeg,.png"
+              onChange={(e) => setNationalIdBack(e.target.files[0])}
+              required
+            />
+          </div>
+
           {/* Date of Birth */}
           <div className="InputGroup">
             <label>Date of Birth</label>
+
             <input
               type="date"
               value={dob}
@@ -195,6 +239,7 @@ const CompleteProfile = () => {
           {/* Address */}
           <div className="InputGroup">
             <label>Address</label>
+
             <textarea
               rows="3"
               placeholder="Enter your address"
@@ -207,6 +252,7 @@ const CompleteProfile = () => {
           <button className="PrimaryButton" type="submit">
             Complete Profile
           </button>
+
         </form>
       </div>
     </div>

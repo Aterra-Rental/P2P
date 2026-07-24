@@ -1,13 +1,26 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Flame } from "lucide-react";
 import "./Navbar.css";
-
+import { getUserProfile } from "../lib/profile";
 const Navbar = () => {
+  const [user, setUser] = useState(null);
   const closeMenu = () => {
     const toggle = document.getElementById("nav-toggle");
     if (toggle) toggle.checked = false;
   };
+  useEffect(() => {
+  const loadUser = async () => {
+    try {
+      const data = await getUserProfile();
+      setUser(data);
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  loadUser();
+}, []);
 
   return (
     <nav className="navbar" aria-label="Primary Navigation">
@@ -62,7 +75,7 @@ const Navbar = () => {
 
           <li>
             <NavLink to="/Dashboard" className="navlink" onClick={closeMenu}>
-              User
+              {user ? user.firstname : "Dashboard"}
             </NavLink>
           </li>
         </ul>

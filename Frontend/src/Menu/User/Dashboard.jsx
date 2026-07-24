@@ -2,10 +2,13 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import "../Global.css";
+import { getUserProfile } from '../../lib/profile';
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
+  
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
 
@@ -18,29 +21,22 @@ const Dashboard = () => {
     }
 
     const fetchProfile = async () => {
-      try {
-        const response = await fetch(
-          `http://127.0.0.1:8000/api/profile/${userId}`
-        );
+  try {
+    const data = await getUserProfile();
+    setUser(data);
+  } catch (err) {
+    console.error(err);
 
-        if (response.status === 404) {
-          navigate("/CompleteProfile");
-          return;
-        }
+    if (err.message.includes("404")) {
+      navigate("/CompleteProfile");
+      return;
+    }
 
-        if (!response.ok) {
-          throw new Error("Failed to load profile");
-        }
-
-        const data = await response.json();
-        setUser(data);
-      } catch (err) {
-        console.error(err);
-        alert("Unable to load your profile.");
-      } finally {
-        setLoading(false);
-      }
-    };
+    alert("Unable to load your profile.");
+  } finally {
+    setLoading(false);
+  }
+};
 
     fetchProfile();
   }, [navigate]);
