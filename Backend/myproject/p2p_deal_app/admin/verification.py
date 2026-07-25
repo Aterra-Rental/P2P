@@ -2,6 +2,8 @@ from flask import Blueprint, jsonify
 from database import get_db
 
 verification_bp = Blueprint("admin_verification", __name__)
+
+
 @verification_bp.route("/verifications", methods=["GET"])
 def get_pending_verifications():
 
@@ -29,35 +31,34 @@ def get_pending_verifications():
         users = []
 
         for row in rows:
-
             users.append({
-
                 "user_id": row[0],
                 "fullname": row[1],
                 "email": row[2],
                 "phone": row[3],
                 "verify_status": row[4]
-
             })
 
         return jsonify(users), 200
 
     except Exception as e:
-
         return jsonify({
             "message": str(e)
         }), 500
 
     finally:
-
         cur.close()
         conn.close()
+
+
 @verification_bp.route("/verifications/<int:user_id>", methods=["GET"])
 def get_verification_details(user_id):
+
     conn = get_db()
     cur = conn.cursor()
 
     try:
+
         cur.execute("""
             SELECT
                 ud.user_id,
@@ -78,8 +79,10 @@ def get_verification_details(user_id):
 
         row = cur.fetchone()
 
-        if not row:
-            return jsonify({"message": "User not found"}), 404
+        if row is None:
+            return jsonify({
+                "message": "User not found"
+            }), 404
 
         return jsonify({
             "user_id": row[0],
@@ -92,10 +95,12 @@ def get_verification_details(user_id):
             "national_id_front": row[7],
             "national_id_back": row[8],
             "verify_status": row[9]
-        })
+        }), 200
 
     except Exception as e:
-        return jsonify({"message": str(e)}), 500
+        return jsonify({
+            "message": str(e)
+        }), 500
 
     finally:
         cur.close()
