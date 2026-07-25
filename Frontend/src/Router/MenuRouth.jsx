@@ -12,13 +12,15 @@ import CompleteProfile from '../pages/CompleteProfile.jsx'
 import DealRoom from '../Menu/Home/DealRoom.jsx'
 import CameraPage from '../components/Camera/CameraPage.jsx'
 import PreviewPage from '../components/Camera/PreviewPage.jsx'
-
-
+import AdminLogin from '../Admin/Components/Login/AdminLogin.jsx'
+import ProtectedAdminRoute from '../Admin/Components/ProtectedRoute/ProtectedAdminRoute.jsx'
+import AdminDashboard from '../Admin/Dashboard/Dashboard.jsx'
 const Layout = () => {
   const location = useLocation()
   const hideLayout =
-  ['/Register', '/Login'].includes(location.pathname) ||
-  location.pathname.startsWith('/camera');
+  ['/Register', '/Login', '/admin/login'].includes(location.pathname) ||
+  location.pathname.startsWith('/camera') ||
+  location.pathname.startsWith('/admin');
 
   return (
     <>
@@ -35,6 +37,8 @@ const Layout = () => {
         <Route path="/create-deal" element={<DealRoom />}/>
         <Route path="/camera/:type" element={<CameraPage />} />
         <Route path="/camera/:type/preview" element={<PreviewPage />} />
+        <Route path="/admin/login" element={<AdminLogin />}/>
+        <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
       </Routes>
       {!hideLayout && <Footer/>}
     </>

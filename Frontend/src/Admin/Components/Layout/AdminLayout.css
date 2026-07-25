@@ -1,0 +1,33 @@
+.admin-layout{
+
+    display:flex;
+
+    min-height:100vh;
+
+    background:#120C20;
+
+}
+
+.admin-content{
+
+    flex:1;
+
+    margin-left:270px;
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.admin-page{
+
+    flex:1;
+
+    padding:30px;
+
+    background:#120C20;
+
+    overflow-y:auto;
+
+}

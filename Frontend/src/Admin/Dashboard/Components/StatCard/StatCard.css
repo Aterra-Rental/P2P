@@ -1,0 +1,81 @@
+.stat-card{
+
+    background:#1E1633;
+
+    border:1px solid rgba(255,255,255,.08);
+
+    border-radius:18px;
+
+    padding:25px;
+
+    display:flex;
+
+    align-items:center;
+
+    gap:20px;
+
+    transition:.3s;
+
+    cursor:default;
+
+}
+
+.stat-card:hover{
+
+    transform:translateY(-6px);
+
+    box-shadow:0 12px 30px rgba(139,92,246,.25);
+
+}
+
+.stat-icon{
+
+    width:65px;
+
+    height:65px;
+
+    border-radius:16px;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    color:white;
+
+    font-size:28px;
+
+}
+
+.stat-info{
+
+    display:flex;
+
+    flex-direction:column;
+
+}
+
+.stat-info h4{
+
+    margin:0;
+
+    color:#B8B2D1;
+
+    font-size:15px;
+
+    font-weight:500;
+
+}
+
+.stat-info h2{
+
+    margin-top:8px;
+
+    color:white;
+
+    font-size:32px;
+
+    font-weight:700;
+
+}
