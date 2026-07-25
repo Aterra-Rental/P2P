@@ -4,6 +4,7 @@ import { Flame } from "lucide-react";
 import "./Auth.css";
 
 const Login = () => {
+
   const navigate = useNavigate();
 
   const [formData, setFormData] = useState({
@@ -15,21 +16,25 @@ const Login = () => {
   const [error, setError] = useState("");
 
   const handleChange = (e) => {
+
     setFormData({
       ...formData,
       [e.target.name]: e.target.value,
     });
 
     if (error) setError("");
+
   };
 
   const handleSubmit = async (e) => {
+
     e.preventDefault();
 
     setLoading(true);
     setError("");
 
     try {
+
       const response = await fetch("http://127.0.0.1:8000/api/login", {
         method: "POST",
         headers: {
@@ -45,47 +50,93 @@ const Login = () => {
         return;
       }
 
-      // Save user information
-localStorage.setItem("user_id", data.user_id);
-localStorage.setItem("email", data.email);
+      try {
 
-try {
-  // Check whether the user has completed their profile
-  const profileResponse = await fetch(
-    `http://127.0.0.1:8000/api/profile/${data.user_id}`
-  );
+        // Check whether the user has completed their profile
+        const profileResponse = await fetch(
+          `http://127.0.0.1:8000/api/profile/${data.user_id}`
+        );
 
-  if (profileResponse.ok) {
-    alert("Login Successful!");
-    navigate("/Dashboard");
-  } else if (profileResponse.status === 404) {
-    alert("Please complete your profile first.");
-    navigate("/CompleteProfile");
-  } else {
-    setError("Unable to verify your profile.");
-  }
+        if (profileResponse.ok) {
 
-} catch (err) {
-  console.error(err);
-  setError("Unable to connect to the server.");
-}
+          const profile = await profileResponse.json();
+
+          // Store complete user object
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              user_id: data.user_id,
+              email: data.email,
+              firstname: profile.firstname,
+              lastname: profile.lastname,
+              verify_status: profile.verify_status,
+            })
+          );
+
+          // Keep old storage for compatibility
+          localStorage.setItem("user_id", data.user_id);
+          localStorage.setItem("email", data.email);
+
+          alert("Login Successful!");
+          navigate("/Dashboard");
+
+        } else if (profileResponse.status === 404) {
+
+          // User exists but has not completed profile yet
+          localStorage.setItem(
+            "user",
+            JSON.stringify({
+              user_id: data.user_id,
+              email: data.email,
+              verify_status: null,
+            })
+          );
+
+          localStorage.setItem("user_id", data.user_id);
+          localStorage.setItem("email", data.email);
+
+          alert("Please complete your profile first.");
+          navigate("/CompleteProfile");
+
+        } else {
+
+          setError("Unable to verify your profile.");
+
+        }
+
+      } catch (err) {
+
+        console.error(err);
+        setError("Unable to connect to the server.");
+
+      }
+
     } catch (err) {
+
       console.error(err);
       setError("Unable to connect to the server.");
+
     } finally {
+
       setLoading(false);
+
     }
+
   };
 
   return (
     <div className="AuthPage">
+
       <div className="AuthCard">
 
         <div className="AuthLogo">
           <div className="AuthLogoIcon">
             <Flame size={30} />
           </div>
-          <span className="AuthLogoText">P2P</span>
+
+          <span className="AuthLogoText">
+            P2P
+          </span>
         </div>
 
         <h1>Welcome Back</h1>
@@ -97,7 +148,9 @@ try {
         <form onSubmit={handleSubmit}>
 
           <div className="InputGroup">
+
             <label>Email</label>
+
             <input
               type="email"
               name="email"
@@ -106,10 +159,13 @@ try {
               onChange={handleChange}
               required
             />
+
           </div>
 
           <div className="InputGroup">
+
             <label>Password</label>
+
             <input
               type="password"
               name="password"
@@ -118,6 +174,7 @@ try {
               onChange={handleChange}
               required
             />
+
           </div>
 
           {error && <p className="error">{error}</p>}
@@ -138,8 +195,10 @@ try {
         </div>
 
       </div>
+
     </div>
   );
+
 };
 
 export default Login;

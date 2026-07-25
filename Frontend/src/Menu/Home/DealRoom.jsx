@@ -1,11 +1,59 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 
-const generateCode = () =>
-  Math.random().toString(36).substring(2, 8).toUpperCase()
+const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase()
+const formatTime = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-const formatTime = () =>
-  new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+// --- DJANGO + POSTGRESQL API ENDPOINTS ---
+const API_BASE = 'http://127.0.0.1:8000/api'
+
+const getHeaders = () => ({
+  'Content-Type': 'application/json',
+})
+
+// 1. Verify User exists in PostgreSQL via Django (with Decoy ID '123' bypass)
+const verifyUserExists = async (username) => {
+  if (username === '123') return true
+
+  try {
+    const res = await fetch(`${API_BASE}/users/verify/?username=${encodeURIComponent(username)}`, {
+      method: 'GET',
+      headers: getHeaders(),
+    })
+    if (!res.ok) return false
+    const data = await res.json()
+    return data.exists
+  } catch (error) {
+    console.error('Error checking user:', error)
+    return false
+  }
+}
+
+// 2. Create Deal in Django / PostgreSQL
+const createDealInDB = async (dealData) => {
+  if (dealData.partner === '123' || dealData.isSimulated) return { success: true }
+
+  const res = await fetch(`${API_BASE}/deals/`, {
+    method: 'POST',
+    headers: getHeaders(),
+    body: JSON.stringify(dealData),
+  })
+  if (!res.ok) throw new Error('Failed to create deal.')
+  return await res.json()
+}
+
+// 3. Delete / Cancel Deal in Django / PostgreSQL
+const deleteDealInDB = async (dealId) => {
+  try {
+    const res = await fetch(`${API_BASE}/deals/${dealId}/`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    })
+    return res.ok
+  } catch (err) {
+    return true
+  }
+}
 
 const styles = {
   page: {
@@ -16,159 +64,113 @@ const styles = {
     display: 'flex',
     flexDirection: 'column',
     alignItems: 'center',
-    padding: '3rem 1.5rem',
+    padding: '2rem 1rem',
   },
-  card: {
-    background: '#1c1a2e',
-    border: '1px solid rgba(216, 128, 255, 0.15)',
-    borderRadius: '16px',
-    padding: '2.5rem',
-    width: '100%',
-    maxWidth: '480px',
-    boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
-  },
-  wideCard: {
+  modalContainer: {
     background: '#1c1a2e',
     border: '1px solid rgba(216, 128, 255, 0.15)',
     borderRadius: '16px',
     padding: '2rem',
     width: '100%',
-    maxWidth: '820px',
+    maxWidth: '1000px',
     boxShadow: '0 12px 40px rgba(0,0,0,0.5)',
   },
+  splitLayout: {
+    display: 'grid',
+    gridTemplateColumns: '1fr 1fr',
+    gap: '2rem',
+    marginTop: '1rem',
+  },
+  sectionBox: {
+    background: '#141224',
+    border: '1px solid rgba(255,255,255,0.06)',
+    borderRadius: '12px',
+    padding: '1.5rem',
+  },
   title: {
-    fontSize: '1.9rem',
+    fontSize: '1.8rem',
     fontWeight: 700,
-    marginBottom: '0.5rem',
+    marginBottom: '0.2rem',
     background: 'linear-gradient(90deg, #d946ef, #ec4899)',
     WebkitBackgroundClip: 'text',
     WebkitTextFillColor: 'transparent',
   },
-  subtitle: {
-    color: '#a89db8',
-    marginBottom: '2rem',
-    fontSize: '0.95rem',
+  sectionHeader: {
+    fontSize: '1.2rem',
+    fontWeight: 700,
+    marginBottom: '1rem',
+    color: '#f3d9ff',
   },
   label: {
     fontSize: '0.85rem',
     color: '#c7c0d4',
-    marginBottom: '0.4rem',
+    marginBottom: '0.3rem',
     display: 'block',
     fontWeight: 600,
   },
-  inputWrap: {
-    position: 'relative',
-    marginBottom: '1.25rem',
-  },
-  atPrefix: {
-    position: 'absolute',
-    left: '1rem',
-    top: '50%',
-    transform: 'translateY(-50%)',
-    color: '#8b8299',
-    fontWeight: 700,
-  },
   input: {
     width: '100%',
-    padding: '0.85rem 1rem',
-    borderRadius: '10px',
+    padding: '0.75rem 1rem',
+    borderRadius: '8px',
     border: '1px solid rgba(255,255,255,0.1)',
-    background: '#141224',
+    background: '#0a0612',
     color: '#fff',
-    fontSize: '1rem',
-    letterSpacing: '0.02em',
+    fontSize: '0.95rem',
+    marginBottom: '1rem',
     boxSizing: 'border-box',
-  },
-  inputWithPrefix: {
-    paddingLeft: '2rem',
-  },
-  hint: {
-    fontSize: '0.78rem',
-    color: '#6f6785',
-    marginTop: '0.4rem',
   },
   primaryBtn: (disabled) => ({
     width: '100%',
-    padding: '0.9rem',
-    borderRadius: '10px',
+    padding: '0.8rem',
+    borderRadius: '8px',
     border: 'none',
-    background: disabled
-      ? 'rgba(255,255,255,0.08)'
-      : 'linear-gradient(90deg, #d946ef, #ec4899)',
+    background: disabled ? 'rgba(255,255,255,0.08)' : 'linear-gradient(90deg, #d946ef, #ec4899)',
     color: disabled ? '#666' : '#fff',
     fontWeight: 700,
-    fontSize: '1rem',
+    fontSize: '0.95rem',
     cursor: disabled ? 'not-allowed' : 'pointer',
-    marginBottom: '0.75rem',
+    marginTop: '0.5rem',
   }),
-  secondaryBtn: {
+  simulateBtn: {
     width: '100%',
-    padding: '0.9rem',
-    borderRadius: '10px',
-    border: '1px solid rgba(255,255,255,0.15)',
-    background: 'transparent',
-    color: '#c7c0d4',
-    fontWeight: 600,
-    fontSize: '1rem',
+    padding: '0.65rem',
+    borderRadius: '8px',
+    border: '1px dashed #d946ef',
+    background: 'rgba(217, 70, 239, 0.1)',
+    color: '#f3d9ff',
+    fontWeight: 700,
+    fontSize: '0.85rem',
     cursor: 'pointer',
+    marginBottom: '1rem',
+    transition: 'all 0.2s ease',
+  },
+  roomCardVertical: {
+    background: 'rgba(255,255,255,0.03)',
+    border: '1px solid rgba(217,70,239,0.2)',
+    borderRadius: '10px',
+    padding: '1rem',
+    marginBottom: '0.75rem',
+    cursor: 'pointer',
+    transition: 'all 0.2s ease',
   },
   codeBadge: {
-    display: 'inline-block',
     fontWeight: 800,
-    letterSpacing: '0.25em',
-    padding: '0.35rem 0.9rem',
+    padding: '0.2rem 0.6rem',
     borderRadius: '999px',
     background: 'rgba(217,70,239,0.1)',
     border: '1px solid rgba(217,70,239,0.35)',
     color: '#f3d9ff',
-    fontSize: '0.9rem',
+    fontSize: '0.8rem',
   },
-  partiesRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1rem',
-    marginBottom: '1.25rem',
-  },
-  personCard: {
-    borderRadius: '12px',
-    padding: '0.85rem',
-    background: 'rgba(255,255,255,0.03)',
-    border: '1px solid rgba(255,255,255,0.08)',
-    textAlign: 'center',
-    fontSize: '0.9rem',
-  },
-  statusDot: (online) => ({
-    display: 'inline-block',
-    width: '8px',
-    height: '8px',
-    borderRadius: '50%',
-    background: online ? '#4ade80' : '#666',
-    marginRight: '6px',
-  }),
-  spinnerWrap: {
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: 'center',
-    gap: '1rem',
-    padding: '1.5rem 0',
-  },
-  spinner: {
-    width: '36px',
-    height: '36px',
-    borderRadius: '50%',
-    border: '3px solid rgba(217,70,239,0.2)',
-    borderTopColor: '#d946ef',
-    animation: 'spin 0.9s linear infinite',
-  },
-  inviteTarget: {
-    textAlign: 'center',
-    fontSize: '1.1rem',
+  inviteBadge: {
     fontWeight: 700,
-    color: '#f3d9ff',
-    marginBottom: '0.25rem',
+    padding: '0.15rem 0.5rem',
+    borderRadius: '4px',
+    background: 'rgba(74, 222, 128, 0.15)',
+    border: '1px solid rgba(74, 222, 128, 0.4)',
+    color: '#4ade80',
+    fontSize: '0.7rem',
   },
-
-  // --- chat ---
   chatWindow: {
     background: '#141224',
     borderRadius: '14px',
@@ -177,545 +179,438 @@ const styles = {
     marginBottom: '1rem',
   },
   chatScroll: {
-    maxHeight: '360px',
+    maxHeight: '320px',
     overflowY: 'auto',
     display: 'flex',
     flexDirection: 'column',
-    gap: '0.4rem',
-    paddingRight: '4px',
-  },
-  systemMsg: {
-    alignSelf: 'center',
-    background: 'rgba(255,255,255,0.05)',
-    color: '#a89db8',
-    fontSize: '0.75rem',
-    padding: '0.3rem 0.8rem',
-    borderRadius: '999px',
-    margin: '0.4rem 0',
-  },
-  messageRow: (mine) => ({
-    display: 'flex',
-    justifyContent: mine ? 'flex-end' : 'flex-start',
-    alignItems: 'flex-end',
     gap: '0.5rem',
-  }),
-  avatar: (kind) => ({
-    width: '28px',
-    height: '28px',
-    borderRadius: '50%',
-    flexShrink: 0,
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: kind === 'bot' ? '0.85rem' : '0.7rem',
-    fontWeight: 700,
-    background:
-      kind === 'mine'
-        ? 'linear-gradient(135deg, #d946ef, #ec4899)'
-        : kind === 'bot'
-        ? 'linear-gradient(135deg, #22d3ee, #6366f1)'
-        : 'linear-gradient(135deg, #4b4468, #2e2a44)',
-    color: '#fff',
-  }),
-  bubbleGroup: (mine) => ({
-    display: 'flex',
-    flexDirection: 'column',
-    alignItems: mine ? 'flex-end' : 'flex-start',
-    maxWidth: '72%',
-  }),
+  },
   bubble: (kind) => ({
-    background:
-      kind === 'mine'
-        ? 'linear-gradient(135deg, #d946ef, #ec4899)'
-        : kind === 'bot'
-        ? 'rgba(99,102,241,0.18)'
-        : '#26233a',
+    background: kind === 'mine' ? 'linear-gradient(135deg, #d946ef, #ec4899)' : kind === 'bot' ? 'rgba(99,102,241,0.18)' : '#26233a',
     border: kind === 'bot' ? '1px solid rgba(99,102,241,0.35)' : 'none',
     color: '#fff',
-    padding: '0.55rem 0.9rem',
+    padding: '0.6rem 0.9rem',
     fontSize: '0.9rem',
-    lineHeight: 1.4,
-    borderRadius:
-      kind === 'mine' ? '16px 16px 4px 16px' : '16px 16px 16px 4px',
+    borderRadius: '12px',
+    maxWidth: '85%',
     wordBreak: 'break-word',
-  }),
-  timestamp: (mine) => ({
-    fontSize: '0.68rem',
-    color: '#6f6785',
-    marginTop: '3px',
-    padding: mine ? '0 4px 0 0' : '0 0 0 4px',
   }),
   roleBtnRow: {
     display: 'flex',
     gap: '0.5rem',
     marginTop: '0.6rem',
   },
-  roleChoiceBtn: (disabled) => ({
+  roleChoiceBtn: (disabled, selected) => ({
     padding: '0.5rem 1rem',
-    borderRadius: '999px',
-    border: '1px solid rgba(255,255,255,0.2)',
-    background: 'rgba(255,255,255,0.06)',
+    borderRadius: '8px',
+    border: selected ? '1px solid #4ade80' : '1px solid rgba(255,255,255,0.2)',
+    background: selected ? 'rgba(74,222,128,0.2)' : 'rgba(255,255,255,0.06)',
     color: '#fff',
     fontSize: '0.85rem',
     fontWeight: 600,
     cursor: disabled ? 'not-allowed' : 'pointer',
-    opacity: disabled ? 0.4 : 1,
+    opacity: disabled ? 0.3 : 1,
   }),
-  typingBubble: {
-    background: '#26233a',
-    borderRadius: '16px 16px 16px 4px',
-    padding: '0.55rem 0.9rem',
+  actionBtnGroup: {
     display: 'flex',
-    gap: '4px',
-    alignItems: 'center',
+    gap: '0.5rem',
+    marginTop: '0.8rem',
   },
-  typingDot: (delay) => ({
-    width: '6px',
-    height: '6px',
-    borderRadius: '50%',
-    background: '#9b93ad',
-    animation: `bounce 1.2s infinite ${delay}s`,
-  }),
-  chatInputRow: {
-    display: 'flex',
-    gap: '0.6rem',
-    alignItems: 'center',
-    background: '#141224',
-    borderRadius: '999px',
-    border: '1px solid rgba(255,255,255,0.08)',
-    padding: '0.4rem 0.4rem 0.4rem 1.1rem',
-    marginBottom: '1.5rem',
-  },
-  chatInput: {
+  confirmBtn: {
     flex: 1,
-    background: 'transparent',
+    padding: '0.5rem',
+    borderRadius: '6px',
     border: 'none',
-    outline: 'none',
+    background: '#22c55e',
     color: '#fff',
-    fontSize: '0.95rem',
-    padding: '0.5rem 0',
+    fontWeight: 700,
+    cursor: 'pointer',
   },
-  sendBtn: (disabled) => ({
-    width: '38px',
-    height: '38px',
-    borderRadius: '50%',
+  cancelBtn: {
+    flex: 1,
+    padding: '0.5rem',
+    borderRadius: '6px',
     border: 'none',
-    flexShrink: 0,
-    background: disabled
-      ? 'rgba(255,255,255,0.08)'
-      : 'linear-gradient(135deg, #d946ef, #ec4899)',
-    color: disabled ? '#666' : '#fff',
-    cursor: disabled ? 'not-allowed' : 'pointer',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    fontSize: '1rem',
-  }),
-
-  finalizeBox: {
-    background: 'rgba(217,70,239,0.06)',
-    border: '1px solid rgba(217,70,239,0.25)',
-    borderRadius: '14px',
-    padding: '1.2rem',
-    marginBottom: '1rem',
+    background: '#ef4444',
+    color: '#fff',
+    fontWeight: 700,
+    cursor: 'pointer',
   },
-  finalizeRow: {
-    display: 'flex',
-    gap: '0.6rem',
-  },
-  readyRow: {
-    display: 'grid',
-    gridTemplateColumns: '1fr 1fr',
-    gap: '1rem',
-    marginTop: '1rem',
-  },
-  readyBox: (ready) => ({
-    borderRadius: '12px',
-    padding: '0.8rem',
-    textAlign: 'center',
-    background: ready ? 'rgba(74,222,128,0.1)' : 'rgba(255,255,255,0.03)',
-    border: ready ? '1px solid rgba(74,222,128,0.4)' : '1px solid rgba(255,255,255,0.08)',
-    color: ready ? '#86efac' : '#8b8299',
-    fontWeight: 600,
+  deleteDealBtn: {
+    width: '100%',
+    padding: '0.6rem',
+    borderRadius: '6px',
+    border: '1px solid rgba(239,68,68,0.5)',
+    background: 'rgba(239,68,68,0.15)',
+    color: '#fca5a5',
+    fontWeight: 700,
     fontSize: '0.85rem',
-  }),
-
-  completeWrap: {
-    textAlign: 'center',
-    padding: '1rem 0',
+    cursor: 'pointer',
+    marginTop: '0.8rem',
   },
-  checkCircle: {
-    width: '72px',
-    height: '72px',
-    borderRadius: '50%',
-    background: 'linear-gradient(90deg, #4ade80, #22c55e)',
-    display: 'flex',
-    alignItems: 'center',
-    justifyContent: 'center',
-    margin: '0 auto 1.5rem',
-    fontSize: '2rem',
-    fontWeight: 900,
-    color: '#0a0612',
-  },
-  itemBoxLeft: {
-    background: 'rgba(255,255,255,0.03)',
-    borderRadius: '12px',
-    padding: '1.2rem',
-    textAlign: 'left',
-  },
+  errorBox: {
+    color: '#f87171',
+    fontSize: '0.85rem',
+    marginBottom: '0.8rem',
+    background: 'rgba(239,68,68,0.1)',
+    padding: '0.5rem 0.8rem',
+    borderRadius: '6px',
+    border: '1px solid rgba(239,68,68,0.2)',
+  }
 }
-
-const NEGOTIATION_REPLIES = [
-  "Hmm, that's a bit lower than I hoped — can you come up a little?",
-  'I could work with that, let me think for a sec.',
-  "That's fair, I'm okay meeting somewhere around there.",
-  'Can we settle a little closer to the middle?',
-  'Alright, that works for me honestly.',
-]
 
 const DealRoom = () => {
   const navigate = useNavigate()
 
-  const [step, setStep] = useState('setup') // setup -> inviting -> room -> complete
+  // Room Lists & Selection
+  const [activeRooms, setActiveRooms] = useState([])
+  const [selectedRoom, setSelectedRoom] = useState(null)
+
+  // Form Inputs & Async State
   const [partnerId, setPartnerId] = useState('')
-  const [roomCode, setRoomCode] = useState('')
+  const [amount, setAmount] = useState('')
+  const [item, setItem] = useState('')
+  const [isLoading, setIsLoading] = useState(false)
+  const [errorMessage, setErrorMessage] = useState('')
 
+  // Interactive Selected Room State
   const [myRole, setMyRole] = useState(null)
-  const [otherRole, setOtherRole] = useState(null)
-  const [otherJoined, setOtherJoined] = useState(false)
-
+  const [partnerRole, setPartnerRole] = useState(null)
+  const [roleConfirmed, setRoleConfirmed] = useState(false)
+  const [amountConfirmed, setAmountConfirmed] = useState(false)
   const [messages, setMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
-  const [otherTyping, setOtherTyping] = useState(false)
 
-  const [showFinalize, setShowFinalize] = useState(false)
-  const [myPriceInput, setMyPriceInput] = useState('')
-  const [myConfirmed, setMyConfirmed] = useState(false)
-  const [otherConfirmed, setOtherConfirmed] = useState(false)
-  const [dealPrice, setDealPrice] = useState(null)
-
-  const timers = useRef([])
-  const scrollRef = useRef(null)
   const msgId = useRef(0)
+  const scrollRef = useRef(null)
 
-  useEffect(() => () => timers.current.forEach(clearTimeout), [])
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
-  }, [messages, otherTyping])
+  }, [messages])
 
-  const nextId = () => ++msgId.current
+  // Step 1: Create room and save to DB
+  const handleCreateDeal = async () => {
+    if (!partnerId.trim() || !amount.trim() || !item.trim()) return
 
-  const pushMessage = (msg) =>
-    setMessages((prev) => [...prev, { id: nextId(), time: formatTime(), ...msg }])
+    setIsLoading(true)
+    setErrorMessage('')
 
-  const initials = (label) => label?.charAt(0).toUpperCase() || '?'
+    try {
+      const exists = await verifyUserExists(partnerId.trim())
+      if (!exists) {
+        setErrorMessage('User ID not found')
+        setIsLoading(false)
+        return
+      }
 
-  // ---- Step 1: invite by user ID ----
-  const handleInvite = () => {
-    if (!partnerId.trim()) return
-    setRoomCode(generateCode())
-    setStep('inviting')
+      const roomCode = generateCode()
+      const dealData = {
+        id: roomCode,
+        partner: partnerId.trim(),
+        amount: amount.trim(),
+        item: item.trim(),
+        created: formatTime(),
+        isSimulated: false,
+      }
 
-    const t = setTimeout(() => {
-      setStep('room')
-      const t1 = setTimeout(() => {
-        pushMessage({
-          kind: 'bot',
-          from: 'DealBot',
-          text: `@${partnerId.trim()} has accepted the invite. Before we start, are you joining as the Buyer or the Seller?`,
-          roleChoice: true,
-        })
-      }, 400)
-      timers.current.push(t1)
-    }, 2000)
-    timers.current.push(t)
-  }
+      await createDealInDB(dealData)
 
-  // ---- Step 2: bot asks role ----
-  const chooseRole = (role) => {
-    if (myRole) return
-    setMyRole(role)
-
-    pushMessage({ kind: 'mine', from: 'You', text: `I'll be the ${role}.` })
-
-    const opposite = role === 'buyer' ? 'seller' : 'buyer'
-    const t1 = setTimeout(() => {
-      pushMessage({
-        kind: 'bot',
-        from: 'DealBot',
-        text: `Got it — you're the ${role}. Let me confirm with @${partnerId.trim()}...`,
-      })
-      const t2 = setTimeout(() => {
-        setOtherRole(opposite)
-        setOtherJoined(true)
-        pushMessage({
-          kind: 'bot',
-          from: 'DealBot',
-          text: `@${partnerId.trim()} is in as the ${opposite}. You're both set — feel free to start negotiating whenever you're ready.`,
-        })
-      }, 2000)
-      timers.current.push(t2)
-    }, 600)
-    timers.current.push(t1)
-  }
-
-  // ---- Step 3: free negotiation ----
-  const sendChat = () => {
-    if (!chatInput.trim() || !otherJoined) return
-    pushMessage({ kind: 'mine', from: 'You', text: chatInput })
-    setChatInput('')
-    setOtherTyping(true)
-
-    const t = setTimeout(() => {
-      setOtherTyping(false)
-      const reply = NEGOTIATION_REPLIES[Math.floor(Math.random() * NEGOTIATION_REPLIES.length)]
-      pushMessage({ kind: 'other', from: partnerId.trim(), text: reply })
-    }, 1300 + Math.random() * 900)
-    timers.current.push(t)
-  }
-
-  // ---- Step 4: each side locks in their own final price ----
-  const confirmMyPrice = () => {
-    if (!myPriceInput.trim()) return
-    setMyConfirmed(true)
-    pushMessage({
-      kind: 'system',
-      text: `You locked in ${myPriceInput}$ ✅`,
-    })
-
-    const t = setTimeout(() => {
-      setOtherConfirmed(true)
-      pushMessage({
-        kind: 'system',
-        text: `@${partnerId.trim()} locked in ${myPriceInput}$ ✅`,
-      })
-      setDealPrice(myPriceInput)
-    }, 1800)
-    timers.current.push(t)
-  }
-
-  useEffect(() => {
-    if (myConfirmed && otherConfirmed) {
-      const t = setTimeout(() => setStep('complete'), 1500)
-      timers.current.push(t)
+      setActiveRooms((prev) => [dealData, ...prev])
+      setPartnerId('')
+      setAmount('')
+      setItem('')
+    } catch (err) {
+      setErrorMessage('Error creating room. Check connection.')
+    } finally {
+      setIsLoading(false)
     }
-  }, [myConfirmed, otherConfirmed])
+  }
+
+  // SIMULATE INCOMING INVITATION
+  const handleSimulateInvite = () => {
+    const roomCode = generateCode()
+    const mockUsers = ['crypto_trader99', 'shadow_merchant', 'pro_seller_x']
+    const mockItems = ['100 USDT', 'Game Account', '50 LTC', 'VIP Pass']
+    
+    const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)]
+    const randomItem = mockItems[Math.floor(Math.random() * mockItems.length)]
+    const randomAmount = Math.floor(Math.random() * 250) + 25
+
+    const simulatedInvite = {
+      id: roomCode,
+      partner: randomUser,
+      amount: String(randomAmount),
+      item: randomItem,
+      created: formatTime(),
+      isSimulated: true,
+      isIncoming: true,
+    }
+
+    setActiveRooms((prev) => [simulatedInvite, ...prev])
+  }
+
+  // Step 2: Open deal room
+  const openRoom = (room) => {
+    setSelectedRoom(room)
+    setMyRole(null)
+    setPartnerRole(null)
+    setRoleConfirmed(false)
+    setAmountConfirmed(false)
+    
+    const welcomeText = room.isIncoming
+      ? `@${room.partner} invited you to Room #${room.id} to trade "${room.item}" for $${room.amount}. Pick your role or decline:`
+      : `Welcome to Room #${room.id}. Trading "${room.item}" for $${room.amount} with @${room.partner}. Pick your role or cancel:`
+
+    setMessages([
+      {
+        id: ++msgId.current,
+        kind: 'bot',
+        text: welcomeText,
+        roleSelection: true,
+      }
+    ])
+  }
+
+  // Step 3: Role interactions
+  const handleSelectRole = (role) => {
+    if (roleConfirmed) return
+    setMyRole(role)
+    if (!partnerRole) {
+      setPartnerRole(role === 'buyer' ? 'seller' : 'buyer')
+    }
+  }
+
+  // Confirming Role triggers the NEW BOT MESSAGE for Amount Verification
+  const handleConfirmRole = () => {
+    setRoleConfirmed(true)
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: ++msgId.current,
+        kind: 'bot',
+        text: `Role set as ${myRole.toUpperCase()}. Please verify: Is the deal amount of $${selectedRoom.amount} for "${selectedRoom.item}" correct?`,
+        amountConfirmation: true,
+      }
+    ])
+  }
+
+  // Step 4: Amount Confirmation Handlers
+  const handleConfirmAmount = () => {
+    setAmountConfirmed(true)
+    setMessages((prev) => [
+      ...prev,
+      {
+        id: ++msgId.current,
+        kind: 'bot',
+        text: `Deal amount ($${selectedRoom.amount}) verified! You can now proceed with the transaction.`,
+      }
+    ])
+  }
+
+  const handleResetRoleSelection = () => {
+    setMyRole(null)
+    setPartnerRole(null)
+    setRoleConfirmed(false)
+    setAmountConfirmed(false)
+  }
+
+  // Step 5: CANCEL / DECLINE DEAL
+  const handleCancelAndDestroyDeal = async () => {
+    if (!selectedRoom) return
+
+    try {
+      await deleteDealInDB(selectedRoom.id)
+      setActiveRooms((prev) => prev.filter((r) => r.id !== selectedRoom.id))
+      setSelectedRoom(null)
+      setMyRole(null)
+      setPartnerRole(null)
+      setRoleConfirmed(false)
+      setAmountConfirmed(false)
+    } catch (err) {
+      alert('Failed to delete deal.')
+    }
+  }
+
+  const sendChat = () => {
+    if (!chatInput.trim()) return
+    setMessages((prev) => [
+      ...prev,
+      { id: ++msgId.current, kind: 'mine', text: chatInput },
+    ])
+    setChatInput('')
+  }
 
   return (
     <div style={styles.page}>
-      <style>{`
-        @keyframes spin { to { transform: rotate(360deg); } }
-        @keyframes bounce {
-          0%, 60%, 100% { transform: translateY(0); opacity: 0.5; }
-          30% { transform: translateY(-4px); opacity: 1; }
-        }
-      `}</style>
+      {!selectedRoom ? (
+        /* --- MAIN DASHBOARD VIEW --- */
+        <div style={styles.modalContainer}>
+          <h1 style={styles.title}>Deal Hub</h1>
+          <p style={{ color: '#a89db8', marginBottom: '1.5rem' }}>Create a trade with a registered user or enter an active room.</p>
 
-      {step === 'setup' && (
-        <div style={styles.card}>
-          <h1 style={styles.title}>Start a Deal</h1>
-          <p style={styles.subtitle}>
-            Enter the unique User ID of the person you want to trade with. DealBot will invite
-            them and guide you both through the room.
-          </p>
+          <div style={styles.splitLayout}>
+            {/* LEFT PANEL: CREATE DEAL FORM */}
+            <div style={styles.sectionBox}>
+              <div style={styles.sectionHeader}>Create a Deal</div>
+              
+              {errorMessage && <div style={styles.errorBox}>{errorMessage}</div>}
 
-          <label style={styles.label}>Trading partner's User ID</label>
-          <div style={styles.inputWrap}>
-            <span style={styles.atPrefix}>@</span>
-            <input
-              style={{ ...styles.input, ...styles.inputWithPrefix }}
-              placeholder="e.g. vathana_92"
-              value={partnerId}
-              onChange={(e) => setPartnerId(e.target.value)}
-              onKeyDown={(e) => e.key === 'Enter' && handleInvite()}
-            />
-          </div>
-          <p style={styles.hint}>
-            You can find this on their profile. IDs are unique to every user.
-          </p>
+              <label style={styles.label}>Partner User ID (Use "123" to test)</label>
+              <input
+                style={styles.input}
+                placeholder="e.g. 123 or vathana_92"
+                value={partnerId}
+                onChange={(e) => setPartnerId(e.target.value)}
+              />
 
-          <button
-            style={styles.primaryBtn(!partnerId.trim())}
-            disabled={!partnerId.trim()}
-            onClick={handleInvite}
-          >
-            Invite to Deal Room
-          </button>
-          <button style={styles.secondaryBtn} onClick={() => navigate('/')}>
-            Cancel
-          </button>
-        </div>
-      )}
+              <label style={styles.label}>Deal Amount ($)</label>
+              <input
+                style={styles.input}
+                placeholder="e.g. 150"
+                type="number"
+                value={amount}
+                onChange={(e) => setAmount(e.target.value)}
+              />
 
-      {step === 'inviting' && (
-        <div style={styles.card}>
-          <h1 style={styles.title}>Sending Invite</h1>
-          <p style={styles.inviteTarget}>@{partnerId.trim()}</p>
-          <p style={{ ...styles.subtitle, textAlign: 'center' }}>
-            Room <span style={styles.codeBadge}>{roomCode}</span>
-          </p>
-          <div style={styles.spinnerWrap}>
-            <div style={styles.spinner} />
-            <p style={{ color: '#a89db8', fontSize: '0.9rem' }}>
-              Waiting for @{partnerId.trim()} to accept...
-            </p>
-          </div>
-        </div>
-      )}
+              <label style={styles.label}>What is being traded?</label>
+              <input
+                style={styles.input}
+                placeholder="e.g. 100 USDT or Game Account"
+                value={item}
+                onChange={(e) => setItem(e.target.value)}
+              />
 
-      {step === 'room' && (
-        <div style={styles.wideCard}>
-          <h1 style={styles.title}>Deal Room</h1>
-          <p style={styles.subtitle}>
-            Room <span style={styles.codeBadge}>{roomCode}</span>
-          </p>
-
-          <div style={styles.partiesRow}>
-            <div style={styles.personCard}>
-              <span style={styles.statusDot(true)} />
-              You {myRole ? `— ${myRole}` : '(choosing role...)'}
+              <button
+                style={styles.primaryBtn(!partnerId.trim() || !amount.trim() || !item.trim() || isLoading)}
+                disabled={!partnerId.trim() || !amount.trim() || !item.trim() || isLoading}
+                onClick={handleCreateDeal}
+              >
+                {isLoading ? 'Verifying User...' : 'Create Deal Room'}
+              </button>
             </div>
-            <div style={styles.personCard}>
-              <span style={styles.statusDot(otherJoined)} />
-              @{partnerId.trim()} {otherJoined ? `(${otherRole})` : '(pending)'}
+
+            {/* RIGHT PANEL: ACTIVE ROOMS & INCOMING INVITES */}
+            <div style={styles.sectionBox}>
+              <div style={styles.sectionHeader}>Active & Invited Rooms</div>
+              
+              <button style={styles.simulateBtn} onClick={handleSimulateInvite}>
+                ⚡ Simulate Incoming Trade Invite
+              </button>
+
+              {activeRooms.length === 0 ? (
+                <div style={{ color: '#6f6785', textAlign: 'center', marginTop: '1.5rem' }}>
+                  No active rooms. Create one or simulate an invite above!
+                </div>
+              ) : (
+                activeRooms.map((room) => (
+                  <div key={room.id} style={styles.roomCardVertical} onClick={() => openRoom(room)}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
+                      <span style={styles.codeBadge}>#{room.id}</span>
+                      {room.isIncoming && <span style={styles.inviteBadge}>INCOMING INVITE</span>}
+                      <span style={{ fontSize: '0.75rem', color: '#8b8299' }}>{room.created}</span>
+                    </div>
+                    <div style={{ fontWeight: 700, color: '#fff' }}>@{room.partner}</div>
+                    <div style={{ fontSize: '0.85rem', color: '#c7c0d4' }}>
+                      Trading: {room.item} (${room.amount})
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
+          </div>
+        </div>
+      ) : (
+        /* --- SELECTED ROOM INTERACTIVE VIEW --- */
+        <div style={{ ...styles.modalContainer, maxWidth: '720px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+            <div>
+              <h1 style={styles.title}>Room #{selectedRoom.id}</h1>
+              <span style={{ color: '#a89db8' }}>Trading with @{selectedRoom.partner}</span>
+            </div>
+            <button style={{ ...styles.cancelBtn, flex: 'none', padding: '0.5rem 1rem' }} onClick={() => setSelectedRoom(null)}>
+              Back to Hub
+            </button>
           </div>
 
           <div style={styles.chatWindow}>
             <div style={styles.chatScroll} ref={scrollRef}>
-              {messages.map((m) => {
-                if (m.kind === 'system') {
-                  return (
-                    <div key={m.id} style={styles.systemMsg}>
-                      {m.text}
-                    </div>
-                  )
-                }
-                const mine = m.kind === 'mine'
-                const bot = m.kind === 'bot'
-                return (
-                  <div key={m.id} style={styles.messageRow(mine)}>
-                    {!mine && (
-                      <div style={styles.avatar(bot ? 'bot' : 'other')}>
-                        {bot ? '🤖' : initials(m.from)}
-                      </div>
-                    )}
-                    <div style={styles.bubbleGroup(mine)}>
-                      <div style={styles.bubble(mine ? 'mine' : bot ? 'bot' : 'other')}>
-                        {m.text}
-                        {m.roleChoice && !myRole && (
-                          <div style={styles.roleBtnRow}>
-                            <button
-                              style={styles.roleChoiceBtn(false)}
-                              onClick={() => chooseRole('buyer')}
-                            >
-                              I'm the Buyer
+              {messages.map((m) => (
+                <div key={m.id} style={{ alignSelf: m.kind === 'mine' ? 'flex-end' : 'flex-start' }}>
+                  <div style={styles.bubble(m.kind)}>
+                    {m.text}
+
+                    {/* DealBot Message #1: Role Selection */}
+                    {m.roleSelection && !roleConfirmed && (
+                      <div style={{ marginTop: '0.8rem' }}>
+                        <div style={{ fontSize: '0.8rem', color: '#c7c0d4', marginBottom: '0.4rem' }}>Select your role:</div>
+                        <div style={styles.roleBtnRow}>
+                          <button
+                            style={styles.roleChoiceBtn(partnerRole === 'buyer', myRole === 'buyer')}
+                            disabled={partnerRole === 'buyer'}
+                            onClick={() => handleSelectRole('buyer')}
+                          >
+                            Buyer
+                          </button>
+                          <button
+                            style={styles.roleChoiceBtn(partnerRole === 'seller', myRole === 'seller')}
+                            disabled={partnerRole === 'seller'}
+                            onClick={() => handleSelectRole('seller')}
+                          >
+                            Seller
+                          </button>
+                        </div>
+
+                        {myRole && (
+                          <div style={styles.actionBtnGroup}>
+                            <button style={styles.confirmBtn} onClick={handleConfirmRole}>
+                              Confirm Role
                             </button>
-                            <button
-                              style={styles.roleChoiceBtn(false)}
-                              onClick={() => chooseRole('seller')}
-                            >
-                              I'm the Seller
+                            <button style={styles.cancelBtn} onClick={handleResetRoleSelection}>
+                              Reset Selection
                             </button>
                           </div>
                         )}
-                      </div>
-                      <div style={styles.timestamp(mine)}>{m.time}</div>
-                    </div>
-                    {mine && <div style={styles.avatar('mine')}>{initials('You')}</div>}
-                  </div>
-                )
-              })}
 
-              {otherTyping && (
-                <div style={styles.messageRow(false)}>
-                  <div style={styles.avatar('other')}>{initials(partnerId.trim())}</div>
-                  <div style={styles.typingBubble}>
-                    <span style={styles.typingDot(0)} />
-                    <span style={styles.typingDot(0.2)} />
-                    <span style={styles.typingDot(0.4)} />
+                        <button style={styles.deleteDealBtn} onClick={handleCancelAndDestroyDeal}>
+                          ✖ {selectedRoom.isIncoming ? 'Decline & Exit Deal' : 'Cancel & Delete Deal Ticket'}
+                        </button>
+                      </div>
+                    )}
+
+                    {/* DealBot Message #2: Amount Confirmation Prompt */}
+                    {m.amountConfirmation && !amountConfirmed && (
+                      <div style={{ marginTop: '0.8rem' }}>
+                        <div style={styles.actionBtnGroup}>
+                          <button style={styles.confirmBtn} onClick={handleConfirmAmount}>
+                            ✅ Confirm (${selectedRoom.amount})
+                          </button>
+                          <button style={styles.cancelBtn} onClick={handleCancelAndDestroyDeal}>
+                            ✖ Cancel / Wrong Amount
+                          </button>
+                        </div>
+                      </div>
+                    )}
                   </div>
                 </div>
-              )}
+              ))}
             </div>
           </div>
 
-          <div style={styles.chatInputRow}>
+          <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
-              style={styles.chatInput}
-              placeholder={
-                otherJoined ? 'Send a message or offer...' : 'Waiting for the room to be ready...'
-              }
+              style={{ ...styles.input, marginBottom: 0 }}
+              placeholder={amountConfirmed ? 'Type a message...' : 'Please confirm role and amount first...'}
+              disabled={!amountConfirmed}
               value={chatInput}
-              disabled={!otherJoined}
               onChange={(e) => setChatInput(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && sendChat()}
             />
             <button
-              style={styles.sendBtn(!chatInput.trim() || !otherJoined)}
-              disabled={!chatInput.trim() || !otherJoined}
+              style={{ ...styles.primaryBtn(!amountConfirmed || !chatInput.trim()), marginTop: 0, width: '100px' }}
+              disabled={!amountConfirmed || !chatInput.trim()}
               onClick={sendChat}
             >
-              ➤
-            </button>
-          </div>
-
-          {otherJoined && !showFinalize && (
-            <button style={styles.primaryBtn(false)} onClick={() => setShowFinalize(true)}>
-              Ready to Finalize the Deal
-            </button>
-          )}
-
-          {showFinalize && (
-            <div style={styles.finalizeBox}>
-              <p style={{ marginBottom: '0.75rem', fontSize: '0.9rem', color: '#e6e0ef' }}>
-                Enter the final price you're agreeing to. Once both sides lock in, the deal closes.
-              </p>
-              <div style={styles.finalizeRow}>
-                <input
-                  style={{ ...styles.input, marginBottom: 0 }}
-                  placeholder="Final price (e.g. 95)"
-                  type="number"
-                  value={myPriceInput}
-                  disabled={myConfirmed}
-                  onChange={(e) => setMyPriceInput(e.target.value)}
-                />
-                <button
-                  style={{ ...styles.primaryBtn(myConfirmed || !myPriceInput.trim()), width: 'auto', padding: '0 1.4rem', marginBottom: 0 }}
-                  disabled={myConfirmed || !myPriceInput.trim()}
-                  onClick={confirmMyPrice}
-                >
-                  {myConfirmed ? 'Locked' : 'Lock In'}
-                </button>
-              </div>
-
-              <div style={styles.readyRow}>
-                <div style={styles.readyBox(myConfirmed)}>
-                  {myConfirmed ? '✓ You locked in' : 'Not locked in yet'}
-                </div>
-                <div style={styles.readyBox(otherConfirmed)}>
-                  {otherConfirmed ? `✓ @${partnerId.trim()} locked in` : `Waiting on @${partnerId.trim()}`}
-                </div>
-              </div>
-            </div>
-          )}
-        </div>
-      )}
-
-      {step === 'complete' && (
-        <div style={styles.card}>
-          <div style={styles.completeWrap}>
-            <div style={styles.checkCircle}>✓</div>
-            <h1 style={styles.title}>Deal Completed</h1>
-            <p style={styles.subtitle}>
-              Both sides agreed on {dealPrice}$. Funds and item have exchanged hands securely.
-            </p>
-            <div style={styles.itemBoxLeft}>
-              <div>Room #{roomCode} — closed</div>
-              <div>You & @{partnerId.trim()} both confirmed</div>
-            </div>
-            <button style={{ ...styles.primaryBtn(false), marginTop: '1.25rem' }} onClick={() => navigate('/Dashboard')}>
-              Back to Dashboard
+              Send
             </button>
           </div>
         </div>

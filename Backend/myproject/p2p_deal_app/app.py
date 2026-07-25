@@ -7,7 +7,7 @@ from admin.verification import verification_bp
 from config import Config
 from routes.auth import auth_bp
 from routes.profile import profile_bp
-
+from routes.room import room_bp
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -32,7 +32,7 @@ app.register_blueprint(auth_bp, url_prefix="/api")
 app.register_blueprint(profile_bp, url_prefix="/api")
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(verification_bp, url_prefix="/api/admin")
-
+app.register_blueprint(room_bp, url_prefix="/api")
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
