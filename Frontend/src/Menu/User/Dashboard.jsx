@@ -2,16 +2,16 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import "../Global.css";
+import defaultAvatar from "../../assets/default-avatar.png";
 import { getUserProfile } from '../../lib/profile';
-
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
-  
+  const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-
+  
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
 
@@ -46,6 +46,49 @@ const Dashboard = () => {
     navigate("/Login");
   };
 
+  const handleCapturedImage = async (event) => {
+    const file = event.target.files[0];
+     if (!file) {
+        alert("No image selected.");
+        return;
+    }
+    const userId = localStorage.getItem("user_id");
+    console.log("User ID:", userId);
+    if (!userId) {
+        alert("User not logged in.");
+        return;
+    }
+
+    const formData = new FormData();
+    formData.append("profile_picture", file);
+
+    try {
+
+        const response = await fetch(
+            `http://127.0.0.1:8000/api/profile/${userId}/picture`,
+            {
+                method: "PUT",
+                body: formData,
+            }
+        );
+
+        const result = await response.json();
+
+        if (!response.ok) {
+            alert(result.message || "Upload failed.");
+            return;
+        }
+
+        const updatedUser = await getUserProfile();
+        setUser(updatedUser);
+
+        alert("Profile picture updated successfully!");
+
+    } catch (err) {
+        console.error(err);
+        alert("Upload failed.");
+    }
+};
   if (loading) {
     return (
       <div className="user-container">
@@ -72,8 +115,73 @@ const Dashboard = () => {
     </header>
 
     <div className="dashboard-grid">
-
       <div className="dashboard-card">
+         <div className="profile-picture-container">
+ <img
+  src={
+    user.profile_picture
+      ? `http://127.0.0.1:8000/${user.profile_picture}?t=${new Date().getTime()}`
+      : defaultAvatar
+  }
+  alt="Profile"
+  className="profile-picture"
+/>
+  
+  <div className="upload-buttons">
+
+  {!showUploadOptions ? (
+
+    <button
+      type="button"
+      className="upload-button"
+      onClick={() => setShowUploadOptions(true)}
+    >
+      Change Profile Picture
+    </button>
+
+  ) : (
+
+    <>
+
+      <button
+        type="button"
+        className="upload-button"
+        onClick={() => navigate("/camera/profile")}
+      >
+         Take Photo
+      </button>
+
+      <button
+        type="button"
+        className="upload-button secondary"
+        onClick={() => document.getElementById("galleryInput").click()}
+      >
+         Choose from Gallery
+      </button>
+
+      <button
+        type="button"
+        className="upload-button cancel"
+        onClick={() => setShowUploadOptions(false)}
+      >
+        Cancel
+      </button>
+
+    </>
+
+  )}
+
+  <input
+    id="galleryInput"
+    type="file"
+    accept="image/*"
+    hidden
+    onChange={handleCapturedImage}
+  />
+
+</div>
+
+</div>
         <h2>Profile Information</h2>
 
         <div className="profile-row">
@@ -175,7 +283,7 @@ const Dashboard = () => {
       </div>
 
     </div>
-
+    
   </div>
 
   );

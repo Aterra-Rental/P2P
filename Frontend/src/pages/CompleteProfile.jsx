@@ -1,11 +1,15 @@
-import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+
+// import { useNavigate } from "react-router-dom";
 import { Flame } from "lucide-react";
 import "./CompleteProfile.css";
+import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
+import CameraModal from "../components/Camera/CameraModal";
+
+
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
-
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [phonenumber, setPhonenumber] = useState("");
@@ -15,7 +19,9 @@ const CompleteProfile = () => {
 
   const [nationalIdFront, setNationalIdFront] = useState(null);
   const [nationalIdBack, setNationalIdBack] = useState(null);
-
+  const [showCamera, setShowCamera] = useState(false);
+  const [captureSide, setCaptureSide] = useState(null);
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -203,25 +209,65 @@ const CompleteProfile = () => {
           {/* National ID Front */}
           <div className="InputGroup">
             <label>National ID (Front)</label>
+            <div className="upload-buttons">
+                    <button
+                      type="button"
+                      className="upload-button"
+                      onClick={() => {
+                            setCaptureSide("front");
+                            setShowCamera(true);
+                        }}
+                    >
+                       Take Front Photo
+                    </button>
 
-            <input
-              type="file"
-              accept=".jpg,.jpeg,.png"
-              onChange={(e) => setNationalIdFront(e.target.files[0])}
-              required
-            />
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setNationalIdFront(e.target.files[0])}
+                  />
+                  {nationalIdFront && (
+                      <img
+                          src={URL.createObjectURL(nationalIdFront)}
+                          alt="Front ID"
+                          className="id-preview"
+                      />
+                  )}
+
+          </div>
           </div>
 
           {/* National ID Back */}
           <div className="InputGroup">
             <label>National ID (Back)</label>
 
-            <input
-              type="file"
-              accept=".jpg,.jpeg,.png"
-              onChange={(e) => setNationalIdBack(e.target.files[0])}
-              required
-            />
+            <div className="upload-buttons">
+
+                  <button
+                    type="button"
+                    className="upload-button"
+                    onClick={() => {
+                        setCaptureSide("back");
+                        setShowCamera(true);
+                    }}
+                  >
+                     Take Back Photo
+                  </button>
+
+                  <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => setNationalIdBack(e.target.files[0])}
+                  />
+
+                  {nationalIdBack && (
+                        <img
+                            src={URL.createObjectURL(nationalIdBack)}
+                            alt="Back ID"
+                            className="id-preview"
+                        />
+                    )}
+            </div>
           </div>
 
           {/* Date of Birth */}
@@ -255,6 +301,21 @@ const CompleteProfile = () => {
 
         </form>
       </div>
+      {showCamera && (
+            <CameraModal
+                onClose={() => setShowCamera(false)}
+                onCapture={(file) => {
+
+                    if (captureSide === "front") {
+                        setNationalIdFront(file);
+                    } else {
+                        setNationalIdBack(file);
+                    }
+
+                    setShowCamera(false);
+                  }}
+              />
+      )}
     </div>
   );
 };

@@ -10,15 +10,19 @@ import Register from '../pages/Register.jsx'
 import Login from '../pages/Login.jsx'
 import CompleteProfile from '../pages/CompleteProfile.jsx'
 import DealRoom from '../Menu/Home/DealRoom.jsx'
+import CameraPage from '../components/Camera/CameraPage.jsx'
+import PreviewPage from '../components/Camera/PreviewPage.jsx'
 
 
 const Layout = () => {
   const location = useLocation()
-  const hideNavbar = ['/Register', '/Login'].includes(location.pathname)
+  const hideLayout =
+  ['/Register', '/Login'].includes(location.pathname) ||
+  location.pathname.startsWith('/camera');
 
   return (
     <>
-      {!hideNavbar && <Navbar/>}
+      {!hideLayout && <Navbar/>}
       <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/Home' element={<Home/>}/>
@@ -29,8 +33,10 @@ const Layout = () => {
         <Route path='/Login' element={<Login/>}/>
         <Route path='/CompleteProfile' element={<CompleteProfile/>} />
         <Route path="/create-deal" element={<DealRoom />}/>
+        <Route path="/camera/:type" element={<CameraPage />} />
+        <Route path="/camera/:type/preview" element={<PreviewPage />} />
       </Routes>
-      {!hideNavbar && <Footer/>}
+      {!hideLayout && <Footer/>}
     </>
   )
 }

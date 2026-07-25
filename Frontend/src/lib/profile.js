@@ -18,4 +18,5 @@ export const getUserProfile = async () => {
   }
 
   return await response.json();
+  
 };

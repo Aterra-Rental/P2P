@@ -7,14 +7,22 @@ from werkzeug.utils import secure_filename
 
 profile_bp = Blueprint("profile", __name__)
 
-UPLOAD_FOLDER = os.path.join(
+
+
+NATIONAL_ID_FOLDER = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),
     "uploads",
     "national_ids"
 )
 
-os.makedirs(UPLOAD_FOLDER, exist_ok=True)
+PROFILE_PICTURE_FOLDER = os.path.join(
+    os.path.dirname(os.path.dirname(__file__)),
+    "uploads",
+    "profile_pictures"
+)
 
+os.makedirs(NATIONAL_ID_FOLDER, exist_ok=True)
+os.makedirs(PROFILE_PICTURE_FOLDER, exist_ok=True)
 ALLOWED_EXTENSIONS = {"png", "jpg", "jpeg"}
 
 
@@ -105,7 +113,7 @@ def create_profile():
             f"user_{user_id}_front_{national_id_front.filename}"
         )
 
-        front_filepath = os.path.join(UPLOAD_FOLDER, front_filename)
+        front_filepath = os.path.join(NATIONAL_ID_FOLDER, front_filename)
         national_id_front.save(front_filepath)
 
         # Save back image
@@ -113,7 +121,7 @@ def create_profile():
             f"user_{user_id}_back_{national_id_back.filename}"
         )
 
-        back_filepath = os.path.join(UPLOAD_FOLDER, back_filename)
+        back_filepath = os.path.join(NATIONAL_ID_FOLDER, back_filename)
         national_id_back.save(back_filepath)
 
         front_path = f"uploads/national_ids/{front_filename}"
@@ -191,6 +199,7 @@ def get_profile(user_id):
                 address,
                 national_id_front,
                 national_id_back,
+                profile_picture,
                 verify_status
             FROM user_details
             WHERE user_id = %s
@@ -214,7 +223,8 @@ def get_profile(user_id):
             "address": profile[5],
             "national_id_front": profile[6],
             "national_id_back": profile[7],
-            "verify_status": profile[8]
+            "profile_picture": profile[8],
+            "verify_status": profile[9]
         }), 200
 
     except Exception as e:
@@ -223,6 +233,77 @@ def get_profile(user_id):
         return jsonify({
             "message": str(e)
         }), 500
+
+    finally:
+        cursor.close()
+        conn.close()
+
+@profile_bp.route("/profile/<int:user_id>/picture", methods=["PUT"])
+def upload_profile_picture(user_id):
+
+    picture = request.files.get("profile_picture")
+
+    if picture is None or picture.filename == "":
+        return jsonify({"message": "No image selected"}), 400
+
+    if not allowed_file(picture.filename):
+        return jsonify({"message": "Image must be PNG, JPG or JPEG"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT user_id FROM user_details WHERE user_id = %s",
+            (user_id,)
+        )
+
+        if cursor.fetchone() is None:
+            return jsonify({"message": "Profile not found"}), 404
+
+        # Create user folder
+        user_folder = os.path.join(
+                PROFILE_PICTURE_FOLDER,
+                f"user_{user_id}")
+
+        os.makedirs(user_folder, exist_ok=True)
+
+                # Keep original extension
+        extension = picture.filename.rsplit(".", 1)[1].lower()
+
+        filename = f"profile.{extension}"
+
+        filepath = os.path.join(
+                    user_folder,
+                    filename
+                )
+
+        picture.save(filepath)
+
+        image_path = (
+                    f"uploads/profile_pictures/user_{user_id}/{filename}"
+                    )
+
+        cursor.execute(
+            """
+            UPDATE user_details
+            SET profile_picture = %s
+            WHERE user_id = %s
+            """,
+            (image_path, user_id)
+        )
+
+        conn.commit()
+
+        return jsonify({
+            "message": "Profile picture updated successfully",
+            "profile_picture": image_path
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        traceback.print_exc()
+        return jsonify({"message": str(e)}), 500
 
     finally:
         cursor.close()

@@ -1,0 +1,158 @@
+/* ==========================================
+        PREVIEW PAGE
+========================================== */
+
+.preview-page{
+
+    width:100%;
+    min-height:100vh;
+
+    display:flex;
+    justify-content:center;
+    align-items:center;
+
+    padding:40px;
+}
+
+.preview-card{
+
+    width:100%;
+    max-width:550px;
+
+    background:var(--bg-card);
+
+    border:1px solid var(--border);
+
+    border-radius:22px;
+
+    backdrop-filter:blur(20px);
+
+    box-shadow:var(--shadow);
+
+    padding:30px;
+
+    text-align:center;
+}
+
+.preview-card h2{
+
+    color:white;
+
+    margin-bottom:25px;
+
+    padding-bottom:15px;
+
+    border-bottom:1px solid rgba(255,255,255,.08);
+
+    font-size:1.8rem;
+}
+
+.preview-image{
+
+    width:100%;
+
+    aspect-ratio:3/4;
+
+    object-fit:cover;
+
+    border-radius:18px;
+
+    border:2px solid var(--border);
+
+    margin-bottom:30px;
+}
+
+.preview-actions{
+
+    display:flex;
+
+    gap:15px;
+
+    margin-bottom:15px;
+}
+
+.preview-actions button{
+
+    flex:1;
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:15px;
+
+    font-size:15px;
+
+    font-weight:600;
+
+    cursor:pointer;
+
+    transition:.35s;
+}
+
+.retake-btn{
+
+    background:#374151;
+
+    color:white;
+}
+
+.retake-btn:hover{
+
+    background:#4b5563;
+
+    transform:translateY(-4px);
+}
+
+.cancel-btn{
+
+    background:#EF4444;
+
+    color:white;
+}
+
+.cancel-btn:hover{
+
+    background:#dc2626;
+
+    transform:translateY(-4px);
+}
+
+.use-btn{
+
+    width:100%;
+
+    background:var(--gradient-primary);
+
+    color:white;
+
+    border:none;
+
+    border-radius:14px;
+
+    padding:16px;
+
+    font-size:16px;
+
+    font-weight:700;
+
+    cursor:pointer;
+
+    transition:.35s;
+
+    box-shadow:var(--shadow);
+}
+
+.use-btn:hover{
+
+    transform:translateY(-4px);
+
+    box-shadow:var(--glow);
+}
+
+.use-btn:disabled{
+
+    opacity:.6;
+
+    cursor:not-allowed;
+}
