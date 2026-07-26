@@ -50,7 +50,7 @@ const FQA = () => {
   return (
     <div className="Global">
       <div className="Container">
-        <h1>Frequently Asked Questions (FQA)</h1>
+        <h1>Frequently Asked Questions (FAQ)</h1>
         <p className="fa-subtitle">
           Answers to the most common questions about how rooms, payments, and disputes work on the platform.
         </p>
