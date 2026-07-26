@@ -2,41 +2,40 @@
    Feature.css
 =========================== */
 
+/* ---------- Sections ---------- */
+
+section{
+    margin-bottom:80px;
+}
+
 /* ---------- Feature & How It Works ---------- */
 
 .For-box{
     width:100%;
-    justify-items:center;
-    align-items:center;
 }
 
 .box,
 .boxf{
-    width:220px;
-    height:185px;
+    width:100%;
+    min-height:220px;
 
     background:var(--bg-card);
-
     border:1px solid var(--border);
-
     border-radius:20px;
 
     backdrop-filter:blur(18px);
-
     box-shadow:var(--shadow);
 
-    padding:18px;
+    padding:28px;
 
     display:flex;
     flex-direction:column;
-    justify-content:flex-start;
     align-items:center;
+    justify-content:flex-start;
 
     text-align:center;
 
     transition:.3s;
-
-    overflow:hidden;
 }
 
 .box:hover,
@@ -48,63 +47,59 @@
 
 .box i,
 .boxf i{
-    font-size:2rem;
+    font-size:2.3rem;
     color:var(--primary);
-    margin-bottom:12px;
+    margin-bottom:18px;
 }
 
 .box h3,
 .boxf h3{
+    color:#fff;
     font-size:1.2rem;
-    color:white;
-    margin-bottom:10px;
+    font-weight:600;
+    margin-bottom:12px;
 }
 
 .box p,
 .boxf p{
-    font-size:.85rem;
     color:var(--text-secondary);
-    line-height:1.45;
+    font-size:.95rem;
+    line-height:1.7;
 }
 
+/* ---------- Security & Comparison ---------- */
 
-/* ---------- Security Card ---------- */
-
-.security-card{
-
+.security-card,
+.compare-card{
     background:var(--bg-card);
-
     border:1px solid var(--border);
-
     border-radius:22px;
-
     padding:30px;
-
     box-shadow:var(--shadow);
+    height:100%;
 }
 
+.security-card h2,
+.compare-card h2{
+    color:#fff;
+}
 
-/* ---------- Mini Security Cards ---------- */
+/* ---------- Mini Cards ---------- */
 
 .mini-box{
-
     background:rgba(255,255,255,.03);
 
     border:1px solid var(--border);
-
     border-radius:18px;
 
-    padding:18px;
+    padding:22px;
 
-    min-height:190px;
+    min-height:180px;
 
     display:flex;
-
     flex-direction:column;
-
-    justify-content:flex-start;
-
     align-items:center;
+    justify-content:flex-start;
 
     text-align:center;
 
@@ -112,167 +107,125 @@
 }
 
 .mini-box:hover{
-
     transform:translateY(-5px);
-
     border-color:var(--primary);
-
-    box-shadow:var(--shadow);
+    box-shadow:var(--glow);
 }
 
 .mini-box i{
-
     font-size:2rem;
-
     color:var(--primary);
-
-    margin-bottom:12px;
+    margin-bottom:15px;
 }
 
 .mini-box h4{
-
-    color:white;
-
-    font-size:1.05rem;
-
+    color:#fff;
     margin-bottom:10px;
-
-    line-height:1.3;
+    font-size:1.05rem;
 }
 
 .mini-box p{
-
     color:var(--text-secondary);
-
+    line-height:1.6;
     font-size:.9rem;
-
-    line-height:1.5;
 }
-
-
-/* ---------- Comparison Card ---------- */
-
-.compare-card{
-
-    background:var(--bg-card);
-
-    border:1px solid var(--border);
-
-    border-radius:22px;
-
-    padding:30px;
-
-    box-shadow:var(--shadow);
-}
-
 
 /* ---------- Table ---------- */
 
-.compare-card table{
-
+.table-wrapper{
     width:100%;
+}
 
+.compare-card table{
+    width:100%;
     border-collapse:collapse;
-
     overflow:hidden;
-
     border-radius:15px;
 }
 
 .compare-card thead{
-
     background:var(--gradient-primary);
 }
 
 .compare-card th{
-
-    color:white;
-
-    padding:16px;
-
+    color:#fff;
+    padding:18px;
+    font-weight:600;
     text-align:center;
-
-    font-size:1rem;
 }
 
 .compare-card td{
-
-    color:var(--text-secondary);
-
-    padding:16px;
-
+    padding:18px;
     text-align:center;
-
+    color:var(--text-secondary);
     border-top:1px solid var(--border);
 }
 
-.compare-card tbody tr{
-
-    transition:.25s;
+.compare-card tbody tr:nth-child(even){
+    background:rgba(255,255,255,.03);
 }
 
 .compare-card tbody tr:hover{
-
-    background:rgba(255,255,255,.04);
+    background:rgba(255,255,255,.05);
 }
-
 
 /* ---------- Responsive ---------- */
 
-@media (max-width:1200px){
+@media (max-width:1024px){
 
-    .box,
-    .boxf{
-
-        width:210px;
-    }
-}
-
-@media (max-width:992px){
-
-    .box,
-    .boxf{
-
-        width:230px;
+    .security-card,
+    .compare-card{
+        padding:25px;
     }
 
-    .mini-box{
-
-        min-height:170px;
-    }
 }
 
 @media (max-width:768px){
 
     .box,
     .boxf{
+        min-height:auto;
+        padding:24px;
+    }
 
-        width:250px;
+    .mini-box{
+        min-height:auto;
+    }
+
+    .compare-card{
+        overflow:hidden;
+    }
+
+    .table-wrapper{
+        overflow-x:auto;
+    }
+
+    .compare-card table{
+        min-width:600px;
+    }
+
+}
+
+@media (max-width:480px){
+
+    .box,
+    .boxf{
+        padding:22px;
+    }
+
+    .box h3,
+    .boxf h3{
+        font-size:1.1rem;
+    }
+
+    .box p,
+    .boxf p{
+        font-size:.9rem;
     }
 
     .security-card,
     .compare-card{
-
-        padding:22px;
+        padding:20px;
     }
 
-    .mini-box{
-
-        min-height:170px;
-    }
-}
-
-@media (max-width:576px){
-
-    .box,
-    .boxf{
-
-        width:100%;
-        max-width:300px;
-    }
-
-    .mini-box{
-
-        min-height:auto;
-    }
 }
