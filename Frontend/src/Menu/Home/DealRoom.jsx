@@ -1,6 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
-import PaymentQRCode from './PaymentQRCode'
+import PaymentQRCode from '../../components/PaymentQRCode'
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase()
 const formatTime = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
