@@ -710,7 +710,7 @@ const DealRoom = () => {
               <div style={styles.sectionHeader}>Active & Invited Rooms</div>
 
               <button style={styles.simulateBtn} onClick={handleSimulateInvite}>
-                ⚡ Simulate Incoming Trade Invite
+                ⚡️ Simulate Incoming Trade Invite
               </button>
 
               {activeRooms.length === 0 ? (
@@ -789,7 +789,7 @@ const DealRoom = () => {
                         )}
 
                         <button style={styles.deleteDealBtn} onClick={handleCancelAndDestroyDeal}>
-                          ✖ {selectedRoom.isIncoming ? 'Decline & Exit Deal' : 'Cancel & Delete Deal Ticket'}
+                          ✖️ {selectedRoom.isIncoming ? 'Decline & Exit Deal' : 'Cancel & Delete Deal Ticket'}
                         </button>
                       </div>
                     )}
@@ -801,7 +801,7 @@ const DealRoom = () => {
                             ✅ Confirm (${selectedRoom.proposedamount})
                           </button>
                           <button style={styles.cancelBtn} onClick={handleCancelAndDestroyDeal}>
-                            ✖ Cancel / Wrong Amount
+                            ✖️ Cancel / Wrong Amount
                           </button>
                         </div>
                       </div>
