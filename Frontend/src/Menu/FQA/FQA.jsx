@@ -34,10 +34,6 @@ const FQA = () => {
   const [activeCat, setActiveCat] = useState("all");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState(null);
-  const [customQuestion, setCustomQuestion] = useState("");
-  const [submitted, setSubmitted] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [errorMessage, setErrorMessage] = useState("");
 
   const filtered = FAQS.filter((f) => {
     const inCat = activeCat === "all" || f.cat === activeCat;
@@ -49,50 +45,6 @@ const FQA = () => {
 
   function toggle(id) {
     setOpenId((prev) => (prev === id ? null : id));
-  }
-
-  async function handleSubmit(e) {
-    e.preventDefault();
-    const text = customQuestion.trim();
-    if (!text) return;
-
-    setLoading(true);
-    setErrorMessage("");
-
-    // Retrieve user session info if available
-    const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
-    const userId = savedUser.user_id || localStorage.getItem("user_id") || null;
-    const email = savedUser.email || localStorage.getItem("email") || null;
-
-    try {
-      const response = await fetch("http://127.0.0.1:8000/api/questions", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          question: text,
-          user_id: userId,
-          email: email,
-        }),
-      });
-
-      const data = await response.json();
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to submit question.");
-      }
-
-      setSubmitted(true);
-      setCustomQuestion("");
-      setTimeout(() => setSubmitted(false), 4000);
-
-    } catch (err) {
-      console.error("Error submitting question:", err);
-      setErrorMessage("Could not send your question. Please try again later.");
-    } finally {
-      setLoading(false);
-    }
   }
 
   return (
@@ -124,58 +76,22 @@ const FQA = () => {
           ))}
         </div>
 
-        <div className="fa-layout">
-          <div className="fa-list">
-            {filtered.map((f) => {
-              const isOpen = openId === f.id;
-              return (
-                <div key={f.id} className={`fa-item${isOpen ? " open" : ""}`}>
-                  <button className="fa-question" onClick={() => toggle(f.id)}>
-                    <span>{f.q}</span>
-                    <span className="fa-icon">{isOpen ? "−" : "+"}</span>
-                  </button>
-                  {isOpen && <div className="fa-answer">{f.a}</div>}
-                </div>
-              );
-            })}
-            {filtered.length === 0 && (
-              <p className="fa-empty">No questions match that search.</p>
-            )}
-          </div>
-
-          <aside className="fa-ask-box">
-            <h2 className="fa-ask-title">Didn't find your answer?</h2>
-            <p className="fa-ask-subtitle">
-              Type your question below and our team will get back to you.
-            </p>
-            <form onSubmit={handleSubmit} className="fa-ask-form">
-              <textarea
-                value={customQuestion}
-                onChange={(e) => setCustomQuestion(e.target.value)}
-                placeholder="Type your question here..."
-                className="fa-ask-textarea"
-                rows={5}
-                disabled={loading}
-              />
-              <button
-                type="submit"
-                disabled={!customQuestion.trim() || loading}
-                className="fa-ask-submit"
-              >
-                {loading ? "Sending..." : "Submit Question"}
-              </button>
-            </form>
-            {submitted && (
-              <p className="fa-ask-success">
-                Your question has been sent. We'll follow up soon.
-              </p>
-            )}
-            {errorMessage && (
-              <p className="fa-ask-error" style={{ color: "red", marginTop: "10px" }}>
-                {errorMessage}
-              </p>
-            )}
-          </aside>
+        <div className="fa-list">
+          {filtered.map((f) => {
+            const isOpen = openId === f.id;
+            return (
+              <div key={f.id} className={`fa-item${isOpen ? " open" : ""}`}>
+                <button className="fa-question" onClick={() => toggle(f.id)}>
+                  <span>{f.q}</span>
+                  <span className="fa-icon">{isOpen ? "−" : "+"}</span>
+                </button>
+                {isOpen && <div className="fa-answer">{f.a}</div>}
+              </div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <p className="fa-empty">No questions match that search.</p>
+          )}
         </div>
       </div>
 
