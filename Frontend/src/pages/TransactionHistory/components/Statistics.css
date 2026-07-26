@@ -1,0 +1,31 @@
+.statistics-container {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+    gap: 20px;
+    margin-bottom: 30px;
+}
+
+.stat-card {
+    background: #ffffff;
+    border-radius: 12px;
+    padding: 20px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    transition: 0.2s ease;
+}
+
+.stat-card:hover {
+    transform: translateY(-3px);
+}
+
+.stat-card h3 {
+    font-size: 2rem;
+    margin-bottom: 8px;
+    color: #0d6efd;
+}
+
+.stat-card p {
+    color: #666;
+    font-weight: 500;
+    margin: 0;
+}
