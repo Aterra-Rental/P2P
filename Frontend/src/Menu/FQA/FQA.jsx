@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../Global.css";
 import "./FQA.css";
-import Footer from '../../Router/Footer'
+import Footer from '../../Router/Footer';
 
 const CATEGORIES = [
   { id: "all", label: "All" },
@@ -34,8 +34,6 @@ const FQA = () => {
   const [activeCat, setActiveCat] = useState("all");
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState(null);
-  const [customQuestion, setCustomQuestion] = useState("");
-  const [submitted, setSubmitted] = useState(false);
 
   const filtered = FAQS.filter((f) => {
     const inCat = activeCat === "all" || f.cat === activeCat;
@@ -49,19 +47,10 @@ const FQA = () => {
     setOpenId((prev) => (prev === id ? null : id));
   }
 
-  function handleSubmit(e) {
-    e.preventDefault();
-    const text = customQuestion.trim();
-    if (!text) return;
-    setSubmitted(true);
-    setCustomQuestion("");
-    setTimeout(() => setSubmitted(false), 4000);
-  }
-
   return (
     <div className="Global">
       <div className="Container">
-        <h1>Frequently Asked Questions (FQA)</h1>
+        <h1>Frequently Asked Questions (FAQ)</h1>
         <p className="fa-subtitle">
           Answers to the most common questions about how rooms, payments, and disputes work on the platform.
         </p>
@@ -87,52 +76,22 @@ const FQA = () => {
           ))}
         </div>
 
-        <div className="fa-layout">
-          <div className="fa-list">
-            {filtered.map((f) => {
-              const isOpen = openId === f.id;
-              return (
-                <div key={f.id} className={`fa-item${isOpen ? " open" : ""}`}>
-                  <button className="fa-question" onClick={() => toggle(f.id)}>
-                    <span>{f.q}</span>
-                    <span className="fa-icon">{isOpen ? "−" : "+"}</span>
-                  </button>
-                  {isOpen && <div className="fa-answer">{f.a}</div>}
-                </div>
-              );
-            })}
-            {filtered.length === 0 && (
-              <p className="fa-empty">No questions match that search.</p>
-            )}
-          </div>
-
-          <aside className="fa-ask-box">
-            <h2 className="fa-ask-title">Didn't find your answer?</h2>
-            <p className="fa-ask-subtitle">
-              Type your question below and our team will get back to you.
-            </p>
-            <form onSubmit={handleSubmit} className="fa-ask-form">
-              <textarea
-                value={customQuestion}
-                onChange={(e) => setCustomQuestion(e.target.value)}
-                placeholder="Type your question here..."
-                className="fa-ask-textarea"
-                rows={5}
-              />
-              <button
-                type="submit"
-                disabled={!customQuestion.trim()}
-                className="fa-ask-submit"
-              >
-                Submit Question
-              </button>
-            </form>
-            {submitted && (
-              <p className="fa-ask-success">
-                Your question has been sent. We'll follow up soon.
-              </p>
-            )}
-          </aside>
+        <div className="fa-list">
+          {filtered.map((f) => {
+            const isOpen = openId === f.id;
+            return (
+              <div key={f.id} className={`fa-item${isOpen ? " open" : ""}`}>
+                <button className="fa-question" onClick={() => toggle(f.id)}>
+                  <span>{f.q}</span>
+                  <span className="fa-icon">{isOpen ? "−" : "+"}</span>
+                </button>
+                {isOpen && <div className="fa-answer">{f.a}</div>}
+              </div>
+            );
+          })}
+          {filtered.length === 0 && (
+            <p className="fa-empty">No questions match that search.</p>
+          )}
         </div>
       </div>
 

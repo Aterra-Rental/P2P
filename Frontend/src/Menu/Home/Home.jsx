@@ -67,9 +67,9 @@ const Home = () => {
               <button type="button" id="Create_deal" className="btn-primary btn-1 button_under1" onClick={handleCreateDealClick}>
                 Create Deals <i className="fa-solid fa-arrow-up-long rotatearrow"></i>
               </button>
-              <butto className="button_under2" onClick={handleHowItWorksClick}>
+              <button className="button_under2" onClick={handleHowItWorksClick}>
                 How it works <i className="fa-solid fa-arrow-up-long rotatearrow"></i>
-              </butto>
+              </button>
             </div>
           </div>
 

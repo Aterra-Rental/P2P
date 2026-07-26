@@ -36,5 +36,6 @@ app.register_blueprint(verification_bp, url_prefix="/api/admin")
 app.register_blueprint(room_bp, url_prefix="/api")
 app.register_blueprint(transaction_bp, url_prefix="/api")
 
+
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
