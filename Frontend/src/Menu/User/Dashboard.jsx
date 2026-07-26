@@ -45,6 +45,26 @@ const Dashboard = () => {
     localStorage.clear();
     navigate("/Login");
   };
+  const handleRestrictedAction = (path) => {
+    if (user.verify_status === "Pending") {
+        alert(
+            "Your account verification is still pending.\n\nPlease wait for an administrator to review and approve your account before trading."
+        );
+        return;
+    }
+
+    if (user.verify_status === "Rejected") {
+        alert(
+            "Your verification was rejected.\n\nPlease update your profile and submit it again."
+        );
+        return;
+    }
+
+    navigate(path);
+};
+
+
+
 
   const handleCapturedImage = async (event) => {
     const file = event.target.files[0];
@@ -141,6 +161,26 @@ const Dashboard = () => {
           Logout
         </button>
       </header>
+      {user.verify_status === "Pending" && (
+  <div className="dashboard-banner pending">
+    ⏳ Your verification request has been submitted successfully.
+    Please wait for an administrator to review your account.
+  </div>
+)}
+
+{user.verify_status === "Verified" && (
+  <div className="dashboard-banner verified">
+    ✅ Your account has been verified.
+    You can now create and join deal rooms.
+  </div>
+)}
+
+{user.verify_status === "Rejected" && (
+  <div className="dashboard-banner rejected">
+    ❌ Your verification was rejected.
+    Please update your profile and submit it again.
+  </div>
+)}
 
       <div className="dashboard-grid">
         <div className="dashboard-card">
@@ -205,83 +245,143 @@ const Dashboard = () => {
           </div>
           <h2>Profile Information</h2>
 
-          <div className="profile-row">
+          <div className="profile-row verification-row">
             <span>First Name</span>
             <strong>{user.firstname}</strong>
           </div>
 
-          <div className="profile-row">
+          <div className="profile-row verification-row">
             <span>Last Name</span>
             <strong>{user.lastname}</strong>
           </div>
 
-          <div className="profile-row">
+          <div className="profile-row verification-row">
             <span>Phone Number</span>
             <strong>{user.phonenumber}</strong>
           </div>
 
-          <div className="profile-row">
+          <div className="profile-row verification-row">
             <span>National ID</span>
             <strong>{user.nationalidentity_id}</strong>
           </div>
 
-          <div className="profile-row">
+          <div className="profile-row verification-row">
             <span>Date of Birth</span>
             <strong>{user.dob}</strong>
           </div>
 
-          <div className="profile-row">
+          <div className="profile-row verification-row">
             <span>Address</span>
             <strong>{user.address}</strong>
           </div>
 
-          <div className="profile-row">
+          <div className="profile-row verification-row">
             <span>Verification</span>
 
-            <span className={`status ${user.verify_status.toLowerCase()}`}>
-              {user.verify_status}
-            </span>
+            <button
+    type="button"
+    className={`status ${(user.verify_status || "").toLowerCase()}`}
+    onClick={() => {
+
+        if (user.verify_status === "Pending") {
+            alert(
+                "Your verification request has been submitted successfully.\n\nPlease wait for an administrator to review your account."
+            );
+        }
+
+        if (user.verify_status === "Rejected") {
+            alert(
+                "Your verification was rejected.\n\nPlease update your profile and submit it again."
+            );
+        }
+
+        if (user.verify_status === "Verified") {
+            alert(
+                "Your account is verified and ready to trade."
+            );
+        }
+
+    }}
+>
+    {user.verify_status}
+</button>
           </div>
         </div>
 
         
           <div className="dashboard-card">
-            
-              {user.verify_status === "Pending" && (
-                <p>Your verification is pending admin approval.</p>
-              )}
 
-              {user.verify_status === "Rejected" && (
-                <p>
-                  Your verification was rejected. Please update your profile.
-                </p>
-              )}
+    <h2>Quick Actions</h2>
 
-              {user.verify_status === "Verified" && (
-                <>
-                <p>Your account is verified.</p>
-             
-            <h2>Quick Actions</h2>
+    <button
+    className="action-btn primary"
+    onClick={() => handleRestrictedAction("/create-deal")}
+>
+    + Create Room
+</button>
+
+    <div className="action-grid">
+
+        <button
+    className="action-btn"
+    onClick={() => handleRestrictedAction("/BrowseRooms")}
+>
+    Browse Rooms
+</button>
+
+        <button
+    className="action-btn"
+    onClick={() => handleRestrictedAction("/MyRooms")}
+>
+    My Rooms
+</button>
+
+        <button
+    className="action-btn"
+    onClick={() => handleRestrictedAction("/Transactions")}
+>
+    Transactions
+</button>
+
+    </div>
+
+    <div className="verification-message">
+
+    {user.verify_status === "Pending" && (
+        <p className="pending-text">
+            🟡 Your profile has been submitted successfully.
+            <br />
+            Please wait for an administrator to review and approve your account.
+        </p>
+    )}
+
+    {user.verify_status === "Rejected" && (
+        <>
+            <p className="rejected-text">
+                🔴 Your verification was rejected.
+                <br />
+                Please update your profile and submit it again.
+            </p>
 
             <button
-              className="action-btn primary"
-              disabled={user.verify_status !== "Verified"}
-              onClick={() => navigate("/create-deal")}
+                className="action-btn warning"
+                onClick={() => navigate("/CompleteProfile")}
             >
-              + Create Room
+                Update Profile
             </button>
+        </>
+    )}
 
-            <div className="action-grid">
-              <button className="action-btn">Browse Rooms</button>
+    {user.verify_status === "Verified" && (
+        <p className="verified-text">
+            🟢 Your account has been verified.
+            All trading features are available.
+        </p>
+    )}
 
-              <button className="action-btn">My Rooms</button>
+</div>
 
-              <button className="action-btn">Transactions</button>
-              
-            </div>
-            </>
-              )}
-          </div>
+</div>
 
           
         <div className="dashboard-card">
