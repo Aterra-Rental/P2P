@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import "../Global.css";
 import "./FQA.css";
-import Footer from '../../Router/Footer'
+import Footer from '../../Router/Footer';
 
 const CATEGORIES = [
   { id: "all", label: "All" },
@@ -36,6 +36,8 @@ const FQA = () => {
   const [openId, setOpenId] = useState(null);
   const [customQuestion, setCustomQuestion] = useState("");
   const [submitted, setSubmitted] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("");
 
   const filtered = FAQS.filter((f) => {
     const inCat = activeCat === "all" || f.cat === activeCat;
@@ -49,13 +51,48 @@ const FQA = () => {
     setOpenId((prev) => (prev === id ? null : id));
   }
 
-  function handleSubmit(e) {
+  async function handleSubmit(e) {
     e.preventDefault();
     const text = customQuestion.trim();
     if (!text) return;
-    setSubmitted(true);
-    setCustomQuestion("");
-    setTimeout(() => setSubmitted(false), 4000);
+
+    setLoading(true);
+    setErrorMessage("");
+
+    // Retrieve user session info if available
+    const savedUser = JSON.parse(localStorage.getItem("user") || "{}");
+    const userId = savedUser.user_id || localStorage.getItem("user_id") || null;
+    const email = savedUser.email || localStorage.getItem("email") || null;
+
+    try {
+      const response = await fetch("http://127.0.0.1:8000/api/questions", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          question: text,
+          user_id: userId,
+          email: email,
+        }),
+      });
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to submit question.");
+      }
+
+      setSubmitted(true);
+      setCustomQuestion("");
+      setTimeout(() => setSubmitted(false), 4000);
+
+    } catch (err) {
+      console.error("Error submitting question:", err);
+      setErrorMessage("Could not send your question. Please try again later.");
+    } finally {
+      setLoading(false);
+    }
   }
 
   return (
@@ -118,18 +155,24 @@ const FQA = () => {
                 placeholder="Type your question here..."
                 className="fa-ask-textarea"
                 rows={5}
+                disabled={loading}
               />
               <button
                 type="submit"
-                disabled={!customQuestion.trim()}
+                disabled={!customQuestion.trim() || loading}
                 className="fa-ask-submit"
               >
-                Submit Question
+                {loading ? "Sending..." : "Submit Question"}
               </button>
             </form>
             {submitted && (
               <p className="fa-ask-success">
                 Your question has been sent. We'll follow up soon.
+              </p>
+            )}
+            {errorMessage && (
+              <p className="fa-ask-error" style={{ color: "red", marginTop: "10px" }}>
+                {errorMessage}
               </p>
             )}
           </aside>
