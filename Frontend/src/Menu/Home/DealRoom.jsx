@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
+import PaymentQRCode from './PaymentQRCode'
 
 const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase()
 const formatTime = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -261,6 +262,7 @@ const styles = {
 
 const DealRoom = () => {
   const navigate = useNavigate()
+  const CURRENT_USER_ID = 'my_current_user' // Replace with your actual user ID state/context
 
   // Room Lists & Selection
   const [activeRooms, setActiveRooms] = useState([])
@@ -278,6 +280,7 @@ const DealRoom = () => {
   const [partnerRole, setPartnerRole] = useState(null)
   const [roleConfirmed, setRoleConfirmed] = useState(false)
   const [amountConfirmed, setAmountConfirmed] = useState(false)
+  const [showQR, setShowQR] = useState(false) // Toggle QR Code visibility
   const [messages, setMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
 
@@ -356,6 +359,7 @@ const DealRoom = () => {
     setPartnerRole(null)
     setRoleConfirmed(false)
     setAmountConfirmed(false)
+    setShowQR(false)
     
     const welcomeText = room.isIncoming
       ? `@${room.partner} invited you to Room #${room.id} to trade "${room.item}" for $${room.amount}. Pick your role or decline:`
@@ -394,15 +398,16 @@ const DealRoom = () => {
     ])
   }
 
-  // Step 4: Amount Confirmation Handlers
+  // Step 4: Amount Confirmation Handlers + Auto Show QR Code
   const handleConfirmAmount = () => {
     setAmountConfirmed(true)
+    setShowQR(true) // Automatically pop open the QR code once verified
     setMessages((prev) => [
       ...prev,
       {
         id: ++msgId.current,
         kind: 'bot',
-        text: `Deal amount ($${selectedRoom.amount}) verified! You can now proceed with the transaction.`,
+        text: `Deal amount ($${selectedRoom.amount}) verified! Scan the QR code below to transfer funds.`,
       }
     ])
   }
@@ -412,6 +417,7 @@ const DealRoom = () => {
     setPartnerRole(null)
     setRoleConfirmed(false)
     setAmountConfirmed(false)
+    setShowQR(false)
   }
 
   // Step 5: CANCEL / DECLINE DEAL
@@ -426,6 +432,7 @@ const DealRoom = () => {
       setPartnerRole(null)
       setRoleConfirmed(false)
       setAmountConfirmed(false)
+      setShowQR(false)
     } catch (err) {
       alert('Failed to delete deal.')
     }
@@ -596,6 +603,36 @@ const DealRoom = () => {
             </div>
           </div>
 
+          {/* PAYMENT QR CODE COMPONENT SECTION */}
+          {amountConfirmed && (
+            <div style={{ marginBottom: '1rem' }}>
+              {!showQR ? (
+                <button
+                  style={{
+                    width: '100%',
+                    padding: '0.75rem',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'linear-gradient(90deg, #d946ef, #ec4899)',
+                    color: '#fff',
+                    fontWeight: 'bold',
+                    cursor: 'pointer',
+                  }}
+                  onClick={() => setShowQR(true)}
+                >
+                  📱 Show Payment QR Code
+                </button>
+              ) : (
+                <PaymentQRCode
+                  room={selectedRoom}
+                  currentUserId={CURRENT_USER_ID}
+                  onClose={() => setShowQR(false)}
+                />
+              )}
+            </div>
+          )}
+
+          {/* CHAT INPUT AREA */}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
               style={{ ...styles.input, marginBottom: 0 }}
