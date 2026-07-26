@@ -33,7 +33,7 @@ app.register_blueprint(profile_bp, url_prefix="/api")
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(verification_bp, url_prefix="/api/admin")
 app.register_blueprint(room_bp, url_prefix="/api")
-app.register_blueprint(faq_bp)
+
 
 if __name__ == "__main__":
     app.run(debug=True, port=8000)
