@@ -2,22 +2,19 @@ import { useState, useEffect, useRef } from 'react'
 import { useNavigate } from 'react-router-dom'
 import PaymentQRCode from '../../components/PaymentQRCode'
 
-const generateCode = () => Math.random().toString(36).substring(2, 8).toUpperCase()
+const generateRoomCode = () => Math.random().toString(36).substring(2, 8).toUpperCase()
 const formatTime = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
 
-// --- DJANGO + POSTGRESQL API ENDPOINTS ---
 const API_BASE = 'http://127.0.0.1:8000/api'
 
 const getHeaders = () => ({
   'Content-Type': 'application/json',
 })
 
-// 1. Verify User exists in PostgreSQL via Django (with Decoy ID '123' bypass)
-const verifyUserExists = async (username) => {
-  if (username === '123') return true
-
+const verifyUserExists = async (userId) => {
+  if (userId === '123') return true
   try {
-    const res = await fetch(`${API_BASE}/users/verify/?username=${encodeURIComponent(username)}`, {
+    const res = await fetch(`${API_BASE}/users/verify/?user_id=${encodeURIComponent(userId)}`, {
       method: 'GET',
       headers: getHeaders(),
     })
@@ -25,34 +22,79 @@ const verifyUserExists = async (username) => {
     const data = await res.json()
     return data.exists
   } catch (error) {
-    console.error('Error checking user:', error)
+    console.error('Error checking user_id:', error)
     return false
   }
 }
 
-// 2. Create Deal in Django / PostgreSQL
 const createDealInDB = async (dealData) => {
-  if (dealData.partner === '123' || dealData.isSimulated) return { success: true }
+  if (dealData.partner_user_id === '123' || dealData.isSimulated) return { success: true }
 
-  const res = await fetch(`${API_BASE}/deals/`, {
+  const res = await fetch(`${API_BASE}/rooms/`, {
     method: 'POST',
     headers: getHeaders(),
-    body: JSON.stringify(dealData),
+    body: JSON.stringify({
+      room_code: dealData.room_code,
+      created_by: dealData.created_by,
+      status: dealData.status,
+      partner_user_id: dealData.partner_user_id,
+      proposedamount: dealData.proposedamount,
+      item_description: dealData.item_description,
+    }),
   })
-  if (!res.ok) throw new Error('Failed to create deal.')
+  if (!res.ok) throw new Error('Failed to create room in database.')
   return await res.json()
 }
 
-// 3. Delete / Cancel Deal in Django / PostgreSQL
-const deleteDealInDB = async (dealId) => {
+const deleteDealInDB = async (roomCode) => {
   try {
-    const res = await fetch(`${API_BASE}/deals/${dealId}/`, {
+    const res = await fetch(`${API_BASE}/rooms/${roomCode}/`, {
       method: 'DELETE',
       headers: getHeaders(),
     })
     return res.ok
   } catch (err) {
     return true
+  }
+}
+
+const updateRoomInDB = async (roomCode, updates) => {
+  try {
+    await fetch(`${API_BASE}/rooms/${roomCode}/`, {
+      method: 'PATCH',
+      headers: getHeaders(),
+      body: JSON.stringify(updates),
+    })
+  } catch (err) {
+    console.error('Failed to update room status in DB:', err)
+  }
+}
+
+const fetchRoomMessages = async (roomCode) => {
+  try {
+    const res = await fetch(`${API_BASE}/rooms/${roomCode}/messages/`, { headers: getHeaders() })
+    if (!res.ok) return []
+    return await res.json()
+  } catch (err) {
+    console.error('Error fetching messages:', err)
+    return []
+  }
+}
+
+const saveMessageToDB = async (roomCode, senderId, text, kind = 'mine') => {
+  try {
+    await fetch(`${API_BASE}/messages/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        room_code: roomCode,
+        sender_id: senderId,
+        text: text,
+        kind: kind,
+      }),
+    })
+  } catch (err) {
+    console.error('Failed to save message:', err)
   }
 }
 
@@ -143,7 +185,6 @@ const styles = {
     fontSize: '0.85rem',
     cursor: 'pointer',
     marginBottom: '1rem',
-    transition: 'all 0.2s ease',
   },
   roomCardVertical: {
     background: 'rgba(255,255,255,0.03)',
@@ -152,7 +193,6 @@ const styles = {
     padding: '1rem',
     marginBottom: '0.75rem',
     cursor: 'pointer',
-    transition: 'all 0.2s ease',
   },
   codeBadge: {
     fontWeight: 800,
@@ -261,67 +301,91 @@ const styles = {
 }
 
 const DealRoom = () => {
-  const navigate = useNavigate()
-  const CURRENT_USER_ID = 'my_current_user' // Replace with your actual user ID state/context
-
-  // Room Lists & Selection
   const [activeRooms, setActiveRooms] = useState([])
   const [selectedRoom, setSelectedRoom] = useState(null)
 
-  // Form Inputs & Async State
-  const [partnerId, setPartnerId] = useState('')
-  const [amount, setAmount] = useState('')
-  const [item, setItem] = useState('')
+  const [partnerUserId, setPartnerUserId] = useState('')
+  const [proposedAmount, setProposedAmount] = useState('')
+  const [itemDescription, setItemDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
 
-  // Interactive Selected Room State
   const [myRole, setMyRole] = useState(null)
   const [partnerRole, setPartnerRole] = useState(null)
   const [roleConfirmed, setRoleConfirmed] = useState(false)
   const [amountConfirmed, setAmountConfirmed] = useState(false)
-  const [showQR, setShowQR] = useState(false) // Toggle QR Code visibility
   const [messages, setMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
 
   const msgId = useRef(0)
   const scrollRef = useRef(null)
 
+  const currentUserId = 9 
+
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  // Step 1: Create room and save to DB
+  // Polling with simulation state preservation
+  useEffect(() => {
+    const fetchActiveRooms = async () => {
+      try {
+        const res = await fetch(`${API_BASE}/rooms/?user_id=${currentUserId}`, {
+          headers: getHeaders(),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          setActiveRooms((prevRooms) => {
+            const simulatedRooms = prevRooms.filter((r) => r.isSimulated)
+            const dbRoomCodes = new Set(data.map((r) => r.room_code))
+            const filteredSimulated = simulatedRooms.filter((r) => !dbRoomCodes.has(r.room_code))
+
+            return [...data, ...filteredSimulated]
+          })
+        }
+      } catch (err) {
+        console.error('Failed to fetch rooms:', err)
+      }
+    }
+
+    fetchActiveRooms()
+    const interval = setInterval(fetchActiveRooms, 3000)
+
+    return () => clearInterval(interval)
+  }, [currentUserId])
+
   const handleCreateDeal = async () => {
-    if (!partnerId.trim() || !amount.trim() || !item.trim()) return
+    if (!partnerUserId.trim() || !proposedAmount.trim() || !itemDescription.trim()) return
 
     setIsLoading(true)
     setErrorMessage('')
 
     try {
-      const exists = await verifyUserExists(partnerId.trim())
+      const exists = await verifyUserExists(partnerUserId.trim())
       if (!exists) {
-        setErrorMessage('User ID not found')
+        setErrorMessage('User ID not found in database')
         setIsLoading(false)
         return
       }
 
-      const roomCode = generateCode()
+      const roomCode = generateRoomCode()
       const dealData = {
-        id: roomCode,
-        partner: partnerId.trim(),
-        amount: amount.trim(),
-        item: item.trim(),
-        created: formatTime(),
+        room_code: roomCode,
+        created_by: currentUserId,
+        status: 'Waiting',
+        partner_user_id: partnerUserId.trim(),
+        proposedamount: proposedAmount.trim(),
+        item_description: itemDescription.trim(),
+        created_at: formatTime(),
         isSimulated: false,
       }
 
       await createDealInDB(dealData)
 
       setActiveRooms((prev) => [dealData, ...prev])
-      setPartnerId('')
-      setAmount('')
-      setItem('')
+      setPartnerUserId('')
+      setProposedAmount('')
+      setItemDescription('')
     } catch (err) {
       setErrorMessage('Error creating room. Check connection.')
     } finally {
@@ -329,10 +393,9 @@ const DealRoom = () => {
     }
   }
 
-  // SIMULATE INCOMING INVITATION
   const handleSimulateInvite = () => {
-    const roomCode = generateCode()
-    const mockUsers = ['crypto_trader99', 'shadow_merchant', 'pro_seller_x']
+    const roomCode = generateRoomCode()
+    const mockUsers = [8, 13, 14, 17]
     const mockItems = ['100 USDT', 'Game Account', '50 LTC', 'VIP Pass']
     
     const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)]
@@ -340,11 +403,13 @@ const DealRoom = () => {
     const randomAmount = Math.floor(Math.random() * 250) + 25
 
     const simulatedInvite = {
-      id: roomCode,
-      partner: randomUser,
-      amount: String(randomAmount),
-      item: randomItem,
-      created: formatTime(),
+      room_code: roomCode,
+      created_by: randomUser,
+      status: 'Waiting',
+      partner_user_id: String(randomUser),
+      proposedamount: String(randomAmount),
+      item_description: randomItem,
+      created_at: formatTime(),
       isSimulated: true,
       isIncoming: true,
     }
@@ -352,30 +417,52 @@ const DealRoom = () => {
     setActiveRooms((prev) => [simulatedInvite, ...prev])
   }
 
-  // Step 2: Open deal room
-  const openRoom = (room) => {
+  const openRoom = async (room) => {
     setSelectedRoom(room)
-    setMyRole(null)
-    setPartnerRole(null)
-    setRoleConfirmed(false)
-    setAmountConfirmed(false)
-    setShowQR(false)
-    
-    const welcomeText = room.isIncoming
-      ? `@${room.partner} invited you to Room #${room.id} to trade "${room.item}" for $${room.amount}. Pick your role or decline:`
-      : `Welcome to Room #${room.id}. Trading "${room.item}" for $${room.amount} with @${room.partner}. Pick your role or cancel:`
 
-    setMessages([
-      {
+    const isBuyer = String(room.buyer_id) === String(currentUserId)
+    const isSeller = String(room.seller_id) === String(currentUserId)
+
+    if (isBuyer) {
+      setMyRole('buyer')
+      setPartnerRole('seller')
+    } else if (isSeller) {
+      setMyRole('seller')
+      setPartnerRole('buyer')
+    } else {
+      setMyRole(null)
+      setPartnerRole(null)
+    }
+
+    const isReady = room.status === 'Ready' || room.status === 'Completed'
+    const hasRoles = Boolean(room.buyer_id || room.seller_id)
+
+    setRoleConfirmed(isReady || hasRoles)
+    setAmountConfirmed(isReady)
+
+    const dbMessages = await fetchRoomMessages(room.room_code)
+
+    if (dbMessages && dbMessages.length > 0) {
+      setMessages(dbMessages)
+    } else {
+      const welcomeText = room.isIncoming
+        ? `User #${room.partner_user_id} invited you to Room #${room.room_code} to trade "${room.item_description}" for $${room.proposedamount}. Pick your role or decline:`
+        : `Welcome to Room #${room.room_code}. Trading "${room.item_description}" for $${room.proposedamount} with User #${room.partner_user_id}. Pick your role or cancel:`
+
+      const initialMsg = {
         id: ++msgId.current,
         kind: 'bot',
         text: welcomeText,
-        roleSelection: true,
+        roleSelection: !(isReady || hasRoles),
       }
-    ])
+
+      setMessages([initialMsg])
+      if (!room.isSimulated) {
+        saveMessageToDB(room.room_code, 'SYSTEM', welcomeText, 'bot')
+      }
+    }
   }
 
-  // Step 3: Role interactions
   const handleSelectRole = (role) => {
     if (roleConfirmed) return
     setMyRole(role)
@@ -384,32 +471,64 @@ const DealRoom = () => {
     }
   }
 
-  // Confirming Role triggers the NEW BOT MESSAGE for Amount Verification
-  const handleConfirmRole = () => {
+  const handleConfirmRole = async () => {
     setRoleConfirmed(true)
+
+    const isBuyer = myRole === 'buyer'
+    const roleUpdates = isBuyer
+      ? { buyer_id: currentUserId, seller_id: selectedRoom.partner_user_id }
+      : { seller_id: currentUserId, buyer_id: selectedRoom.partner_user_id }
+
+    setSelectedRoom((prev) => ({ ...prev, ...roleUpdates }))
+    setActiveRooms((prev) =>
+      prev.map((r) => (r.room_code === selectedRoom.room_code ? { ...r, ...roleUpdates } : r))
+    )
+
+    if (!selectedRoom.isSimulated) {
+      await updateRoomInDB(selectedRoom.room_code, roleUpdates)
+    }
+
+    const botText = `Role set as ${myRole.toUpperCase()}. Please verify: Is the proposed amount of $${selectedRoom.proposedamount} for "${selectedRoom.item_description}" correct?`
+
     setMessages((prev) => [
       ...prev,
       {
         id: ++msgId.current,
         kind: 'bot',
-        text: `Role set as ${myRole.toUpperCase()}. Please verify: Is the deal amount of $${selectedRoom.amount} for "${selectedRoom.item}" correct?`,
+        text: botText,
         amountConfirmation: true,
-      }
+      },
     ])
+
+    if (!selectedRoom.isSimulated) {
+      saveMessageToDB(selectedRoom.room_code, 'SYSTEM', botText, 'bot')
+    }
   }
 
-  // Step 4: Amount Confirmation Handlers + Auto Show QR Code
-  const handleConfirmAmount = () => {
+  const handleConfirmAmount = async () => {
     setAmountConfirmed(true)
-    setShowQR(true) // Automatically pop open the QR code once verified
+
+    const statusUpdate = { status: 'Ready' }
+
+    setSelectedRoom((prev) => ({ ...prev, ...statusUpdate }))
+    setActiveRooms((prev) =>
+      prev.map((r) => (r.room_code === selectedRoom.room_code ? { ...r, ...statusUpdate } : r))
+    )
+
+    if (!selectedRoom.isSimulated) {
+      await updateRoomInDB(selectedRoom.room_code, statusUpdate)
+    }
+
+    const botText = `Deal amount ($${selectedRoom.proposedamount}) verified! Room status is now READY.`
+
     setMessages((prev) => [
       ...prev,
-      {
-        id: ++msgId.current,
-        kind: 'bot',
-        text: `Deal amount ($${selectedRoom.amount}) verified! Scan the QR code below to transfer funds.`,
-      }
+      { id: ++msgId.current, kind: 'bot', text: botText },
     ])
+
+    if (!selectedRoom.isSimulated) {
+      saveMessageToDB(selectedRoom.room_code, 'SYSTEM', botText, 'bot')
+    }
   }
 
   const handleResetRoleSelection = () => {
@@ -417,86 +536,89 @@ const DealRoom = () => {
     setPartnerRole(null)
     setRoleConfirmed(false)
     setAmountConfirmed(false)
-    setShowQR(false)
   }
 
-  // Step 5: CANCEL / DECLINE DEAL
   const handleCancelAndDestroyDeal = async () => {
     if (!selectedRoom) return
 
     try {
-      await deleteDealInDB(selectedRoom.id)
-      setActiveRooms((prev) => prev.filter((r) => r.id !== selectedRoom.id))
+      if (!selectedRoom.isSimulated) {
+        await deleteDealInDB(selectedRoom.room_code)
+      }
+      setActiveRooms((prev) => prev.filter((r) => r.room_code !== selectedRoom.room_code))
       setSelectedRoom(null)
       setMyRole(null)
       setPartnerRole(null)
       setRoleConfirmed(false)
       setAmountConfirmed(false)
-      setShowQR(false)
     } catch (err) {
       alert('Failed to delete deal.')
     }
   }
 
-  const sendChat = () => {
+  const sendChat = async () => {
     if (!chatInput.trim()) return
+
+    const text = chatInput.trim()
+    setChatInput('')
+
     setMessages((prev) => [
       ...prev,
-      { id: ++msgId.current, kind: 'mine', text: chatInput },
+      { id: ++msgId.current, kind: 'mine', text: text },
     ])
-    setChatInput('')
+
+    if (selectedRoom && !selectedRoom.isSimulated) {
+      await saveMessageToDB(selectedRoom.room_code, currentUserId, text, 'mine')
+    }
   }
 
   return (
     <div style={styles.page}>
       {!selectedRoom ? (
-        /* --- MAIN DASHBOARD VIEW --- */
         <div style={styles.modalContainer}>
           <h1 style={styles.title}>Deal Hub</h1>
-          <p style={{ color: '#a89db8', marginBottom: '1.5rem' }}>Create a trade with a registered user or enter an active room.</p>
+          <p style={{ color: '#a89db8', marginBottom: '1.5rem' }}>Create a trade with a registered user_id or enter an active room.</p>
 
           <div style={styles.splitLayout}>
-            {/* LEFT PANEL: CREATE DEAL FORM */}
             <div style={styles.sectionBox}>
               <div style={styles.sectionHeader}>Create a Deal</div>
               
               {errorMessage && <div style={styles.errorBox}>{errorMessage}</div>}
 
-              <label style={styles.label}>Partner User ID (Use "123" to test)</label>
+              <label style={styles.label}>Partner User ID (`user_id`)</label>
               <input
                 style={styles.input}
-                placeholder="e.g. 123 or vathana_92"
-                value={partnerId}
-                onChange={(e) => setPartnerId(e.target.value)}
+                placeholder="e.g. 13 or 123 to test"
+                value={partnerUserId}
+                onChange={(e) => setPartnerUserId(e.target.value)}
               />
 
-              <label style={styles.label}>Deal Amount ($)</label>
+              <label style={styles.label}>Proposed Amount (`proposedamount` $)</label>
               <input
                 style={styles.input}
                 placeholder="e.g. 150"
                 type="number"
-                value={amount}
-                onChange={(e) => setAmount(e.target.value)}
+                value={proposedAmount}
+                onChange={(e) => setProposedAmount(e.target.value)}
               />
 
-              <label style={styles.label}>What is being traded?</label>
+              <label style={styles.label}>Item / Service Description</label>
               <input
                 style={styles.input}
                 placeholder="e.g. 100 USDT or Game Account"
-                value={item}
-                onChange={(e) => setItem(e.target.value)}
+                value={itemDescription}
+                onChange={(e) => setItemDescription(e.target.value)}
               />
 
               <button
-                style={styles.primaryBtn(!partnerId.trim() || !amount.trim() || !item.trim() || isLoading)}
-                disabled={!partnerId.trim() || !amount.trim() || !item.trim() || isLoading}
+                style={styles.primaryBtn(!partnerUserId.trim() || !proposedAmount.trim() || !itemDescription.trim() || isLoading)}
+                disabled={!partnerUserId.trim() || !proposedAmount.trim() || !itemDescription.trim() || isLoading}
                 onClick={handleCreateDeal}
               >
                 {isLoading ? 'Verifying User...' : 'Create Deal Room'}
               </button>
             </div>
 
-            {/* RIGHT PANEL: ACTIVE ROOMS & INCOMING INVITES */}
             <div style={styles.sectionBox}>
               <div style={styles.sectionHeader}>Active & Invited Rooms</div>
               
@@ -510,15 +632,15 @@ const DealRoom = () => {
                 </div>
               ) : (
                 activeRooms.map((room) => (
-                  <div key={room.id} style={styles.roomCardVertical} onClick={() => openRoom(room)}>
+                  <div key={room.room_code} style={styles.roomCardVertical} onClick={() => openRoom(room)}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.4rem' }}>
-                      <span style={styles.codeBadge}>#{room.id}</span>
+                      <span style={styles.codeBadge}>#{room.room_code}</span>
                       {room.isIncoming && <span style={styles.inviteBadge}>INCOMING INVITE</span>}
-                      <span style={{ fontSize: '0.75rem', color: '#8b8299' }}>{room.created}</span>
+                      <span style={{ fontSize: '0.75rem', color: '#8b8299' }}>{room.created_at}</span>
                     </div>
-                    <div style={{ fontWeight: 700, color: '#fff' }}>@{room.partner}</div>
+                    <div style={{ fontWeight: 700, color: '#fff' }}>User ID: {room.partner_user_id}</div>
                     <div style={{ fontSize: '0.85rem', color: '#c7c0d4' }}>
-                      Trading: {room.item} (${room.amount})
+                      Trading: {room.item_description} (${room.proposedamount})
                     </div>
                   </div>
                 ))
@@ -527,12 +649,11 @@ const DealRoom = () => {
           </div>
         </div>
       ) : (
-        /* --- SELECTED ROOM INTERACTIVE VIEW --- */
         <div style={{ ...styles.modalContainer, maxWidth: '720px' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
             <div>
-              <h1 style={styles.title}>Room #{selectedRoom.id}</h1>
-              <span style={{ color: '#a89db8' }}>Trading with @{selectedRoom.partner}</span>
+              <h1 style={styles.title}>Room #{selectedRoom.room_code}</h1>
+              <span style={{ color: '#a89db8' }}>Trading with User #{selectedRoom.partner_user_id}</span>
             </div>
             <button style={{ ...styles.cancelBtn, flex: 'none', padding: '0.5rem 1rem' }} onClick={() => setSelectedRoom(null)}>
               Back to Hub
@@ -546,7 +667,6 @@ const DealRoom = () => {
                   <div style={styles.bubble(m.kind)}>
                     {m.text}
 
-                    {/* DealBot Message #1: Role Selection */}
                     {m.roleSelection && !roleConfirmed && (
                       <div style={{ marginTop: '0.8rem' }}>
                         <div style={{ fontSize: '0.8rem', color: '#c7c0d4', marginBottom: '0.4rem' }}>Select your role:</div>
@@ -584,12 +704,11 @@ const DealRoom = () => {
                       </div>
                     )}
 
-                    {/* DealBot Message #2: Amount Confirmation Prompt */}
                     {m.amountConfirmation && !amountConfirmed && (
                       <div style={{ marginTop: '0.8rem' }}>
                         <div style={styles.actionBtnGroup}>
                           <button style={styles.confirmBtn} onClick={handleConfirmAmount}>
-                            ✅ Confirm (${selectedRoom.amount})
+                            ✅ Confirm (${selectedRoom.proposedamount})
                           </button>
                           <button style={styles.cancelBtn} onClick={handleCancelAndDestroyDeal}>
                             ✖ Cancel / Wrong Amount
@@ -603,36 +722,6 @@ const DealRoom = () => {
             </div>
           </div>
 
-          {/* PAYMENT QR CODE COMPONENT SECTION */}
-          {amountConfirmed && (
-            <div style={{ marginBottom: '1rem' }}>
-              {!showQR ? (
-                <button
-                  style={{
-                    width: '100%',
-                    padding: '0.75rem',
-                    borderRadius: '8px',
-                    border: 'none',
-                    background: 'linear-gradient(90deg, #d946ef, #ec4899)',
-                    color: '#fff',
-                    fontWeight: 'bold',
-                    cursor: 'pointer',
-                  }}
-                  onClick={() => setShowQR(true)}
-                >
-                  📱 Show Payment QR Code
-                </button>
-              ) : (
-                <PaymentQRCode
-                  room={selectedRoom}
-                  currentUserId={CURRENT_USER_ID}
-                  onClose={() => setShowQR(false)}
-                />
-              )}
-            </div>
-          )}
-
-          {/* CHAT INPUT AREA */}
           <div style={{ display: 'flex', gap: '0.5rem' }}>
             <input
               style={{ ...styles.input, marginBottom: 0 }}
@@ -651,7 +740,7 @@ const DealRoom = () => {
             </button>
           </div>
         </div>
-      )}
+      )}  
     </div>
   )
 }

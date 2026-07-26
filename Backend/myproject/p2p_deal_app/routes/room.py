@@ -1,66 +1,100 @@
-from flask import Blueprint, request, jsonify
-from database import get_db
-import random
-import string
-import traceback
+from rest_framework.decorators import api_view
+from rest_framework.response import Response
+from rest_framework import status
 
-room_bp = Blueprint("room", __name__)
-def generate_room_code(length=6):
-    characters = string.ascii_uppercase + string.digits
-    return "".join(random.choices(characters, k=length))
-@room_bp.route("/rooms", methods=["POST"])
-def create_room():
-    try:
-        data = request.get_json()
+# In-memory storage for local dev testing
+# (If using Django Models, replace these dictionaries with Model queries)
+ROOMS_DB = {}
+MESSAGES_DB = {}
 
-        created_by = data.get("created_by")
 
-        if not created_by:
-            return jsonify({
-                "success": False,
-                "message": "created_by is required."
-            }), 400
+@api_view(['GET', 'POST'])
+def create_room(request):
+    """
+    GET: List rooms or filter by user_id
+    POST: Create a new room
+    """
+    if request.method == 'GET':
+        user_id = request.query_params.get('user_id')
+        rooms = list(ROOMS_DB.values())
+        if user_id:
+            rooms = [
+                r for r in rooms 
+                if str(r.get('created_by')) == str(user_id) or str(r.get('partner_user_id')) == str(user_id)
+            ]
+        return Response(rooms, status=status.HTTP_200_OK)
 
-        conn = get_db()
-        cur = conn.cursor()
+    elif request.method == 'POST':
+        data = request.data
+        room_code = data.get('room_code')
+        if not room_code:
+            return Response({'error': 'room_code is required'}, status=status.HTTP_400_BAD_REQUEST)
 
-        room_code = generate_room_code()
+        ROOMS_DB[room_code] = data
+        MESSAGES_DB[room_code] = []
+        return Response({'success': True, 'room': data}, status=status.HTTP_201_CREATED)
 
-        # Ensure uniqueness
-        while True:
-            cur.execute(
-                "SELECT room_id FROM room WHERE room_code = %s",
-                (room_code,)
-            )
 
-            if not cur.fetchone():
-                break
+@api_view(['GET', 'PATCH', 'DELETE'])
+def get_room(request, room_code):
+    """
+    GET: Fetch details of a single room
+    PATCH: Update room status or assign buyer/seller roles
+    DELETE: Cancel and remove a room
+    """
+    room = ROOMS_DB.get(room_code)
 
-            room_code = generate_room_code()
+    if request.method == 'GET':
+        if not room:
+            return Response({'error': 'Room not found'}, status=status.HTTP_404_NOT_FOUND)
+        return Response(room, status=status.HTTP_200_OK)
 
-        cur.execute("""
-            INSERT INTO room
-            (room_code, created_by, status)
-            VALUES (%s, %s, 'Waiting')
-            RETURNING room_id;
-        """, (room_code, created_by))
+    elif request.method == 'PATCH':
+        if not room:
+            # If room isn't in memory yet, initialize it
+            ROOMS_DB[room_code] = {'room_code': room_code}
+            room = ROOMS_DB[room_code]
 
-        room_id = cur.fetchone()[0]
+        room.update(request.data)
+        return Response({'success': True, 'room': room}, status=status.HTTP_200_OK)
 
-        conn.commit()
+    elif request.method == 'DELETE':
+        if room_code in ROOMS_DB:
+            del ROOMS_DB[room_code]
+        if room_code in MESSAGES_DB:
+            del MESSAGES_DB[room_code]
+        return Response({'success': True}, status=status.HTTP_200_OK)
 
-        cur.close()
-        conn.close()
 
-        return jsonify({
-            "success": True,
-            "room_id": room_id,
-            "room_code": room_code
-        }), 201
+@api_view(['GET', 'POST'])
+def get_messages(request, room_code=None):
+    """
+    GET: Retrieve all messages for a room code
+    POST: Save a new message
+    """
+    if request.method == 'GET':
+        if not room_code:
+            return Response({'error': 'room_code required'}, status=status.HTTP_400_BAD_REQUEST)
+        
+        messages = MESSAGES_DB.get(room_code, [])
+        return Response(messages, status=status.HTTP_200_OK)
 
-    except Exception:
-        traceback.print_exc()
-        return jsonify({
-            "success": False,
-            "message": "Failed to create room."
-        }), 500
+    elif request.method == 'POST':
+        data = request.data
+        target_code = room_code or data.get('room_code')
+
+        if not target_code:
+            return Response({'error': 'room_code is required'}, status=status.HTTP_400_BAD_REQUEST)
+
+        if target_code not in MESSAGES_DB:
+            MESSAGES_DB[target_code] = []
+
+        new_msg = {
+            'id': len(MESSAGES_DB[target_code]) + 1,
+            'sender_id': data.get('sender_id'),
+            'text': data.get('text'),
+            'kind': data.get('kind', 'mine'),
+        }
+
+        MESSAGES_DB[target_code].append(new_msg)
+        return Response({'success': True, 'message': new_msg}, status=status.HTTP_201_CREATED)

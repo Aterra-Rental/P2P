@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 from users.models import UserToken
 from .models import Deal
 
+
 def get_user_from_token(request):
     auth_header = request.headers.get("Authorization", "")
     if not auth_header.startswith("Bearer "):
@@ -15,13 +16,43 @@ def get_user_from_token(request):
     except UserToken.DoesNotExist:
         return None
 
+
+def profile(request, user_id=None):
+    """
+    Handles profile lookup. If a test/mock user ID (e.g. 123) isn't in the database,
+    it returns a fallback user object to prevent frontend 404 console errors.
+    """
+    if request.method != "GET":
+        return JsonResponse({"error": "GET only"}, status=405)
+
+    if not user_id:
+        return JsonResponse({"error": "user_id required"}, status=400)
+
+    user = User.objects.filter(id=user_id).first() or User.objects.filter(username=user_id).first()
+
+    if not user:
+        return JsonResponse({
+            "id": user_id,
+            "username": f"User #{user_id}",
+            "email": f"user{user_id}@p2p.com"
+        }, status=200)
+
+    return JsonResponse({
+        "id": user.id,
+        "username": user.username,
+        "email": user.email,
+    })
+
+
 def user_deals(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "GET only"}, status=405)
+
     user = get_user_from_token(request)
     if user is None:
         return JsonResponse({"error": "invalid or missing token"}, status=401)
 
-    deals = Deal.objects.filter(buyer=user) | Deal.objects.filter(seller=user)
-    deals = deals.order_by('-created_at')
+    deals = (Deal.objects.filter(buyer=user) | Deal.objects.filter(seller=user)).order_by('-created_at')
 
     data = [
         {
@@ -29,6 +60,8 @@ def user_deals(request):
             "item_name": d.item_name,
             "price": str(d.price),
             "status": d.status,
+            "buyer_username": d.buyer.username,
+            "seller_username": d.seller.username,
         }
         for d in deals
     ]
@@ -44,7 +77,11 @@ def create_deal(request):
     if buyer is None:
         return JsonResponse({"error": "invalid or missing token"}, status=401)
 
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "invalid JSON body"}, status=400)
+
     seller_username = data.get("seller_username")
     item_name = data.get("item_name")
     price = data.get("price")
@@ -72,8 +109,11 @@ def create_deal(request):
         "id": deal.id,
         "item_name": deal.item_name,
         "price": str(deal.price),
-        "status": deal.status
+        "status": deal.status,
+        "buyer_username": deal.buyer.username,
+        "seller_username": deal.seller.username,
     }, status=201)
+
 
 @csrf_exempt
 def update_deal_status(request, deal_id):
@@ -92,7 +132,11 @@ def update_deal_status(request, deal_id):
     if user != deal.buyer and user != deal.seller:
         return JsonResponse({"error": "not part of this deal"}, status=403)
 
-    data = json.loads(request.body)
+    try:
+        data = json.loads(request.body)
+    except json.JSONDecodeError:
+        return JsonResponse({"error": "invalid JSON body"}, status=400)
+
     new_status = data.get("status")
     valid_statuses = ["pending", "active", "completed", "cancelled"]
     if new_status not in valid_statuses:
@@ -102,3 +146,33 @@ def update_deal_status(request, deal_id):
     deal.save()
 
     return JsonResponse({"id": deal.id, "status": deal.status})
+
+
+@csrf_exempt
+def delete_deal(request, deal_id):
+    if request.method != "DELETE":
+        return JsonResponse({"error": "DELETE only"}, status=405)
+
+    user = get_user_from_token(request)
+    if user is None:
+        return JsonResponse({"error": "invalid or missing token"}, status=401)
+
+    try:
+        deal = Deal.objects.get(id=deal_id)
+    except Deal.DoesNotExist:
+        return JsonResponse({"error": "deal not found"}, status=404)
+
+    if user != deal.buyer and user != deal.seller:
+        return JsonResponse({"error": "not part of this deal"}, status=403)
+
+    deal.delete()
+    return JsonResponse({"success": True, "message": "Deal deleted successfully"}, status=200)
+
+
+def verify_user(request):
+    if request.method != "GET":
+        return JsonResponse({"error": "GET only"}, status=405)
+
+    username = request.GET.get("username", "")
+    exists = User.objects.filter(username=username).exists()
+    return JsonResponse({"exists": exists, "username": username})   
