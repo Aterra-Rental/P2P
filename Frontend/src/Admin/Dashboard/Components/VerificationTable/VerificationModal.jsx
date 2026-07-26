@@ -2,12 +2,12 @@ import "./VerificationModal.css";
 import { useEffect, useState } from "react";
 import API_URL from "../../../../lib/api";
 
-const VerificationModal = ({ user, onClose }) => {
+const VerificationModal = ({ user, onClose, onVerified }) => {
 
     const [details, setDetails] = useState(null);
 
     useEffect(() => {
-
+        
         if (!user) {
             setDetails(null);
             return;
@@ -19,7 +19,55 @@ const VerificationModal = ({ user, onClose }) => {
             .catch(err => console.error(err));
 
     }, [user]);
+    const handleApprove = async () => {
 
+    try {
+
+        const res = await fetch(
+            `${API_URL}/api/admin/verifications/${user.user_id}/approve`,
+            {
+                method: "PUT"
+            }
+        );
+
+        const data = await res.json();
+
+        alert(data.message);
+
+        onVerified();
+
+    } catch (err) {
+
+        console.error(err);
+
+    }
+
+};
+
+const handleReject = async () => {
+
+    try {
+
+        const res = await fetch(
+            `${API_URL}/api/admin/verifications/${user.user_id}/reject`,
+            {
+                method: "PUT"
+            }
+        );
+
+        const data = await res.json();
+
+        alert(data.message);
+
+        onClose();
+
+    } catch (err) {
+
+        console.error(err);
+
+    }
+
+};
     if (!user) return null;
 
     if (!details) {
@@ -92,13 +140,13 @@ const VerificationModal = ({ user, onClose }) => {
 
                 <div className="modal-footer">
 
-                    <button className="reject-btn">
+                    <button className="reject-btn " onClick={handleReject}>
 
                         Reject
 
                     </button>
 
-                    <button className="approve-btn">
+                    <button className="approve-btn " onClick={handleApprove}>
 
                         Approve
 

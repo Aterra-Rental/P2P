@@ -1,16 +1,18 @@
 const API_URL = "http://localhost:8000/api";
 
 export const getUserProfile = async () => {
+
   const userId = localStorage.getItem("user_id");
 
   if (!userId) {
-    throw new Error("No user logged in.");
+    return null;
   }
 
   const response = await fetch(`${API_URL}/profile/${userId}`);
 
+  // User has not completed profile yet
   if (response.status === 404) {
-    throw new Error("404");
+    return null;
   }
 
   if (!response.ok) {
@@ -18,5 +20,5 @@ export const getUserProfile = async () => {
   }
 
   return await response.json();
-  
+
 };

@@ -448,3 +448,71 @@ width:100%;
 .upload-button.secondary:hover{
     background:#e5e7eb;
 }
+.no-profile-container {
+    min-height: 80vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    padding: 40px;
+}
+
+.no-profile-card {
+    width: 100%;
+    max-width: 500px;
+    background: #fff;
+    border-radius: 16px;
+    padding: 40px;
+    text-align: center;
+    box-shadow: 0 10px 30px rgba(0,0,0,.08);
+    border: 1px solid #ececec;
+}
+
+.no-profile-icon {
+    font-size: 60px;
+    margin-bottom: 20px;
+}
+
+.no-profile-card h2 {
+    margin-bottom: 15px;
+    color: #222;
+}
+
+.no-profile-card p {
+    color: #666;
+    line-height: 1.6;
+    margin-bottom: 30px;
+}
+
+.complete-profile-btn {
+    background: #ff7a00;
+    color: white;
+    border: none;
+    padding: 14px 28px;
+    border-radius: 10px;
+    font-size: 16px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: .25s;
+}
+
+.complete-profile-btn:hover {
+    background: #e66d00;
+    transform: translateY(-2px);
+}
+.logout-btn-secondary {
+    margin-top: 15px;
+    width: 100%;
+    padding: 12px;
+    border: 1px solid #d9534f;
+    background: white;
+    color: #d9534f;
+    border-radius: 10px;
+    cursor: pointer;
+    font-weight: 600;
+    transition: 0.25s;
+}
+
+.logout-btn-secondary:hover {
+    background: #d9534f;
+    color: white;
+}

@@ -79,9 +79,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'p2p_deal_db',
         'USER': 'postgres',
-        'PASSWORD': '320606531',
+        'PASSWORD': '123456789',
         'HOST': 'localhost',
-        'PORT': '3620',
+        'PORT': '5432',
     }
 }
 

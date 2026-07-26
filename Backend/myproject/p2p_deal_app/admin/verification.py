@@ -105,3 +105,77 @@ def get_verification_details(user_id):
     finally:
         cur.close()
         conn.close()
+@verification_bp.route("/verifications/<int:user_id>/approve", methods=["PUT"])
+def approve_verification(user_id):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    try:
+
+        cur.execute("""
+            UPDATE user_details
+            SET verify_status = 'Verified'
+            WHERE user_id = %s
+        """, (user_id,))
+
+        if cur.rowcount == 0:
+            return jsonify({
+                "message": "User not found"
+            }), 404
+
+        conn.commit()
+
+        return jsonify({
+            "message": "User approved successfully"
+        }), 200
+
+    except Exception as e:
+
+        conn.rollback()
+
+        return jsonify({
+            "message": str(e)
+        }), 500
+
+    finally:
+
+        cur.close()
+        conn.close()
+@verification_bp.route("/verifications/<int:user_id>/reject", methods=["PUT"])
+def reject_verification(user_id):
+
+    conn = get_db()
+    cur = conn.cursor()
+
+    try:
+
+        cur.execute("""
+            UPDATE user_details
+            SET verify_status = 'Rejected'
+            WHERE user_id = %s
+        """, (user_id,))
+
+        if cur.rowcount == 0:
+            return jsonify({
+                "message": "User not found"
+            }), 404
+
+        conn.commit()
+
+        return jsonify({
+            "message": "User rejected successfully"
+        }), 200
+
+    except Exception as e:
+
+        conn.rollback()
+
+        return jsonify({
+            "message": str(e)
+        }), 500
+
+    finally:
+
+        cur.close()
+        conn.close()

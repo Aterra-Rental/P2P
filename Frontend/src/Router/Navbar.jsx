@@ -13,7 +13,10 @@ const Navbar = () => {
   const loadUser = async () => {
     try {
       const data = await getUserProfile();
-      setUser(data);
+
+          if (data) {
+              setUser(data);
+}
     } catch (err) {
       console.error(err);
     }

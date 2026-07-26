@@ -15,6 +15,7 @@ import PreviewPage from '../components/Camera/PreviewPage.jsx'
 import AdminLogin from '../Admin/Components/Login/AdminLogin.jsx'
 import ProtectedAdminRoute from '../Admin/Components/ProtectedRoute/ProtectedAdminRoute.jsx'
 import AdminDashboard from '../Admin/Dashboard/Dashboard.jsx'
+import ProtectedRoute from '../components/ProtectedRoute.jsx'
 const Layout = () => {
   const location = useLocation()
   const hideLayout =
@@ -30,15 +31,16 @@ const Layout = () => {
         <Route path='/Home' element={<Home/>}/>
         <Route path='/Feature' element={<Feature/>}/>
         <Route path='/FQA' element={<FQA/>}/>
-        <Route path='/Dashboard' element={<Dashboard/>}/>
+        <Route path="/Dashboard" element={ <ProtectedRoute> <Dashboard /> </ProtectedRoute>} />
         <Route path='/Register' element={<Register/>}/>
         <Route path='/Login' element={<Login/>}/>
-        <Route path='/CompleteProfile' element={<CompleteProfile/>} />
-        <Route path="/create-deal" element={<DealRoom />}/>
-        <Route path="/camera/:type" element={<CameraPage />} />
-        <Route path="/camera/:type/preview" element={<PreviewPage />} />
+        <Route path="/CompleteProfile" element={ <ProtectedRoute> <CompleteProfile /> </ProtectedRoute>} />
+        <Route path="/create-deal" element={ <ProtectedRoute requireVerified={true}> <DealRoom /></ProtectedRoute>}/>
+        <Route path="/camera/:type" element={ <ProtectedRoute> <CameraPage /> </ProtectedRoute> } />
+        <Route path="/camera/:type/preview" element={ <ProtectedRoute> <PreviewPage /> </ProtectedRoute> }/>
         <Route path="/admin/login" element={<AdminLogin />}/>
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
+        <Route path="*" element={<Home />} />
       </Routes>
       {!hideLayout && <Footer/>}
     </>

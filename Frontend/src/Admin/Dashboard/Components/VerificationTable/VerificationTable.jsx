@@ -8,15 +8,20 @@ const VerificationTable = () => {
     const [selectedUser, setSelectedUser] = useState(null);
     const [pendingUsers, setPendingUsers] = useState([]);
 
+    const loadPendingUsers = () => {
+
+    fetch(`${API_URL}/api/admin/verifications`)
+        .then(res => res.json())
+        .then(data => setPendingUsers(data))
+        .catch(err => console.error(err));
+
+    };
+
     useEffect(() => {
 
-        fetch(`${API_URL}/api/admin/verifications`)
-            .then(res => res.json())
-            .then(data => setPendingUsers(data))
-            .catch(err => console.error(err));
+        loadPendingUsers();
 
     }, []);
-
     return (
 
         <div className="verification-table">
@@ -85,9 +90,15 @@ const VerificationTable = () => {
             </table>
 
             <VerificationModal
-                user={selectedUser}
-                onClose={() => setSelectedUser(null)}
-            />
+                    user={selectedUser}
+                    onClose={() => setSelectedUser(null)}
+                    onVerified={() => {
+
+                        setSelectedUser(null);
+                        loadPendingUsers();
+
+                    }}
+                />
 
         </div>
 
