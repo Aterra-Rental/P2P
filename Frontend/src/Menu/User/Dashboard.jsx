@@ -309,7 +309,7 @@ const Dashboard = () => {
         </div>
 
         
-          <div className="dashboard-card">
+  <div className="dashboard-card">
 
     <h2>Quick Actions</h2>
 
@@ -320,30 +320,30 @@ const Dashboard = () => {
     + Create Room
 </button>
 
-    <div className="action-grid">
+<div className="action-grid">
 
-        <button
-    className="action-btn"
-    onClick={() => handleRestrictedAction("/BrowseRooms")}
->
-    Browse Rooms
-</button>
+    <button
+        className="action-btn"
+        onClick={() => handleRestrictedAction("/transactions")}
+    >
+        📜 Transaction History
+    </button>
 
-        <button
-    className="action-btn"
-    onClick={() => handleRestrictedAction("/MyRooms")}
->
-    My Rooms
-</button>
+    <button
+        className="action-btn"
+        onClick={() => alert("Notifications page is coming soon.")}
+    >
+        🔔 Notifications
+    </button>
 
-        <button
-    className="action-btn"
-    onClick={() => handleRestrictedAction("/Transactions")}
->
-    Transactions
-</button>
+    <button
+        className="action-btn"
+        onClick={() => alert("Wallet page is coming soon.")}
+    >
+        💳 Wallet
+    </button>
 
-    </div>
+</div>
 
     <div className="verification-message">
 

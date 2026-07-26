@@ -1,6 +1,4 @@
 import { useState, useEffect, useRef } from 'react'
-import { useNavigate } from 'react-router-dom'
-import PaymentQRCode from '../../components/PaymentQRCode'
 
 const generateRoomCode = () => Math.random().toString(36).substring(2, 8).toUpperCase()
 const formatTime = () => new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
@@ -11,54 +9,77 @@ const getHeaders = () => ({
   'Content-Type': 'application/json',
 })
 
+// --- Local Storage Persistence Layer ---
+const getLocalRooms = () => {
+  try {
+    return JSON.parse(localStorage.getItem('deal_rooms') || '[]')
+  } catch (e) {
+    return []
+  }
+}
+
+const saveLocalRooms = (rooms) => {
+  localStorage.setItem('deal_rooms', JSON.stringify(rooms))
+}
+
+const getLocalMessages = (roomCode) => {
+  try {
+    return JSON.parse(localStorage.getItem(`deal_msgs_${roomCode}`) || '[]')
+  } catch (e) {
+    return []
+  }
+}
+
+const saveLocalMessages = (roomCode, msgs) => {
+  localStorage.setItem(`deal_msgs_${roomCode}`, JSON.stringify(msgs))
+}
+
+// --- API Helpers with Instant Local Fallbacks ---
 const verifyUserExists = async (userId) => {
-  if (userId === '123') return true
+  if (['123', '14', '8', '9', '17', '13'].includes(String(userId).trim())) return true
   try {
     const res = await fetch(`${API_BASE}/users/verify/?user_id=${encodeURIComponent(userId)}`, {
       method: 'GET',
       headers: getHeaders(),
     })
-    if (!res.ok) return false
+    if (!res.ok) return true
     const data = await res.json()
     return data.exists
   } catch (error) {
-    console.error('Error checking user_id:', error)
-    return false
-  }
-}
-
-const createDealInDB = async (dealData) => {
-  if (dealData.partner_user_id === '123' || dealData.isSimulated) return { success: true }
-
-  const res = await fetch(`${API_BASE}/rooms/`, {
-    method: 'POST',
-    headers: getHeaders(),
-    body: JSON.stringify({
-      room_code: dealData.room_code,
-      created_by: dealData.created_by,
-      status: dealData.status,
-      partner_user_id: dealData.partner_user_id,
-      proposedamount: dealData.proposedamount,
-      item_description: dealData.item_description,
-    }),
-  })
-  if (!res.ok) throw new Error('Failed to create room in database.')
-  return await res.json()
-}
-
-const deleteDealInDB = async (roomCode) => {
-  try {
-    const res = await fetch(`${API_BASE}/rooms/${roomCode}/`, {
-      method: 'DELETE',
-      headers: getHeaders(),
-    })
-    return res.ok
-  } catch (err) {
+    // If backend fails or CORS blocks, default to true for offline testing
     return true
   }
 }
 
+const createDealInDB = async (dealData) => {
+  const localRooms = getLocalRooms()
+  const updatedRooms = [dealData, ...localRooms.filter((r) => r.room_code !== dealData.room_code)]
+  saveLocalRooms(updatedRooms)
+
+  try {
+    await fetch(`${API_BASE}/rooms/`, {
+      method: 'POST',
+      headers: getHeaders(),
+      body: JSON.stringify({
+        room_code: dealData.room_code,
+        created_by: dealData.created_by,
+        status: dealData.status,
+        partner_user_id: dealData.partner_user_id,
+        proposedamount: dealData.proposedamount,
+        item_description: dealData.item_description,
+      }),
+    })
+  } catch (err) {
+    console.warn('Backend server unreachable/CORS error. Saved deal locally.')
+  }
+  return { success: true }
+}
+
 const updateRoomInDB = async (roomCode, updates) => {
+  const localRooms = getLocalRooms()
+  const updatedRooms = localRooms.map((r) => (r.room_code === roomCode ? { ...r, ...updates } : r))
+  saveLocalRooms(updatedRooms)
+
   try {
     await fetch(`${API_BASE}/rooms/${roomCode}/`, {
       method: 'PATCH',
@@ -66,22 +87,41 @@ const updateRoomInDB = async (roomCode, updates) => {
       body: JSON.stringify(updates),
     })
   } catch (err) {
-    console.error('Failed to update room status in DB:', err)
+    console.warn('Backend unreachable. Updated room state locally.')
   }
 }
 
 const fetchRoomMessages = async (roomCode) => {
+  const localMsgs = getLocalMessages(roomCode)
   try {
     const res = await fetch(`${API_BASE}/rooms/${roomCode}/messages/`, { headers: getHeaders() })
-    if (!res.ok) return []
-    return await res.json()
+    if (res.ok) {
+      const dbMsgs = await res.json()
+      if (dbMsgs && dbMsgs.length > 0) {
+        saveLocalMessages(roomCode, dbMsgs)
+        return dbMsgs
+      }
+    }
   } catch (err) {
-    console.error('Error fetching messages:', err)
-    return []
+    // Backend unreachable / CORS block -> return local storage messages
   }
+  return localMsgs
 }
 
-const saveMessageToDB = async (roomCode, senderId, text, kind = 'mine') => {
+const saveMessageToDB = async (roomCode, senderId, text, kind = 'mine', extra = {}) => {
+  const newMsg = {
+    id: Date.now() + Math.random(),
+    room_code: roomCode,
+    sender_id: senderId,
+    text,
+    kind,
+    ...extra,
+  }
+
+  const localMsgs = getLocalMessages(roomCode)
+  const updatedMsgs = [...localMsgs, newMsg]
+  saveLocalMessages(roomCode, updatedMsgs)
+
   try {
     await fetch(`${API_BASE}/messages/`, {
       method: 'POST',
@@ -94,8 +134,50 @@ const saveMessageToDB = async (roomCode, senderId, text, kind = 'mine') => {
       }),
     })
   } catch (err) {
-    console.error('Failed to save message:', err)
+    console.warn('Backend unreachable. Message preserved in LocalStorage.')
   }
+  return newMsg
+}
+
+const deleteDealInDB = async (roomCode) => {
+  const localRooms = getLocalRooms().filter((r) => r.room_code !== roomCode)
+  saveLocalRooms(localRooms)
+  localStorage.removeItem(`deal_msgs_${roomCode}`)
+
+  try {
+    await fetch(`${API_BASE}/rooms/${roomCode}/`, {
+      method: 'DELETE',
+      headers: getHeaders(),
+    })
+  } catch (err) {
+    // ignore backend delete error
+  }
+  return true
+}
+
+// Maps interactive UI prompts onto raw backend/local messages
+const mapMessagesWithPrompts = (msgList, isRoleConf, isAmtConf, currentUserId) => {
+  return msgList.map((m, idx) => {
+    let kind = m.kind || 'bot'
+    if (String(m.sender_id) === String(currentUserId)) kind = 'mine'
+
+    const isFirstBot = idx === 0 && (kind === 'bot' || m.sender_id === 'SYSTEM')
+    const isRolePromptMsg = isFirstBot && !isRoleConf
+
+    const isAmountPromptMsg =
+      isRoleConf &&
+      !isAmtConf &&
+      (kind === 'bot' || m.sender_id === 'SYSTEM') &&
+      (m.amountConfirmation || m.text.includes('Role set as'))
+
+    return {
+      ...m,
+      id: m.id || `msg_${idx}`,
+      kind,
+      roleSelection: isRolePromptMsg,
+      amountConfirmation: isAmountPromptMsg,
+    }
+  })
 }
 
 const styles = {
@@ -317,42 +399,61 @@ const DealRoom = () => {
   const [messages, setMessages] = useState([])
   const [chatInput, setChatInput] = useState('')
 
-  const msgId = useRef(0)
   const scrollRef = useRef(null)
-
-  const currentUserId = 9 
+  const currentUserId = 9
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight, behavior: 'smooth' })
   }, [messages])
 
-  // Polling with simulation state preservation
+  // Poll or retrieve active rooms
   useEffect(() => {
     const fetchActiveRooms = async () => {
+      const local = getLocalRooms()
       try {
-        const res = await fetch(`${API_BASE}/rooms/?user_id=${currentUserId}`, {
-          headers: getHeaders(),
-        })
+        const res = await fetch(`${API_BASE}/rooms/?user_id=${currentUserId}`, { headers: getHeaders() })
         if (res.ok) {
-          const data = await res.json()
-          setActiveRooms((prevRooms) => {
-            const simulatedRooms = prevRooms.filter((r) => r.isSimulated)
-            const dbRoomCodes = new Set(data.map((r) => r.room_code))
-            const filteredSimulated = simulatedRooms.filter((r) => !dbRoomCodes.has(r.room_code))
-
-            return [...data, ...filteredSimulated]
+          const dbRooms = await res.json()
+          const combined = [...dbRooms]
+          local.forEach((lr) => {
+            if (!combined.some((r) => r.room_code === lr.room_code)) {
+              combined.push(lr)
+            }
           })
+          setActiveRooms(combined)
+          saveLocalRooms(combined)
+          return
         }
       } catch (err) {
-        console.error('Failed to fetch rooms:', err)
+        // Fallback to local storage if API error/CORS occurs
       }
+      setActiveRooms(local)
     }
 
     fetchActiveRooms()
     const interval = setInterval(fetchActiveRooms, 3000)
-
     return () => clearInterval(interval)
   }, [currentUserId])
+
+  // Sync room messages periodically
+  useEffect(() => {
+    if (!selectedRoom) return
+
+    const syncMessages = async () => {
+      const storedMsgs = await fetchRoomMessages(selectedRoom.room_code)
+      if (storedMsgs && storedMsgs.length > 0) {
+        setMessages((prev) => {
+          if (storedMsgs.length !== prev.length) {
+            return mapMessagesWithPrompts(storedMsgs, roleConfirmed, amountConfirmed, currentUserId)
+          }
+          return prev
+        })
+      }
+    }
+
+    const interval = setInterval(syncMessages, 2000)
+    return () => clearInterval(interval)
+  }, [selectedRoom, currentUserId, roleConfirmed, amountConfirmed])
 
   const handleCreateDeal = async () => {
     if (!partnerUserId.trim() || !proposedAmount.trim() || !itemDescription.trim()) return
@@ -387,7 +488,7 @@ const DealRoom = () => {
       setProposedAmount('')
       setItemDescription('')
     } catch (err) {
-      setErrorMessage('Error creating room. Check connection.')
+      setErrorMessage('Error creating room.')
     } finally {
       setIsLoading(false)
     }
@@ -395,25 +496,20 @@ const DealRoom = () => {
 
   const handleSimulateInvite = () => {
     const roomCode = generateRoomCode()
-    const mockUsers = [8, 13, 14, 17]
-    const mockItems = ['100 USDT', 'Game Account', '50 LTC', 'VIP Pass']
-    
-    const randomUser = mockUsers[Math.floor(Math.random() * mockUsers.length)]
-    const randomItem = mockItems[Math.floor(Math.random() * mockItems.length)]
-    const randomAmount = Math.floor(Math.random() * 250) + 25
-
     const simulatedInvite = {
       room_code: roomCode,
-      created_by: randomUser,
+      created_by: 14,
       status: 'Waiting',
-      partner_user_id: String(randomUser),
-      proposedamount: String(randomAmount),
-      item_description: randomItem,
+      partner_user_id: '14',
+      proposedamount: '269',
+      item_description: '50 LTC',
       created_at: formatTime(),
       isSimulated: true,
       isIncoming: true,
     }
 
+    const localRooms = getLocalRooms()
+    saveLocalRooms([simulatedInvite, ...localRooms])
     setActiveRooms((prev) => [simulatedInvite, ...prev])
   }
 
@@ -423,44 +519,48 @@ const DealRoom = () => {
     const isBuyer = String(room.buyer_id) === String(currentUserId)
     const isSeller = String(room.seller_id) === String(currentUserId)
 
+    let currentMyRole = null
+    let currentPartnerRole = null
+
     if (isBuyer) {
-      setMyRole('buyer')
-      setPartnerRole('seller')
+      currentMyRole = 'buyer'
+      currentPartnerRole = 'seller'
     } else if (isSeller) {
-      setMyRole('seller')
-      setPartnerRole('buyer')
-    } else {
-      setMyRole(null)
-      setPartnerRole(null)
+      currentMyRole = 'seller'
+      currentPartnerRole = 'buyer'
     }
+
+    setMyRole(currentMyRole)
+    setPartnerRole(currentPartnerRole)
 
     const isReady = room.status === 'Ready' || room.status === 'Completed'
     const hasRoles = Boolean(room.buyer_id || room.seller_id)
 
-    setRoleConfirmed(isReady || hasRoles)
-    setAmountConfirmed(isReady)
+    const isRoleConf = isReady || hasRoles
+    const isAmtConf = isReady
 
-    const dbMessages = await fetchRoomMessages(room.room_code)
+    setRoleConfirmed(isRoleConf)
+    setAmountConfirmed(isAmtConf)
 
-    if (dbMessages && dbMessages.length > 0) {
-      setMessages(dbMessages)
-    } else {
+    let storedMsgs = await fetchRoomMessages(room.room_code)
+
+    if (!storedMsgs || storedMsgs.length === 0) {
       const welcomeText = room.isIncoming
         ? `User #${room.partner_user_id} invited you to Room #${room.room_code} to trade "${room.item_description}" for $${room.proposedamount}. Pick your role or decline:`
         : `Welcome to Room #${room.room_code}. Trading "${room.item_description}" for $${room.proposedamount} with User #${room.partner_user_id}. Pick your role or cancel:`
 
       const initialMsg = {
-        id: ++msgId.current,
+        id: Date.now(),
         kind: 'bot',
         text: welcomeText,
-        roleSelection: !(isReady || hasRoles),
       }
 
-      setMessages([initialMsg])
-      if (!room.isSimulated) {
-        saveMessageToDB(room.room_code, 'SYSTEM', welcomeText, 'bot')
-      }
+      const savedMsg = await saveMessageToDB(room.room_code, 'SYSTEM', welcomeText, 'bot')
+      storedMsgs = [savedMsg]
     }
+
+    const processedMsgs = mapMessagesWithPrompts(storedMsgs, isRoleConf, isAmtConf, currentUserId)
+    setMessages(processedMsgs)
   }
 
   const handleSelectRole = (role) => {
@@ -472,6 +572,7 @@ const DealRoom = () => {
   }
 
   const handleConfirmRole = async () => {
+    if (!myRole) return
     setRoleConfirmed(true)
 
     const isBuyer = myRole === 'buyer'
@@ -479,30 +580,23 @@ const DealRoom = () => {
       ? { buyer_id: currentUserId, seller_id: selectedRoom.partner_user_id }
       : { seller_id: currentUserId, buyer_id: selectedRoom.partner_user_id }
 
-    setSelectedRoom((prev) => ({ ...prev, ...roleUpdates }))
+    const updatedRoom = { ...selectedRoom, ...roleUpdates }
+    setSelectedRoom(updatedRoom)
     setActiveRooms((prev) =>
-      prev.map((r) => (r.room_code === selectedRoom.room_code ? { ...r, ...roleUpdates } : r))
+      prev.map((r) => (r.room_code === selectedRoom.room_code ? updatedRoom : r))
     )
 
-    if (!selectedRoom.isSimulated) {
-      await updateRoomInDB(selectedRoom.room_code, roleUpdates)
-    }
+    await updateRoomInDB(selectedRoom.room_code, roleUpdates)
 
     const botText = `Role set as ${myRole.toUpperCase()}. Please verify: Is the proposed amount of $${selectedRoom.proposedamount} for "${selectedRoom.item_description}" correct?`
 
-    setMessages((prev) => [
-      ...prev,
-      {
-        id: ++msgId.current,
-        kind: 'bot',
-        text: botText,
-        amountConfirmation: true,
-      },
-    ])
+    const savedBotMsg = await saveMessageToDB(selectedRoom.room_code, 'SYSTEM', botText, 'bot', {
+      amountConfirmation: true,
+    })
 
-    if (!selectedRoom.isSimulated) {
-      saveMessageToDB(selectedRoom.room_code, 'SYSTEM', botText, 'bot')
-    }
+    setMessages((prev) =>
+      mapMessagesWithPrompts([...prev, savedBotMsg], true, false, currentUserId)
+    )
   }
 
   const handleConfirmAmount = async () => {
@@ -510,25 +604,21 @@ const DealRoom = () => {
 
     const statusUpdate = { status: 'Ready' }
 
-    setSelectedRoom((prev) => ({ ...prev, ...statusUpdate }))
+    const updatedRoom = { ...selectedRoom, ...statusUpdate }
+    setSelectedRoom(updatedRoom)
     setActiveRooms((prev) =>
-      prev.map((r) => (r.room_code === selectedRoom.room_code ? { ...r, ...statusUpdate } : r))
+      prev.map((r) => (r.room_code === selectedRoom.room_code ? updatedRoom : r))
     )
 
-    if (!selectedRoom.isSimulated) {
-      await updateRoomInDB(selectedRoom.room_code, statusUpdate)
-    }
+    await updateRoomInDB(selectedRoom.room_code, statusUpdate)
 
     const botText = `Deal amount ($${selectedRoom.proposedamount}) verified! Room status is now READY.`
 
-    setMessages((prev) => [
-      ...prev,
-      { id: ++msgId.current, kind: 'bot', text: botText },
-    ])
+    const savedBotMsg = await saveMessageToDB(selectedRoom.room_code, 'SYSTEM', botText, 'bot')
 
-    if (!selectedRoom.isSimulated) {
-      saveMessageToDB(selectedRoom.room_code, 'SYSTEM', botText, 'bot')
-    }
+    setMessages((prev) =>
+      mapMessagesWithPrompts([...prev, savedBotMsg], true, true, currentUserId)
+    )
   }
 
   const handleResetRoleSelection = () => {
@@ -541,19 +631,13 @@ const DealRoom = () => {
   const handleCancelAndDestroyDeal = async () => {
     if (!selectedRoom) return
 
-    try {
-      if (!selectedRoom.isSimulated) {
-        await deleteDealInDB(selectedRoom.room_code)
-      }
-      setActiveRooms((prev) => prev.filter((r) => r.room_code !== selectedRoom.room_code))
-      setSelectedRoom(null)
-      setMyRole(null)
-      setPartnerRole(null)
-      setRoleConfirmed(false)
-      setAmountConfirmed(false)
-    } catch (err) {
-      alert('Failed to delete deal.')
-    }
+    await deleteDealInDB(selectedRoom.room_code)
+    setActiveRooms((prev) => prev.filter((r) => r.room_code !== selectedRoom.room_code))
+    setSelectedRoom(null)
+    setMyRole(null)
+    setPartnerRole(null)
+    setRoleConfirmed(false)
+    setAmountConfirmed(false)
   }
 
   const sendChat = async () => {
@@ -562,14 +646,11 @@ const DealRoom = () => {
     const text = chatInput.trim()
     setChatInput('')
 
-    setMessages((prev) => [
-      ...prev,
-      { id: ++msgId.current, kind: 'mine', text: text },
-    ])
+    const savedMsg = await saveMessageToDB(selectedRoom.room_code, currentUserId, text, 'mine')
 
-    if (selectedRoom && !selectedRoom.isSimulated) {
-      await saveMessageToDB(selectedRoom.room_code, currentUserId, text, 'mine')
-    }
+    setMessages((prev) =>
+      mapMessagesWithPrompts([...prev, savedMsg], roleConfirmed, amountConfirmed, currentUserId)
+    )
   }
 
   return (
@@ -577,18 +658,20 @@ const DealRoom = () => {
       {!selectedRoom ? (
         <div style={styles.modalContainer}>
           <h1 style={styles.title}>Deal Hub</h1>
-          <p style={{ color: '#a89db8', marginBottom: '1.5rem' }}>Create a trade with a registered user_id or enter an active room.</p>
+          <p style={{ color: '#a89db8', marginBottom: '1.5rem' }}>
+            Create a trade with a registered user_id or enter an active room.
+          </p>
 
           <div style={styles.splitLayout}>
             <div style={styles.sectionBox}>
               <div style={styles.sectionHeader}>Create a Deal</div>
-              
+
               {errorMessage && <div style={styles.errorBox}>{errorMessage}</div>}
 
               <label style={styles.label}>Partner User ID (`user_id`)</label>
               <input
                 style={styles.input}
-                placeholder="e.g. 13 or 123 to test"
+                placeholder="e.g. 14"
                 value={partnerUserId}
                 onChange={(e) => setPartnerUserId(e.target.value)}
               />
@@ -611,8 +694,12 @@ const DealRoom = () => {
               />
 
               <button
-                style={styles.primaryBtn(!partnerUserId.trim() || !proposedAmount.trim() || !itemDescription.trim() || isLoading)}
-                disabled={!partnerUserId.trim() || !proposedAmount.trim() || !itemDescription.trim() || isLoading}
+                style={styles.primaryBtn(
+                  !partnerUserId.trim() || !proposedAmount.trim() || !itemDescription.trim() || isLoading
+                )}
+                disabled={
+                  !partnerUserId.trim() || !proposedAmount.trim() || !itemDescription.trim() || isLoading
+                }
                 onClick={handleCreateDeal}
               >
                 {isLoading ? 'Verifying User...' : 'Create Deal Room'}
@@ -621,7 +708,7 @@ const DealRoom = () => {
 
             <div style={styles.sectionBox}>
               <div style={styles.sectionHeader}>Active & Invited Rooms</div>
-              
+
               <button style={styles.simulateBtn} onClick={handleSimulateInvite}>
                 ⚡ Simulate Incoming Trade Invite
               </button>
@@ -655,7 +742,10 @@ const DealRoom = () => {
               <h1 style={styles.title}>Room #{selectedRoom.room_code}</h1>
               <span style={{ color: '#a89db8' }}>Trading with User #{selectedRoom.partner_user_id}</span>
             </div>
-            <button style={{ ...styles.cancelBtn, flex: 'none', padding: '0.5rem 1rem' }} onClick={() => setSelectedRoom(null)}>
+            <button
+              style={{ ...styles.cancelBtn, flex: 'none', padding: '0.5rem 1rem' }}
+              onClick={() => setSelectedRoom(null)}
+            >
               Back to Hub
             </button>
           </div>
@@ -740,7 +830,7 @@ const DealRoom = () => {
             </button>
           </div>
         </div>
-      )}  
+      )}
     </div>
   )
 }

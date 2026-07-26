@@ -1,16 +1,22 @@
 import json
+from decimal import Decimal, InvalidOperation
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.models import User
+from django.db.models import Q
 from users.models import UserToken
 from .models import Deal
 
 
 def get_user_from_token(request):
     auth_header = request.headers.get("Authorization", "")
-    if not auth_header.startswith("Bearer "):
+    parts = auth_header.split()
+    
+    # Safely validate 'Bearer <token>' format without IndexError
+    if len(parts) != 2 or parts[0].lower() != "bearer":
         return None
-    token_str = auth_header.split(" ")[1]
+        
+    token_str = parts[1]
     try:
         return UserToken.objects.get(token=token_str).user
     except UserToken.DoesNotExist:
@@ -19,8 +25,8 @@ def get_user_from_token(request):
 
 def profile(request, user_id=None):
     """
-    Handles profile lookup. If a test/mock user ID (e.g. 123) isn't in the database,
-    it returns a fallback user object to prevent frontend 404 console errors.
+    Handles profile lookup. If a test/mock user ID isn't in the database,
+    returns fallback data to prevent frontend console errors.
     """
     if request.method != "GET":
         return JsonResponse({"error": "GET only"}, status=405)
@@ -28,7 +34,13 @@ def profile(request, user_id=None):
     if not user_id:
         return JsonResponse({"error": "user_id required"}, status=400)
 
-    user = User.objects.filter(id=user_id).first() or User.objects.filter(username=user_id).first()
+    user = None
+    # Only search by id if user_id is numeric to avoid ValueError crashes
+    if str(user_id).isdigit():
+        user = User.objects.filter(id=user_id).first()
+        
+    if not user:
+        user = User.objects.filter(username=user_id).first()
 
     if not user:
         return JsonResponse({
@@ -52,7 +64,12 @@ def user_deals(request):
     if user is None:
         return JsonResponse({"error": "invalid or missing token"}, status=401)
 
-    deals = (Deal.objects.filter(buyer=user) | Deal.objects.filter(seller=user)).order_by('-created_at')
+    # Use Q objects and select_related to fetch buyer/seller in 1 query
+    deals = (
+        Deal.objects.filter(Q(buyer=user) | Q(seller=user))
+        .select_related("buyer", "seller")
+        .order_by("-created_at")
+    )
 
     data = [
         {
@@ -84,10 +101,18 @@ def create_deal(request):
 
     seller_username = data.get("seller_username")
     item_name = data.get("item_name")
-    price = data.get("price")
+    raw_price = data.get("price")
 
-    if not all([seller_username, item_name, price]):
+    if not all([seller_username, item_name, raw_price]):
         return JsonResponse({"error": "missing fields"}, status=400)
+
+    # Validate price format and bounds
+    try:
+        price = Decimal(str(raw_price))
+        if price <= 0:
+            return JsonResponse({"error": "price must be greater than zero"}, status=400)
+    except (InvalidOperation, TypeError, ValueError):
+        return JsonResponse({"error": "invalid price format"}, status=400)
 
     try:
         seller = User.objects.get(username=seller_username)
@@ -102,7 +127,7 @@ def create_deal(request):
         seller=seller,
         item_name=item_name,
         price=price,
-        status='pending'
+        status="pending"
     )
 
     return JsonResponse({
@@ -175,4 +200,4 @@ def verify_user(request):
 
     username = request.GET.get("username", "")
     exists = User.objects.filter(username=username).exists()
-    return JsonResponse({"exists": exists, "username": username})   
+    return JsonResponse({"exists": exists, "username": username})

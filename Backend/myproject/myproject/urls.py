@@ -32,7 +32,7 @@ urlpatterns = [
     path('api/register/', register, name='register'),
     path('api/login/', login_view, name='login'),
 
-    # Profile Endpoints (Fixes 404 on /api/profile/123)
+    # Profile Endpoints
     path('api/profile/<str:user_id>/', profile, name='profile'),
     path('api/Dashboard/profile/', profile, name='profile_dashboard'),
 
@@ -48,4 +48,4 @@ urlpatterns = [
     path('api/rooms/<str:room_code>/', get_room, name='get_room'),
     path('api/rooms/<str:room_code>/messages/', get_messages, name='get_messages'),
     path('api/messages/', get_messages, name='save_message'),
-]           
+]
