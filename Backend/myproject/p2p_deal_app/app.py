@@ -1,7 +1,6 @@
 import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from routes.faq import faq_bp
 
 from admin import admin_bp
 from admin.verification import verification_bp
