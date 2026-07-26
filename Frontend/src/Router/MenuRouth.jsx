@@ -44,10 +44,7 @@ const Layout = () => {
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
         <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>}/>
         <Route path="/transaction/:transactionId" element={<TransactionDetails />}/>
-        {/* <Route
-    path="/transaction/:transactionId"
-    element={<h1 style={{ padding: 40 }}>Transaction Route Works!</h1>}
-/> */}
+       
         
         <Route path="*" element={<Home />} />
       </Routes>

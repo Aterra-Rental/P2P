@@ -8,7 +8,7 @@ const TransactionCard = ({ transaction }) => {
       <div className="transaction-top">
         <div>
           <h3>{transaction.item}</h3>
-          <small>{transaction.id}</small>
+          <small>TX-{transaction.transactionId}</small>
         </div>
 
         <span className={`status ${transaction.status.toLowerCase()}`}>
@@ -32,9 +32,12 @@ const TransactionCard = ({ transaction }) => {
 
           <button
     className="details-btn"
-    onClick={() =>
-        navigate(`/transaction/${transaction.id}`)
-    }
+    onClick={() => {
+        console.log("Transaction object:", transaction);
+        console.log("transactionId:", transaction.transactionId);
+
+        navigate(`/transaction/${transaction.transactionId}`);
+    }}
 >
     View Details
 </button>
