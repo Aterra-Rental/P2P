@@ -17,6 +17,7 @@ import ProtectedAdminRoute from '../Admin/Components/ProtectedRoute/ProtectedAdm
 import AdminDashboard from '../Admin/Dashboard/Dashboard.jsx'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import TransactionHistory from "../pages/TransactionHistory/TransactionHistory.jsx";
+import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.jsx";
 const Layout = () => {
   const location = useLocation()
   const hideLayout =
@@ -41,9 +42,12 @@ const Layout = () => {
         <Route path="/camera/:type/preview" element={ <ProtectedRoute> <PreviewPage /> </ProtectedRoute> }/>
         <Route path="/admin/login" element={<AdminLogin />}/>
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
-        <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>
-    }
-/>
+        <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>}/>
+        <Route path="/transaction/:transactionId" element={<TransactionDetails />}/>
+        {/* <Route
+    path="/transaction/:transactionId"
+    element={<h1 style={{ padding: 40 }}>Transaction Route Works!</h1>}
+/> */}
         
         <Route path="*" element={<Home />} />
       </Routes>

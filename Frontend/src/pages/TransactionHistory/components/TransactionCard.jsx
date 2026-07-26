@@ -1,43 +1,44 @@
 import "./TransactionCard.css";
-
+import { useNavigate } from "react-router-dom";
 const TransactionCard = ({ transaction }) => {
+    const navigate = useNavigate();
   return (
     <div className="transaction-card">
 
-      <div className="transaction-header">
-        <h3>{transaction.item}</h3>
+      <div className="transaction-top">
+        <div>
+          <h3>{transaction.item}</h3>
+          <small>{transaction.id}</small>
+        </div>
 
         <span className={`status ${transaction.status.toLowerCase()}`}>
           {transaction.status}
         </span>
       </div>
 
-      <p>
-        <strong>Transaction ID:</strong> {transaction.id}
-      </p>
+      <div className="transaction-info">
+        <p> <strong>Partner:</strong> {transaction.partner} <span className="partner-id"> {" "} ({transaction.partnerId})</span> </p>
+        <p><strong>Room:</strong> {transaction.roomId}</p>
+      </div>
 
-      <p>
-        <strong>Room ID:</strong> {transaction.roomId}
-      </p>
+      <div className="transaction-bottom">
+        <div>
+          <strong>{transaction.role}</strong>
+          <p>${transaction.amount}</p>
+        </div>
 
-      <p>
-        <strong>Partner:</strong> {transaction.partner}
-      </p>
+        <div className="transaction-actions">
+          <small>{transaction.completedAt}</small>
 
-      <p>
-        <strong>Role:</strong> {transaction.role}
-      </p>
-
-      <p>
-        <strong>Amount:</strong> ${transaction.amount}
-      </p>
-
-      <div className="transaction-footer">
-        <span>{transaction.completedAt}</span>
-
-        <button className="details-btn">
-          View Details
-        </button>
+          <button
+    className="details-btn"
+    onClick={() =>
+        navigate(`/transaction/${transaction.id}`)
+    }
+>
+    View Details
+</button>
+        </div>
       </div>
 
     </div>

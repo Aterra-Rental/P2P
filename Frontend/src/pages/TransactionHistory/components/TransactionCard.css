@@ -1,27 +1,75 @@
 .transaction-card {
-    background: white;
-    border-radius: 12px;
-    padding: 20px;
+    background: #fff;
+    border-radius: 14px;
+    padding: 24px;
     margin-bottom: 20px;
-    box-shadow: 0 2px 8px rgba(0,0,0,.08);
+    box-shadow: 0 4px 12px rgba(0,0,0,.08);
+    transition: .25s ease;
 }
 
-.transaction-header {
+.transaction-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 18px rgba(0,0,0,.12);
+}
+
+.transaction-top {
     display: flex;
     justify-content: space-between;
-    align-items: center;
-    margin-bottom: 15px;
+    align-items: flex-start;
+    margin-bottom: 18px;
 }
 
-.transaction-header h3 {
+.transaction-top h3 {
     margin: 0;
 }
 
+.transaction-top small {
+    color: #777;
+}
+
+.transaction-info {
+    margin-bottom: 20px;
+}
+
+.transaction-info p {
+    margin: 6px 0;
+}
+
+.transaction-bottom {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+}
+
+.transaction-actions {
+    text-align: right;
+}
+
+.transaction-actions small {
+    display: block;
+    margin-bottom: 10px;
+    color: #777;
+}
+
+.details-btn {
+    background: #0d6efd;
+    color: white;
+    border: none;
+    padding: 10px 18px;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: .2s;
+}
+
+.details-btn:hover {
+    background: #0b5ed7;
+}
+
 .status {
-    padding: 6px 12px;
+    padding: 6px 14px;
     border-radius: 20px;
     font-size: 13px;
-    font-weight: bold;
+    font-weight: 600;
 }
 
 .status.completed {
@@ -44,22 +92,24 @@
     color: #0c5460;
 }
 
-.transaction-footer {
-    margin-top: 18px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
+.status.pending {
+    background: #e2e3e5;
+    color: #41464b;
 }
 
-.details-btn {
-    border: none;
-    background: #0d6efd;
-    color: white;
-    padding: 8px 14px;
-    border-radius: 8px;
-    cursor: pointer;
-}
+@media (max-width: 768px) {
+    .transaction-bottom {
+        flex-direction: column;
+        align-items: flex-start;
+        gap: 16px;
+    }
 
-.details-btn:hover {
-    opacity: 0.9;
+    .transaction-actions {
+        text-align: left;
+    }
+}
+.partner-id {
+    color: #6c757d;
+    font-size: 0.9rem;
+    font-weight: normal;
 }
