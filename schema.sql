@@ -1,0 +1,2 @@
+ALTER TABLE room
+ALTER COLUMN agreed_price TYPE NUMERIC(12,2);
