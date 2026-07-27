@@ -1,2 +1,21 @@
-node_modules
-node_modules
+# Frontend
+node_modules/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+
+# Virtual environment
+.venv/
+venv/
+
+# Environment files
+.env
+
+# User uploads
+uploads/
+
+# OS files
+.DS_Store

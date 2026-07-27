@@ -7,7 +7,8 @@ const ProtectedRoute = ({
 }) => {
 
     const user = JSON.parse(localStorage.getItem("user"));
-
+    console.log("ProtectedRoute:", user);
+    console.log("requireVerified:", requireVerified);
     // User not logged in
     if (!user) {
         return <Navigate to="/Login" replace />;

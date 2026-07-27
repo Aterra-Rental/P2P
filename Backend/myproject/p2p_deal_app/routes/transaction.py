@@ -12,8 +12,7 @@ def get_all_transactions():
         SELECT
             th.transaction_id,
             th.room_id,
-
-            r.item_name,
+            th.item_name,
 
             b.firstname,
             b.lastname,
@@ -26,9 +25,6 @@ def get_all_transactions():
             th.completed_at
 
         FROM transactions_history th
-
-        JOIN room r
-            ON th.room_id = r.room_id
 
         JOIN user_details b
             ON th.buyer_id = b.user_id
@@ -71,10 +67,11 @@ def get_transaction(transaction_id):
     SELECT
         th.transaction_id,
         th.room_id,
+        th.room_code,
 
-        r.item_name,
-        r.item_description,
-        r.agreed_price,
+        th.item_name,
+        th.item_description,
+        th.agreed_price,
 
         b.user_id AS buyer_id,
         b.firstname AS buyer_first_name,
@@ -88,14 +85,19 @@ def get_transaction(transaction_id):
         th.fee_amount,
         th.seller_receive,
         th.platform_income,
+                
+        th.fulfillment_proof,
+        th.fulfillment_uploaded_at, 
+
+        th.payment_verified_at,
+        th.released_at,     
+                
+
         th.transaction_status,
         th.created_at,
         th.completed_at
 
     FROM transactions_history th
-
-    JOIN room r
-        ON th.room_id = r.room_id
 
     JOIN user_details b
         ON th.buyer_id = b.user_id
@@ -116,29 +118,39 @@ def get_transaction(transaction_id):
     return jsonify({
     "transactionId": row[0],
     "roomId": row[1],
+    "roomCode": row[2],
 
-    "item": row[2],
-    "description": row[3],
-    "agreedPrice": float(row[4]) if row[4] else None,
+
+    "item": row[3],
+    "description": row[4],
+    "agreedPrice": float(row[5]) if row[5] else None,
 
     "buyer": {
-        "id": row[5],
-        "firstName": row[6],
-        "lastName": row[7]
+        "id": row[6],
+        "firstName": row[7],
+        "lastName": row[8]
     },
 
     "seller": {
-        "id": row[8],
-        "firstName": row[9],
-        "lastName": row[10]
+        "id": row[9],
+        "firstName": row[10],
+        "lastName": row[11]
     },
 
-    "amount": float(row[11]),
-    "fee": float(row[12]),
-    "sellerReceive": float(row[13]),
-    "platformIncome": float(row[14]),
+    "amount": float(row[12]),
+    "fee": float(row[13]),
+    "sellerReceive": float(row[14]),
+    "platformIncome": float(row[15]),
 
-    "status": row[15],
-    "createdAt": row[16],
-    "completedAt": row[17]
+    "fulfillmentProof": row[16],
+    "fulfillmentUploadedAt": row[17],
+
+    "paymentVerifiedAt": row[18],
+    "releasedAt": row[19],
+
+
+
+    "status": row[20],
+    "createdAt": row[21],
+    "completedAt": row[22]
 })

@@ -36,20 +36,30 @@ const saveLocalMessages = (roomCode, msgs) => {
 
 // --- API Helpers with Instant Local Fallbacks ---
 const verifyUserExists = async (userId) => {
-  if (['123', '14', '8', '9', '17', '13'].includes(String(userId).trim())) return true
   try {
-    const res = await fetch(`${API_BASE}/users/verify/?user_id=${encodeURIComponent(userId)}`, {
-      method: 'GET',
-      headers: getHeaders(),
-    })
-    if (!res.ok) return true
-    const data = await res.json()
-    return data.exists
-  } catch (error) {
-    // If backend fails or CORS blocks, default to true for offline testing
-    return true
+    const res = await fetch(`${API_BASE}/check-user/${userId}`);
+
+    const data = await res.json();
+
+    if (!res.ok) {
+      return {
+        exists: false,
+        message: data.message || "User not found."
+      };
+    }
+
+    return {
+      exists: true,
+      user: data.user
+    };
+
+  } catch (err) {
+    return {
+      exists: false,
+      message: "Unable to connect to server."
+    };
   }
-}
+};
 
 const createDealInDB = async (dealData) => {
   const localRooms = getLocalRooms()
@@ -541,7 +551,7 @@ const DealRoom = () => {
   const [itemDescription, setItemDescription] = useState('')
   const [isLoading, setIsLoading] = useState(false)
   const [errorMessage, setErrorMessage] = useState('')
-
+  const [partnerUser, setPartnerUser] = useState(null);
   const [myRole, setMyRole] = useState(null)
   const [partnerRole, setPartnerRole] = useState(null)
   const [roleConfirmed, setRoleConfirmed] = useState(false)
@@ -799,12 +809,32 @@ const DealRoom = () => {
     setErrorMessage('')
 
     try {
-      const exists = await verifyUserExists(partnerUserId.trim())
-      if (!exists) {
-        setErrorMessage('User ID not found in database')
-        setIsLoading(false)
-        return
-      }
+      setPartnerUser(null);
+
+      const result = await verifyUserExists(partnerUserId.trim());
+
+            if (!result.exists) {
+                setPartnerUser(null);
+                setErrorMessage(result.message);
+                setIsLoading(false);
+                return;
+            }
+
+            if (partnerUserId.trim() === String(currentUserId)) {
+                  setPartnerUser(null);
+                  setErrorMessage("You cannot create a deal with yourself.");
+                  setIsLoading(false);
+                  return;
+              }
+
+            if (result.user.verify_status !== "Verified") {
+                setPartnerUser(null);
+                setErrorMessage("This user is not verified.");
+                setIsLoading(false);
+                return;
+            }
+
+            setPartnerUser(result.user);
 
       const roomCode = generateRoomCode()
       const dealData = {
@@ -1219,8 +1249,30 @@ const DealRoom = () => {
                 style={styles.input}
                 placeholder="e.g. 14"
                 value={partnerUserId}
-                onChange={(e) => setPartnerUserId(e.target.value)}
-              />
+                onChange={(e) => {
+                    setPartnerUserId(e.target.value);
+                    setErrorMessage("");
+                    setPartnerUser(null);
+                }}
+              />{partnerUser && (
+                 <div
+                            style={{
+                                background: "#1b1b1b",
+                                padding: "10px",
+                                borderRadius: "8px",
+                                marginBottom: "15px",
+                                border: "1px solid #4caf50"
+                            }}
+                        >
+                            <strong>
+                                {partnerUser.firstname} {partnerUser.lastname}
+                            </strong>
+
+                            <br />
+
+                            Status: {partnerUser.verify_status}
+                        </div>
+                    )}  
 
               <label style={styles.label}>Proposed Amount (`proposedamount` $)</label>
               <input

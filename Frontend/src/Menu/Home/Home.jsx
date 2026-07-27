@@ -4,7 +4,8 @@ import '../Global.css'
 import './Home.css'
 import { useEffect, useState } from 'react';
 import { getUserProfile } from '../../lib/profile'
-
+// import {getDashboard} from '../../lib/dashboard'
+import { getWallet } from "../../lib/wallet";
 const rielData = [
   { date: 'Feb 1', value: 1200000 },
   { date: 'Feb 3', value: 2500000 },
@@ -16,7 +17,7 @@ const rielData = [
 
 const Home = () => {
   const [profile, setProfile] = useState(null);
-  
+  const [wallet, setWallet] = useState(null);
   const navigate = useNavigate();
 
   const handleCreateDealClick = () => {
@@ -35,9 +36,13 @@ const Home = () => {
 
   useEffect(() => {
   const loadProfile = async () => {
+  
     try {
       const data = await getUserProfile();
       setProfile(data);
+      
+      const walletData = await getWallet();
+      setWallet(walletData);
     } catch (error) {
       console.error(error);
     }
@@ -79,16 +84,24 @@ const Home = () => {
                 <h3 className="text-white fw-semibold mb-2">
                 Welcome Back, {profile?.firstname || "User"}
                 </h3>
-                <p className="text-gray small mb-0 ms-4">View your current details and whats going on</p>
+                <p className="text-gray small mb-0 ms-4">
+                    Verification Status:
+                    <strong> {profile?.verify_status ?? "Pending"}</strong>
+                </p>
+                <p className="text-gray small mb-0 ms-4">Manage your escrow deals and wallet.</p>
               </div>
               <div className="row g-3">
                 <div className="col-6">
                   <div className="stat-card">
                     <div className="stat-label">
-                      ✅ Total Deals Completed
+                      Available Balance
                     </div>
                     <div className="stat-value-container">
-                      <span className="stat-number">2664</span>
+                      <span className="stat-number">
+                          <span className="stat-number">
+                          ${wallet?.available_balance?.toFixed(2) ?? "0.00"}
+                      </span>
+                      </span>
                       <span className="stat-badge text-success">
                         ↑ 74.5%
                       </span>
@@ -99,10 +112,14 @@ const Home = () => {
                 <div className="col-6">
                   <div className="stat-card">
                     <div className="stat-label">
-                      🇰🇭 Total Riel Value Dealt
+                      Pending Balance
                     </div>
                     <div className="stat-value-container">
-                      <span className="stat-number">6.0M ៛</span>
+                      <span className="stat-number">
+                          <span className="stat-number">
+                          ${wallet?.pending_balance?.toFixed(2) ?? "0.00"}
+                      </span>
+                      </span>
                       <span className="stat-badge text-success">
                         ↑ 74.5%
                       </span>
@@ -114,8 +131,8 @@ const Home = () => {
 
               <div className="chart-container mt-4">
                 <div className="d-flex justify-content-between align-items-center mb-2">
-                  <div className="chart-title text-white small fw-semibold">Completed Deals Volume</div>
-                  <div className="chart-subtitle text-muted ultra-small">៛ KHR Value Trend</div>
+                  <div className="chart-title text-white small fw-semibold">Wallet Activity</div>
+                  <div className="chart-subtitle text-muted ultra-small">Transaction Overview</div>
                 </div>
 
                 <ResponsiveContainer width="100%" height={180}>
