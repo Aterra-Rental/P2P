@@ -18,6 +18,8 @@ import AdminDashboard from '../Admin/Dashboard/Dashboard.jsx'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import TransactionHistory from "../pages/TransactionHistory/TransactionHistory.jsx";
 import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.jsx";
+import DealHub from "../Menu/Home/pages/Dealhub.jsx";
+import InvitationPage  from '../Menu/Home/pages/InvitationPage.jsx'
 // Temporary importation 
 import BakongTest from '../testComponents/BakongTest.jsx'
 const Layout = () => {
@@ -50,8 +52,10 @@ const Layout = () => {
         <Route
     path="/bakong-test"
     element={<BakongTest />}
+    
 />
-        
+      <Route path="/deals" element={<DealHub />} />
+        <Route path="/invitations" element={<InvitationPage />} />
         <Route path="*" element={<Home />} />
       </Routes>
       {!hideLayout && <Footer/>}

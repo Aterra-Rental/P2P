@@ -1,7 +1,6 @@
 import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
-from routes.bakong import bakong_bp
 from admin import admin_bp
 from admin.verification import verification_bp
 from config import Config
@@ -10,6 +9,8 @@ from routes.profile import profile_bp
 from routes.room import room_bp
 from routes.transaction import transaction_bp
 from routes.wallet import wallet_bp
+from routes.bakong import bakong_bp
+from routes.participant import participant_bp
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -38,6 +39,6 @@ app.register_blueprint(room_bp, url_prefix="/api")
 app.register_blueprint(transaction_bp, url_prefix="/api")
 app.register_blueprint(wallet_bp, url_prefix="/api")
 app.register_blueprint(bakong_bp, url_prefix="/api")
-
+app.register_blueprint(participant_bp, url_prefix="/api")
 if __name__ == "__main__":
     app.run(debug=True, port=8000)

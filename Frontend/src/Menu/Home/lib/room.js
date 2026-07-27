@@ -1,0 +1,118 @@
+const API_URL = "http://127.0.0.1:8000/api";
+
+const getHeaders = () => ({
+    "Content-Type": "application/json",
+});
+// export const checkUser = async (userId) => {
+//     const response = await fetch(
+//         `${API_URL}/check-user/${userId}`,
+//         {
+//             headers: getHeaders(),
+//         }
+//     );
+
+//     return await response.json();
+// };
+export const checkUser = async (userId) => {
+    const response = await fetch(`${API_URL}/check-user/${userId}`, {
+        headers: getHeaders(),
+    });
+
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error("Backend Error:", data);
+        throw new Error(data.message || "Unknown server error");
+    }
+
+    return data;
+};
+export const createRoom = async (roomData) => {
+    const response = await fetch(
+        `${API_URL}/rooms/`,
+        {
+            method: "POST",
+            headers: getHeaders(),
+            body: JSON.stringify(roomData),
+        }
+    );
+
+    return await response.json();
+};
+export const getRooms = async (userId) => {
+    const response = await fetch(
+        `${API_URL}/rooms/?user_id=${userId}`,
+        {
+            headers: getHeaders(),
+        }
+    );
+     const data = await response.json();
+
+
+    return data;
+};
+export const getInvitations = async (userId) => {
+    const response = await fetch(
+        `${API_URL}/rooms/invitations/${userId}`,
+        {
+            headers: getHeaders(),
+        }
+    );
+
+    return await response.json();
+};
+export const getRoom = async (roomCode) => {
+    const response = await fetch(
+        `${API_URL}/rooms/${roomCode}/`,
+        {
+            headers: getHeaders(),
+        }
+    );
+
+    return await response.json();
+};
+export const acceptInvitation = async (roomCode) => {
+    const response = await fetch(
+        `${API_URL}/rooms/${roomCode}/accept`,
+        {
+            method: "POST",
+            headers: getHeaders(),
+        }
+    );
+
+    return await response.json();
+};
+export const rejectInvitation = async (roomCode) => {
+    const response = await fetch(
+        `${API_URL}/rooms/${roomCode}/reject`,
+        {
+            method: "POST",
+            headers: getHeaders(),
+        }
+    );
+
+    return await response.json();
+};
+export const updateRoom = async (roomCode, updates) => {
+    const response = await fetch(
+        `${API_URL}/rooms/${roomCode}/`,
+        {
+            method: "PATCH",
+            headers: getHeaders(),
+            body: JSON.stringify(updates),
+        }
+    );
+
+    return await response.json();
+};
+export const deleteRoom = async (roomCode) => {
+    const response = await fetch(
+        `${API_URL}/rooms/${roomCode}/`,
+        {
+            method: "DELETE",
+            headers: getHeaders(),
+        }
+    );
+
+    return await response.json();
+};

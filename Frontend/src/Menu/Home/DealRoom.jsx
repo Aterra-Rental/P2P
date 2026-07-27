@@ -578,34 +578,14 @@ const DealRoom = () => {
   const cancelFinalizedRef = useRef(false)
 
   // --- NEW: per-tab identity instead of a hardcoded user ---
-  // sessionStorage is scoped to a single tab (unlike localStorage, which is
+
   // shared across every tab of the same origin). That's what lets you open
   // two tabs and have them be two genuinely different, real users instead of
   // both being "user 9" talking to itself.
-  const KNOWN_USER_IDS = ['123', '14', '8', '9', '17', '13']
-  const [currentUserId, setCurrentUserId] = useState(() => sessionStorage.getItem('deal_active_user') || null)
-  const [loginInput, setLoginInput] = useState('')
-  const [loginError, setLoginError] = useState('')
+  const currentUserId = localStorage.getItem("user_id")  
+  
 
-  const handleLogin = async () => {
-    const id = loginInput.trim()
-    if (!id) return
-    const exists = await verifyUserExists(id)
-    if (!exists) {
-      setLoginError('User ID not found in database')
-      return
-    }
-    sessionStorage.setItem('deal_active_user', id)
-    setCurrentUserId(id)
-    setLoginError('')
-  }
-
-  const handleSwitchUser = () => {
-    sessionStorage.removeItem('deal_active_user')
-    setCurrentUserId(null)
-    setSelectedRoom(null)
-    setActiveRooms([])
-  }
+  
 
   // --- NEW: how long to leave the "completed"/"cancelled" message on screen
   // before the ticket auto-deletes and the user is dropped back on the hub ---
@@ -863,26 +843,7 @@ const DealRoom = () => {
     }
   }
 
-  const handleSimulateInvite = () => {
-    const roomCode = generateRoomCode()
-    const simulatedInvite = {
-      room_code: roomCode,
-      created_by: 14,
-      status: 'Waiting',
-      partner_user_id: '14',
-      proposedamount: '269',
-      item_description: '50 LTC',
-      created_at: formatTime(),
-      isSimulated: true,
-      isIncoming: true,
-      role_picks: {},
-      amount_confirms: [],
-    }
-
-    const localRooms = getLocalRooms()
-    saveLocalRooms([simulatedInvite, ...localRooms])
-    setActiveRooms((prev) => [simulatedInvite, ...prev])
-  }
+  
 
   const openRoom = async (room) => {
     setSelectedRoom(room)
@@ -1199,39 +1160,13 @@ const DealRoom = () => {
 
   return (
     <div style={styles.page}>
-      {!currentUserId ? (
-        <div style={{ ...styles.modalContainer, maxWidth: '380px' }}>
-          <h1 style={styles.title}>Deal Hub</h1>
-          <p style={{ color: '#a89db8', marginBottom: '1.5rem' }}>
-            Enter your user_id to open this tab as that user. Use a different
-            id in another tab to test with two real people instead of one
-            person talking to themselves.
-          </p>
-          {loginError && <div style={styles.errorBox}>{loginError}</div>}
-          <label style={styles.label}>Your User ID</label>
-          <input
-            style={styles.input}
-            placeholder="e.g. 9 or 14"
-            value={loginInput}
-            onChange={(e) => setLoginInput(e.target.value)}
-            onKeyDown={(e) => e.key === 'Enter' && handleLogin()}
-          />
-          <button style={styles.primaryBtn(!loginInput.trim())} disabled={!loginInput.trim()} onClick={handleLogin}>
-            Enter
-          </button>
-        </div>
-      ) : !selectedRoom ? (
+       { !selectedRoom ? (
         <div style={styles.modalContainer}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.5rem' }}>
             <h1 style={styles.title}>Deal Hub</h1>
             <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem' }}>
               <span style={styles.pill('#d946ef')}>User #{currentUserId}</span>
-              <button
-                style={{ ...styles.cancelBtn, flex: 'none', padding: '0.4rem 0.8rem', fontSize: '0.8rem' }}
-                onClick={handleSwitchUser}
-              >
-                Switch User
-              </button>
+              
             </div>
           </div>
           <p style={{ color: '#a89db8', marginBottom: '1.5rem' }}>
@@ -1307,13 +1242,11 @@ const DealRoom = () => {
             <div style={styles.sectionBox}>
               <div style={styles.sectionHeader}>Active & Invited Rooms</div>
 
-              <button style={styles.simulateBtn} onClick={handleSimulateInvite}>
-                ⚡️ Simulate Incoming Trade Invite
-              </button>
+             
 
               {activeRooms.length === 0 ? (
                 <div style={{ color: '#6f6785', textAlign: 'center', marginTop: '1.5rem' }}>
-                  No active rooms. Create one or simulate an invite above!
+                  No active rooms. Create your first deal.
                 </div>
               ) : (
                 activeRooms.map((room) => (
