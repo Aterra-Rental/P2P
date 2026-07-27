@@ -92,9 +92,9 @@ DATABASES = {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'p2p_deal_db',
         'USER': 'postgres',
-        'PASSWORD': '123456789',
+        'PASSWORD': '320606531',
         'HOST': 'localhost',
-        'PORT': '5432',
+        'PORT': '3620',
     }
 }
 
