@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { Flame } from "lucide-react";
 import "./Auth.css";
@@ -35,99 +35,29 @@ const Login = () => {
 
     try {
 
-      const response = await fetch("http://127.0.0.1:8000/api/login", {
+      const response = await fetch("http://127.0.0.1:8000/api/login/", {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
         },
-        body: JSON.stringify(formData),
+        body: JSON.stringify({
+          username: formData.email.split("@")[0],
+          password: formData.password,
+        }),
       });
 
       const data = await response.json();
 
       if (!response.ok) {
-        setError(data.message || "Login failed.");
+        setError(data.error || data.message || "Login failed.");
         return;
       }
 
-      try {
+      localStorage.setItem("token", data.token);
+      localStorage.setItem("username", data.username);
 
-        // Check whether the user has completed their profile
-        const profileResponse = await fetch(
-          `http://127.0.0.1:8000/api/profile/${data.user_id}`
-        );
-
-        if (profileResponse.ok) {
-
-          const profile = await profileResponse.json();
-          console.log("PROFILE FROM API:", profile);
-
-const userObject = {
-    user_id: data.user_id,
-    email: data.email,
-    firstname: profile.firstname,
-    lastname: profile.lastname,
-    verify_status: profile.verify_status,
-};
-
-console.log("Saving user:", userObject);
-
-localStorage.setItem("user", JSON.stringify(userObject));
-
-console.log(
-    "Stored user:",
-    JSON.parse(localStorage.getItem("user"))
-);
-
-          // Store complete user object
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              user_id: data.user_id,
-              email: data.email,
-              firstname: profile.firstname,
-              lastname: profile.lastname,
-              verify_status: profile.verify_status,
-            })
-          );
-
-          // Keep old storage for compatibility
-          localStorage.setItem("user_id", data.user_id);
-          localStorage.setItem("email", data.email);
-
-          alert("Login Successful!");
-          navigate("/Dashboard");
-
-        } else if (profileResponse.status === 404) {
-
-          // User exists but has not completed profile yet
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              user_id: data.user_id,
-              email: data.email,
-              verify_status: null,
-            })
-          );
-
-          localStorage.setItem("user_id", data.user_id);
-          localStorage.setItem("email", data.email);
-
-          alert("Please complete your profile first.");
-          navigate("/CompleteProfile");
-
-        } else {
-
-          setError("Unable to verify your profile.");
-
-        }
-
-      } catch (err) {
-
-        console.error(err);
-        setError("Unable to connect to the server.");
-
-      }
+      alert("Login Successful!");
+      navigate("/Dashboard");
 
     } catch (err) {
 
