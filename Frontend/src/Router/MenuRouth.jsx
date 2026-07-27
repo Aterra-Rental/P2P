@@ -19,7 +19,7 @@ import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import TransactionHistory from "../pages/TransactionHistory/TransactionHistory.jsx";
 import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.jsx";
 // Temporary importation 
-import BakongTest from "./components/Bakong/BakongTest";
+import BakongTest from '../testComponents/BakongTest.jsx'
 const Layout = () => {
   const location = useLocation()
   const hideLayout =
