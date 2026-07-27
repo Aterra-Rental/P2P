@@ -56,8 +56,8 @@ def select_role():
         status = room[4]
         if status == "RolesAssigned":
             return jsonify({
-            "success": False,
-            "message": "Roles have already been assigned."
+                "success": False,
+                "message": "Roles have already been assigned."
             }), 400
 
         if status != "Accepted":

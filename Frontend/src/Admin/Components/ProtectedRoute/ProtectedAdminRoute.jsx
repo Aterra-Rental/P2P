@@ -1,24 +1,14 @@
 import { Navigate } from "react-router-dom";
 
-const ProtectedRoute = ({
-    children,
-    requireVerified = false
-}) => {
+const ProtectedAdminRoute = ({ children }) => {
+  const admin = JSON.parse(localStorage.getItem("admin")); // Checks "admin" key
 
-    const user = JSON.parse(localStorage.getItem("user"));
+  // Admin not logged in -> redirect to /admin/login
+  if (!admin) {
+    return <Navigate to="/admin/login" replace />;
+  }
 
-    // User not logged in
-    if (!user) {
-        return <Navigate to="/Login" replace />;
-    }
-
-    // Only verified users may access this page
-    if (requireVerified && user.verify_status !== "Verified") {
-        return <Navigate to="/Dashboard" replace />;
-    }
-
-    return children;
-
+  return children;
 };
 
-export default ProtectedRoute;
+export default ProtectedAdminRoute;

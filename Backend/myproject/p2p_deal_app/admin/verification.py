@@ -1,4 +1,4 @@
-from flask import Blueprint, jsonify
+from flask import Blueprint, jsonify, request
 from database import get_db
 
 verification_bp = Blueprint("admin_verification", __name__)
@@ -6,12 +6,10 @@ verification_bp = Blueprint("admin_verification", __name__)
 
 @verification_bp.route("/verifications", methods=["GET"])
 def get_pending_verifications():
-
     conn = get_db()
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             SELECT
                 ud.user_id,
@@ -22,29 +20,27 @@ def get_pending_verifications():
             FROM user_details ud
             JOIN user_login ul
                 ON ud.user_id = ul.user_id
-            WHERE ud.verify_status = 'Pending'
+            WHERE LOWER(ud.verify_status) = 'pending'
             ORDER BY ud.user_id DESC;
         """)
 
         rows = cur.fetchall()
 
-        users = []
-
-        for row in rows:
-            users.append({
+        users = [
+            {
                 "user_id": row[0],
                 "fullname": row[1],
                 "email": row[2],
                 "phone": row[3],
                 "verify_status": row[4]
-            })
+            }
+            for row in rows
+        ]
 
         return jsonify(users), 200
 
     except Exception as e:
-        return jsonify({
-            "message": str(e)
-        }), 500
+        return jsonify({"message": str(e)}), 500
 
     finally:
         cur.close()
@@ -53,12 +49,10 @@ def get_pending_verifications():
 
 @verification_bp.route("/verifications/<int:user_id>", methods=["GET"])
 def get_verification_details(user_id):
-
     conn = get_db()
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             SELECT
                 ud.user_id,
@@ -80,9 +74,7 @@ def get_verification_details(user_id):
         row = cur.fetchone()
 
         if row is None:
-            return jsonify({
-                "message": "User not found"
-            }), 404
+            return jsonify({"message": "User not found"}), 404
 
         return jsonify({
             "user_id": row[0],
@@ -98,21 +90,19 @@ def get_verification_details(user_id):
         }), 200
 
     except Exception as e:
-        return jsonify({
-            "message": str(e)
-        }), 500
+        return jsonify({"message": str(e)}), 500
 
     finally:
         cur.close()
         conn.close()
-@verification_bp.route("/verifications/<int:user_id>/approve", methods=["PUT"])
-def approve_verification(user_id):
 
+
+@verification_bp.route("/verifications/<int:user_id>/approve", methods=["PUT", "POST"])
+def approve_verification(user_id):
     conn = get_db()
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             UPDATE user_details
             SET verify_status = 'Verified'
@@ -120,36 +110,26 @@ def approve_verification(user_id):
         """, (user_id,))
 
         if cur.rowcount == 0:
-            return jsonify({
-                "message": "User not found"
-            }), 404
+            return jsonify({"message": "User not found"}), 404
 
         conn.commit()
-
-        return jsonify({
-            "message": "User approved successfully"
-        }), 200
+        return jsonify({"message": "User approved successfully"}), 200
 
     except Exception as e:
-
         conn.rollback()
-
-        return jsonify({
-            "message": str(e)
-        }), 500
+        return jsonify({"message": str(e)}), 500
 
     finally:
-
         cur.close()
         conn.close()
-@verification_bp.route("/verifications/<int:user_id>/reject", methods=["PUT"])
-def reject_verification(user_id):
 
+
+@verification_bp.route("/verifications/<int:user_id>/reject", methods=["PUT", "POST"])
+def reject_verification(user_id):
     conn = get_db()
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             UPDATE user_details
             SET verify_status = 'Rejected'
@@ -157,25 +137,15 @@ def reject_verification(user_id):
         """, (user_id,))
 
         if cur.rowcount == 0:
-            return jsonify({
-                "message": "User not found"
-            }), 404
+            return jsonify({"message": "User not found"}), 404
 
         conn.commit()
-
-        return jsonify({
-            "message": "User rejected successfully"
-        }), 200
+        return jsonify({"message": "User rejected successfully"}), 200
 
     except Exception as e:
-
         conn.rollback()
-
-        return jsonify({
-            "message": str(e)
-        }), 500
+        return jsonify({"message": str(e)}), 500
 
     finally:
-
         cur.close()
         conn.close()
