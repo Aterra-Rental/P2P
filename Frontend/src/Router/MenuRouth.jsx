@@ -18,6 +18,8 @@ import AdminDashboard from '../Admin/Dashboard/Dashboard.jsx'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import TransactionHistory from "../pages/TransactionHistory/TransactionHistory.jsx";
 import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.jsx";
+// Temporary importation 
+import BakongTest from "./components/Bakong/BakongTest";
 const Layout = () => {
   const location = useLocation()
   const hideLayout =
@@ -44,7 +46,11 @@ const Layout = () => {
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
         <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>}/>
         <Route path="/transaction/:transactionId" element={<TransactionDetails />}/>
-       
+        {/* temporary  */}
+        <Route
+    path="/bakong-test"
+    element={<BakongTest />}
+/>
         
         <Route path="*" element={<Home />} />
       </Routes>

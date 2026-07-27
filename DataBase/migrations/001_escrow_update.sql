@@ -39,3 +39,13 @@ CREATE TABLE IF NOT EXISTS deal_proofs (
     REFERENCES user_details(user_id)
     ON DELETE RESTRICT
 );
+-------------------------------------------------------
+-- Bakong Payment Information
+-------------------------------------------------------
+
+ALTER TABLE room
+ADD COLUMN IF NOT EXISTS bakong_transaction_id VARCHAR(100) UNIQUE,
+ADD COLUMN IF NOT EXISTS payment_verified_at TIMESTAMP;
+
+ALTER TABLE transactions_history
+ADD COLUMN IF NOT EXISTS bakong_transaction_id VARCHAR(100) UNIQUE;

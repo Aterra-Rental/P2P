@@ -1,21 +1,14 @@
-# Frontend
+# Node
 node_modules/
+Frontend/node_modules/
 
 # Python
+.venv/
 __pycache__/
 *.pyc
-*.pyo
-*.pyd
 
-# Virtual environment
-.venv/
-venv/
-
-# Environment files
+# Environment
 .env
 
-# User uploads
-uploads/
-
-# OS files
+# macOS
 .DS_Store

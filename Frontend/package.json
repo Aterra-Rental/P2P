@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@tailwindcss/vite": "^4.3.0",
+    "bakong-khqr": "^1.0.20",
     "bootstrap": "^5.3.8",
     "lucide-react": "^1.23.0",
     "qrcode.react": "^4.2.0",
