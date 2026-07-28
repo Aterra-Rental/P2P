@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { checkUser, createRoom } from "../../lib/room";
 import "./CreateDealForm.css";
 const CreateDealForm = ({ onCreated }) => {
@@ -14,6 +14,15 @@ const CreateDealForm = ({ onCreated }) => {
 
     const [error, setError] = useState("");
     const [success, setSuccess] = useState("");
+    useEffect(() => {
+    if (!success) return;
+
+    const timer = setTimeout(() => {
+        setSuccess("");
+    }, 5000);
+
+    return () => clearTimeout(timer);
+}, [success]);
 
     const verifyPartner = async (id) => {
         setPartner(null);
@@ -44,7 +53,6 @@ const CreateDealForm = ({ onCreated }) => {
         if (
             !partnerUserId ||
             !itemName ||
-            !itemDescription ||
             !amount
         ) {
             setError("Please fill in all fields.");
@@ -172,9 +180,10 @@ const CreateDealForm = ({ onCreated }) => {
                         type="number"
                         className="deal-input"
                         value={amount}
-                        onChange={(e) =>
-                            setAmount(e.target.value)
-                        }
+                        min="1"
+                        step="0.01"
+                        onWheel={(e) => e.target.blur()}
+                        onChange={(e) => setAmount(e.target.value)}
                     />
                 </div>
 

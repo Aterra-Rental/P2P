@@ -82,38 +82,45 @@ export const getRoom = async (roomCode) => {
 
     return data;
 };
-export const acceptInvitation = async (roomCode) => {
+export const acceptInvitation = async (roomCode, userId) => {
     const response = await fetch(
         `${API_URL}/rooms/${roomCode}/accept`,
         {
             method: "POST",
             headers: getHeaders(),
+            body: JSON.stringify({
+                user_id: userId,
+            }),
         }
     );
 
     const data = await response.json();
 
     if (!response.ok) {
-        throw new Error(data.message || data.error || "Failed to accept invitation");
+        throw new Error(
+            data.message || data.error || "Failed to accept invitation"
+        );
     }
 
     return data;
 };
-export const rejectInvitation = async (roomCode) => {
+export const rejectInvitation = async (roomCode, userId) => {
     const response = await fetch(
         `${API_URL}/rooms/${roomCode}/reject`,
         {
             method: "POST",
             headers: getHeaders(),
+            body: JSON.stringify({
+                user_id: userId,
+            }),
         }
     );
 
     const data = await response.json();
 
     if (!response.ok) {
-        console.error("Backend Error:", data);
         throw new Error(
-            data.message || data.error || "Failed to reject invitation."
+            data.message || data.error || "Failed to reject invitation"
         );
     }
 
@@ -137,6 +144,22 @@ export const deleteRoom = async (roomCode) => {
         {
             method: "DELETE",
             headers: getHeaders(),
+        }
+    );
+
+    return await response.json();
+};
+export const reinviteRoom = async (roomCode, userId) => {
+    const response = await fetch(
+        `${API_URL}/rooms/${roomCode}/reinvite`,
+        {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                user_id: userId,
+            }),
         }
     );
 

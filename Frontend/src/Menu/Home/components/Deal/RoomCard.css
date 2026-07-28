@@ -44,7 +44,10 @@
     background:#4c1d95;
     color:white;
 }
-
+.room-status.accepted{
+    background:#14532d;
+    color:#86efac;
+}
 .room-status.completed{
     background:#14532d;
     color:#86efac;

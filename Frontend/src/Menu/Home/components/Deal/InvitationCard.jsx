@@ -5,6 +5,11 @@ const InvitationCard = ({
     onAccept,
     onReject,
 }) => {
+
+    console.log({
+    onAccept,
+    onReject,
+});
     return (
         <div className="invitation-card">
             <div className="invitation-body">
