@@ -21,7 +21,7 @@ const Home = () => {
   const navigate = useNavigate();
 
   const handleCreateDealClick = () => {
-    navigate('/create-deal');
+    navigate('/Dealhub');
   };
 
   const handleHowItWorksClick = () => {

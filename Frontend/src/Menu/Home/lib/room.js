@@ -28,16 +28,20 @@ export const checkUser = async (userId) => {
     return data;
 };
 export const createRoom = async (roomData) => {
-    const response = await fetch(
-        `${API_URL}/rooms/`,
-        {
-            method: "POST",
-            headers: getHeaders(),
-            body: JSON.stringify(roomData),
-        }
-    );
+    const response = await fetch(`${API_URL}/rooms/`, {
+        method: "POST",
+        headers: getHeaders(),
+        body: JSON.stringify(roomData),
+    });
 
-    return await response.json();
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error("Backend Error:", data);
+        throw new Error(data.message || "Failed to create room");
+    }
+
+    return data;
 };
 export const getRooms = async (userId) => {
     const response = await fetch(
@@ -69,7 +73,14 @@ export const getRoom = async (roomCode) => {
         }
     );
 
-    return await response.json();
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error("Backend Error:", data);
+        throw new Error(data.message || "Failed to fetch room.");
+    }
+
+    return data;
 };
 export const acceptInvitation = async (roomCode) => {
     const response = await fetch(
@@ -80,7 +91,13 @@ export const acceptInvitation = async (roomCode) => {
         }
     );
 
-    return await response.json();
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(data.message || data.error || "Failed to accept invitation");
+    }
+
+    return data;
 };
 export const rejectInvitation = async (roomCode) => {
     const response = await fetch(
@@ -91,7 +108,16 @@ export const rejectInvitation = async (roomCode) => {
         }
     );
 
-    return await response.json();
+    const data = await response.json();
+
+    if (!response.ok) {
+        console.error("Backend Error:", data);
+        throw new Error(
+            data.message || data.error || "Failed to reject invitation."
+        );
+    }
+
+    return data;
 };
 export const updateRoom = async (roomCode, updates) => {
     const response = await fetch(

@@ -1,0 +1,90 @@
+.invitation-card{
+    background:#1b1730;
+    border:1px solid #31284d;
+    border-radius:14px;
+    margin-bottom:18px;
+    overflow:hidden;
+    transition:.2s;
+}
+
+.invitation-card:hover{
+    border-color:#a855f7;
+    transform:translateY(-2px);
+}
+
+.invitation-body{
+    padding:20px;
+}
+
+.invitation-title{
+    color:#fff;
+    font-size:1.25rem;
+    font-weight:700;
+    margin-bottom:10px;
+}
+
+.invitation-from{
+    color:#b8adc9;
+    margin-bottom:8px;
+}
+
+.invitation-description{
+    color:#ddd6f3;
+    margin-bottom:10px;
+}
+
+.invitation-price{
+    color:#fff;
+    font-size:1.1rem;
+    font-weight:700;
+    margin-bottom:15px;
+}
+
+.status-badge{
+    display:inline-block;
+    background:linear-gradient(90deg,#7c3aed,#d946ef);
+    color:white;
+    padding:6px 14px;
+    border-radius:30px;
+    font-size:.75rem;
+    font-weight:600;
+    margin-bottom:18px;
+}
+
+.action-row{
+    display:flex;
+    gap:12px;
+}
+
+.accept-btn{
+    flex:1;
+    border:none;
+    border-radius:10px;
+    padding:11px;
+    background:linear-gradient(90deg,#7c3aed,#d946ef);
+    color:white;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.accept-btn:hover{
+    transform:translateY(-1px);
+    filter:brightness(1.08);
+}
+
+.reject-btn{
+    flex:1;
+    border:1px solid #5c4a7a;
+    border-radius:10px;
+    padding:11px;
+    background:#2a213c;
+    color:#d8cdee;
+    font-weight:600;
+    cursor:pointer;
+    transition:.2s;
+}
+
+.reject-btn:hover{
+    background:#43305f;
+}

@@ -1,44 +1,44 @@
 import React from "react";
-
+import "./InvitationCard.css";
 const InvitationCard = ({
     invitation,
     onAccept,
     onReject,
 }) => {
     return (
-        <div className="card shadow-sm mb-3">
-            <div className="card-body">
+        <div className="invitation-card">
+            <div className="invitation-body">
 
-                <h5 className="card-title">
+                <h5 className="invitation-title">
                     {invitation.item_name}
                 </h5>
 
-                <p className="text-muted mb-2">
+                <p className="invitation-from">
                     From: {invitation.creator_name}
                 </p>
 
-                <p className="mb-2">
+                <p className="invitation-description">
                     {invitation.item_description}
                 </p>
 
-                <h6 className="mb-3">
+                <h6 className="invitation-price">
                     ${invitation.agreed_price}
                 </h6>
 
-                <span className="badge bg-warning text-dark mb-3">
+                <span className="status-badge">
                     {invitation.status}
                 </span>
 
-                <div className="d-flex gap-2 mt-3">
+                <div className="action-row">
                     <button
-                        className="btn btn-success"
+                        className="accept-btn"
                         onClick={() => onAccept(invitation.room_code)}
                     >
                         Accept
                     </button>
 
                     <button
-                        className="btn btn-danger"
+                        className="reject-btn"
                         onClick={() => onReject(invitation.room_code)}
                     >
                         Reject

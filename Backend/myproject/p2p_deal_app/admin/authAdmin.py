@@ -42,10 +42,10 @@ def admin_login():
         admin_id, admin_email, password_hash = admin
 
         print("========== ADMIN LOGIN ==========")
-        print("Input Email:", email)
+        # print("Input Email:", email)
         print("DB Email:", admin_email)
-        print("Input Password:", password)
-        print("DB Hash:", password_hash)
+        # print("Input Password:", password)
+        # print("DB Hash:", password_hash)
 
         result = bcrypt.checkpw(
             password.encode("utf-8"),

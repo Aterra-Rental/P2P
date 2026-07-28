@@ -1,0 +1,9 @@
+.deal-workspace{
+    min-height:100vh;
+    background: var(--gradient-bg);
+    padding:40px 0 80px;
+}
+.deal-container{
+    width:min(1400px,95%);
+    margin:auto;
+}

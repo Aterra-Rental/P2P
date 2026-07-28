@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { checkUser, createRoom } from "../../lib/room";
-
+import "./CreateDealForm.css";
 const CreateDealForm = ({ onCreated }) => {
     const [partnerUserId, setPartnerUserId] = useState("");
     const [itemName, setItemName] = useState("");
@@ -110,20 +110,20 @@ const CreateDealForm = ({ onCreated }) => {
     };
 
     return (
-        <div className="card shadow-sm p-4">
+        <div className="deal-form shadow-sm p-4">
 
             <h4 className="mb-4">Create New Deal</h4>
 
             <form onSubmit={handleCreate}>
 
                 <div className="mb-3">
-                    <label className="form-label">
+                    <label className="deal-label">
                         Other User ID
                     </label>
 
                     <input
                         type="number"
-                        className="form-control"
+                        className="deal-input"
                         value={partnerUserId}
                         onChange={(e) => {
                             setPartnerUserId(e.target.value);
@@ -133,13 +133,13 @@ const CreateDealForm = ({ onCreated }) => {
                 </div>
 
                 <div className="mb-3">
-                    <label className="form-label">
+                    <label className="deal-label">
                         Item Name
                     </label>
 
                     <input
                         type="text"
-                        className="form-control"
+                        className="deal-input"
                         value={itemName}
                         onChange={(e) =>
                             setItemName(e.target.value)
@@ -148,28 +148,29 @@ const CreateDealForm = ({ onCreated }) => {
                 </div>
 
                 <div className="mb-3">
-                    <label className="form-label">
+                    <label className="deal-label">
                         Item Description
                     </label>
 
                     <textarea
-                        className="form-control"
+                        className="deal-input deal-textarea"
                         rows="3"
                         value={itemDescription}
                         onChange={(e) =>
                             setItemDescription(e.target.value)
                         }
+                        placeholder="Optional"
                     />
                 </div>
 
                 <div className="mb-3">
-                    <label className="form-label">
-                        Agreed Price (៛)
+                    <label className="deal-label">
+                        Agreed Price ($)
                     </label>
 
                     <input
                         type="number"
-                        className="form-control"
+                        className="deal-input"
                         value={amount}
                         onChange={(e) =>
                             setAmount(e.target.value)
@@ -188,7 +189,7 @@ const CreateDealForm = ({ onCreated }) => {
                 )}
 
                 {partner && (
-                    <div className="alert alert-light border">
+                    <div className="partner-card">
 
                         <strong>
                             {partner.firstname} {partner.lastname}
@@ -216,20 +217,20 @@ const CreateDealForm = ({ onCreated }) => {
                 )}
 
                 {error && (
-                    <div className="alert alert-danger">
+                    <div className="deal-error">
                         {error}
                     </div>
                 )}
 
                 {success && (
-                    <div className="alert alert-success">
+                    <div className="deal-success">
                         {success}
                     </div>
                 )}
 
                 <button
                     type="submit"
-                    className="btn btn-primary"
+                    className="deal-btn"
                     disabled={loading}
                 >
                     {loading

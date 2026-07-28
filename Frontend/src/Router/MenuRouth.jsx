@@ -9,7 +9,6 @@ import Dashboard from '../Menu/User/Dashboard.jsx'
 import Register from '../pages/Register.jsx'
 import Login from '../pages/Login.jsx'
 import CompleteProfile from '../pages/CompleteProfile.jsx'
-import DealRoom from '../Menu/Home/DealRoom.jsx'
 import CameraPage from '../components/Camera/CameraPage.jsx'
 import PreviewPage from '../components/Camera/PreviewPage.jsx'
 import AdminLogin from '../Admin/Components/Login/AdminLogin.jsx'
@@ -19,7 +18,8 @@ import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import TransactionHistory from "../pages/TransactionHistory/TransactionHistory.jsx";
 import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.jsx";
 import DealHub from "../Menu/Home/pages/Dealhub.jsx";
-import InvitationPage  from '../Menu/Home/pages/InvitationPage.jsx'
+import DealWorkspace from "../Menu/Home/pages/DealWorkspace";
+// import InvitationPage  from '../Menu/Home/pages/InvitationPage.jsx'
 // Temporary importation 
 import BakongTest from '../testComponents/BakongTest.jsx'
 const Layout = () => {
@@ -41,13 +41,14 @@ const Layout = () => {
         <Route path='/Register' element={<Register/>}/>
         <Route path='/Login' element={<Login/>}/>
         <Route path="/CompleteProfile" element={ <ProtectedRoute> <CompleteProfile /> </ProtectedRoute>} />
-        <Route path="/create-deal" element={ <ProtectedRoute requireVerified={true}> <DealRoom /></ProtectedRoute>}/>
+        <Route path="/DealHub" element={ <ProtectedRoute requireVerified={true}> <DealHub /></ProtectedRoute>}/>
         <Route path="/camera/:type" element={ <ProtectedRoute> <CameraPage /> </ProtectedRoute> } />
         <Route path="/camera/:type/preview" element={ <ProtectedRoute> <PreviewPage /> </ProtectedRoute> }/>
         <Route path="/admin/login" element={<AdminLogin />}/>
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
         <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>}/>
         <Route path="/transaction/:transactionId" element={<TransactionDetails />}/>
+        <Route path="/deal/:roomCode" element={ <ProtectedRoute requireVerified={true}><DealWorkspace /> </ProtectedRoute>}/>
         {/* temporary  */}
         <Route
     path="/bakong-test"
@@ -55,7 +56,7 @@ const Layout = () => {
     
 />
       <Route path="/deals" element={<DealHub />} />
-        <Route path="/invitations" element={<InvitationPage />} />
+        {/* <Route path="/invitations" element={<InvitationPage />} /> */}
         <Route path="*" element={<Home />} />
       </Routes>
       {!hideLayout && <Footer/>}
