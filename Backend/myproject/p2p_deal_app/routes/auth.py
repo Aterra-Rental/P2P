@@ -37,25 +37,12 @@ def register():
         ).decode("utf-8")
 
         # Insert new user
-        # Insert new user and get the new user_id
         cursor.execute(
             """
             INSERT INTO user_login (email, passwordhash)
             VALUES (%s, %s)
-            RETURNING user_id
             """,
             (email, password_hash)
-        )
-
-        new_user_id = cursor.fetchone()[0]
-
-        # Create wallet for the new user
-        cursor.execute(
-            """
-            INSERT INTO user_wallet (user_id)
-            VALUES (%s)
-            """,
-            (new_user_id,)
         )
 
         conn.commit()

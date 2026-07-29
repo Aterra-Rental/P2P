@@ -6,30 +6,12 @@ import { useNavigate, useParams } from "react-router-dom";
 export default function TransactionDetails() {
     const navigate = useNavigate();
     const { transactionId } = useParams();
-    console.log("URL transactionId =", transactionId);
     const [transaction, setTransaction] = useState(null)
-
     useEffect(() => {
     fetch(`/api/transactions/${transactionId}`)
-        .then(res => {
-            console.log("Status:", res.status);
-            return res.json();
-        })
-        .then(data => {
-            console.log("Transaction:", data);
-            setTransaction(data);
-        })
-        .catch(err => {
-            console.error("Fetch error:", err);
-        });
+        .then(res => res.json())
+        .then(data => setTransaction(data));
 }, [transactionId]);
-if (!transaction) {
-    return (
-        <div className="transaction-details-page">
-            <h2>Loading transaction...</h2>
-        </div>
-    );
-}
   return (
     <div className="transaction-details-page">
         <button
@@ -53,7 +35,7 @@ if (!transaction) {
 
         <div className="info-row">
           <span>Transaction ID</span>
-          <strong>{transaction.transactionId}</strong>
+          <strong>{transactionId}</strong>
         </div>
 
         <div className="info-row">
@@ -65,72 +47,71 @@ if (!transaction) {
           <span>Item</span>
           <strong>{transaction.item}</strong>
         </div>
-        <div className="info-row">
-    <span>Description</span>
-    <strong>{transaction.description}</strong>
-</div>
       </div>
         <div className="details-card">
 
     <h2>Participants</h2>
 
     <div className="info-row">
-        <span>Buyer</span>
-        <strong>
-            {transaction.buyer.firstName} {transaction.buyer.lastName}
-        </strong>
+      <span>Buyer</span>
+      <strong>
+        {transaction.buyer.name} ({transaction.buyer.id})
+      </strong>
     </div>
 
     <div className="info-row">
-        <span>Seller</span>
-        <strong>
-            {transaction.seller.firstName} {transaction.seller.lastName}
-        </strong>
+      <span>Seller</span>
+      <strong>
+        {transaction.seller.name} ({transaction.seller.id})
+      </strong>
     </div>
 
-</div>
+  </div>
     {/* Payment */}
 <div className="details-card">
 
-    <h2>Payment</h2>
+  <h2>Payment</h2>
 
-    <div className="info-row">
-        <span>Agreed Price</span>
-        <strong>${transaction.agreedPrice}</strong>
-    </div>
+  <div className="info-row">
+    <span>Amount</span>
+    <strong>${transaction.amount}</strong>
+  </div>
 
-    <div className="info-row">
-        <span>Escrow Fee</span>
-        <strong>${transaction.fee}</strong>
-    </div>
+  <div className="info-row">
+    <span>Escrow Fee</span>
+    <strong>${transaction.escrowFee}</strong>
+  </div>
 
-    <div className="info-row">
-        <span>Seller Receives</span>
-        <strong>${transaction.sellerReceive}</strong>
-    </div>
+  <div className="info-row">
+    <span>Total Paid</span>
+    <strong>${transaction.totalPaid}</strong>
+  </div>
 
-    <div className="info-row">
-        <span>Platform Income</span>
-        <strong>${transaction.platformIncome}</strong>
-    </div>
+  <div className="info-row">
+    <span>Payment Method</span>
+    <strong>{transaction.paymentMethod}</strong>
+  </div>
 
 </div>
 {/* Timeline */}
 <div className="details-card">
 
-    <h2>Timeline</h2>
+  <h2>Timeline</h2>
 
-    <div className="info-row">
-        <span>Created</span>
-        <strong>{transaction.createdAt}</strong>
-    </div>
+  <div className="info-row">
+    <span>Payment Received</span>
+    <strong>{transaction.paidAt}</strong>
+  </div>
 
-    <div className="info-row">
-        <span>Completed</span>
-        <strong>
-            {transaction.completedAt || "Pending"}
-        </strong>
-    </div>
+  <div className="info-row">
+    <span>Escrow Released</span>
+    <strong>{transaction.releasedAt}</strong>
+  </div>
+
+  <div className="info-row">
+    <span>Transaction Completed</span>
+    <strong>{transaction.completedAt}</strong>
+  </div>
 
 </div>
     </div>

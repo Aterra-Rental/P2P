@@ -7,6 +7,7 @@ import {
 import VerificationTable from "./Components/VerificationTable/VerificationTable";
 import AdminLayout from "../Components/Layout/AdminLayout";
 import StatCard from "./Components/StatCard/StatCard";
+import SubmittedQuestions from "./Components/SubmittedQuestions/SubmittedQuestions";
 
 import "./Dashboard.css";
 
@@ -48,6 +49,7 @@ const Dashboard = () => {
 
             </div>
             <VerificationTable />
+            <SubmittedQuestions />
 
         </AdminLayout>
 

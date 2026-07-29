@@ -8,6 +8,7 @@ from werkzeug.utils import secure_filename
 profile_bp = Blueprint("profile", __name__)
 
 
+
 NATIONAL_ID_FOLDER = os.path.join(
     os.path.dirname(os.path.dirname(__file__)),
     "uploads",
@@ -33,69 +34,8 @@ def allowed_file(filename):
 
 
 # ==========================
-# Get Profile
-# ==========================
-
-@profile_bp.route("/profile/<int:user_id>", methods=["GET"])
-def get_profile(user_id):
-    conn = get_db()
-    cursor = conn.cursor()
-    try:
-        cursor.execute(
-                """
-                    SELECT
-                        ud.firstname,
-                        ud.lastname,
-                        ul.email,
-                        ud.phonenumber,
-                        ud.nationalidentity_id,
-                        ud.dob::text,
-                        ud.address,
-                        ud.verify_status,
-                        ud.bio,
-                        ud.show_email,
-                        ud.show_phone
-                    FROM user_details ud
-                    JOIN user_login ul
-                        ON ud.user_id = ul.user_id
-                    WHERE ud.user_id = %s
-                """,
-                (user_id,)
-            )
-        row = cursor.fetchone()
-
-        if row is None:
-            # No profile submitted yet - this is NOT an error state,
-            # the frontend should treat 404 here as "show Complete Profile screen"
-            return jsonify({"message": "Profile not found"}), 404
-
-        return jsonify({
-                "firstname": row[0],
-                "lastname": row[1],
-                "email": row[2],
-                "phonenumber": row[3],
-                "nationalidentity_id": row[4],
-                "dob": row[5],
-                "address": row[6],
-                "verify_status": row[7],
-
-                "bio": row[8] or "",
-                "show_email": row[9],
-                "show_phone": row[10]
-            }), 200
-
-    except Exception as e:
-        traceback.print_exc()
-        return jsonify({"message": str(e)}), 500
-    finally:
-        cursor.close()
-        conn.close()
-
-
-# ==========================
 # Create Profile
 # ==========================
-
 @profile_bp.route("/profile", methods=["POST"])
 def create_profile():
 
@@ -159,22 +99,14 @@ def create_profile():
         if cursor.fetchone() is None:
             return jsonify({"message": "User not found"}), 404
 
-        # --- FIX: check the EXISTING profile's verify_status instead of
-        # blindly blocking whenever any row exists. Only Pending/Verified
-        # profiles should block a new submission - a Rejected profile
-        # should be allowed to resubmit (we UPDATE it instead of INSERT).
+        # Prevent duplicate profile
         cursor.execute(
-            "SELECT verify_status FROM user_details WHERE user_id = %s",
+            "SELECT user_id FROM user_details WHERE user_id = %s",
             (user_id,)
         )
-        existing = cursor.fetchone()
-        is_resubmission = existing is not None
 
-        if is_resubmission:
-            current_status = existing[0]
-            if current_status in ("Pending", "Verified"):
-                return jsonify({"message": "Profile already exists"}), 409
-            # else: current_status == 'Rejected' -> fall through and allow resubmission
+        if cursor.fetchone() is not None:
+            return jsonify({"message": "Profile already exists"}), 409
 
         # Save front image
         front_filename = secure_filename(
@@ -195,75 +127,42 @@ def create_profile():
         front_path = f"uploads/national_ids/{front_filename}"
         back_path = f"uploads/national_ids/{back_filename}"
 
-        if is_resubmission:
-            # Update the existing (previously rejected) row with the new
-            # submission and reset it back to Pending for re-review.
-            cursor.execute(
-                """
-                UPDATE user_details
-                SET
-                    firstname = %s,
-                    lastname = %s,
-                    phonenumber = %s,
-                    nationalidentity_id = %s,
-                    dob = %s,
-                    address = %s,
-                    national_id_front = %s,
-                    national_id_back = %s,
-                    verify_status = %s
-                WHERE user_id = %s
-                """,
-                (
-                    firstname,
-                    lastname,
-                    phonenumber,
-                    nationalidentity_id,
-                    dob,
-                    address,
-                    front_path,
-                    back_path,
-                    "Pending",
-                    user_id
-                )
+        # Insert profile
+        cursor.execute(
+            """
+            INSERT INTO user_details
+            (
+                user_id,
+                firstname,
+                lastname,
+                phonenumber,
+                nationalidentity_id,
+                dob,
+                address,
+                national_id_front,
+                national_id_back,
+                verify_status
             )
-        else:
-            # Insert profile
-            cursor.execute(
-                """
-                INSERT INTO user_details
-                (
-                    user_id,
-                    firstname,
-                    lastname,
-                    phonenumber,
-                    nationalidentity_id,
-                    dob,
-                    address,
-                    national_id_front,
-                    national_id_back,
-                    verify_status
-                )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
-                """,
-                (
-                    user_id,
-                    firstname,
-                    lastname,
-                    phonenumber,
-                    nationalidentity_id,
-                    dob,
-                    address,
-                    front_path,
-                    back_path,
-                    "Pending"
-                )
+            VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+            """,
+            (
+                user_id,
+                firstname,
+                lastname,
+                phonenumber,
+                nationalidentity_id,
+                dob,
+                address,
+                front_path,
+                back_path,
+                "Pending"
             )
+        )
 
         conn.commit()
 
         return jsonify({
-            "message": "Profile completed successfully" if not is_resubmission
-                        else "Profile resubmitted successfully"
+            "message": "Profile created successfully"
         }), 201
 
     except Exception as e:
@@ -277,65 +176,135 @@ def create_profile():
     finally:
         cursor.close()
         conn.close()
+
+
 # ==========================
-# Update Profile Settings
+# Get Profile
 # ==========================
-
-@profile_bp.route("/profile/<int:user_id>", methods=["PUT"])
-def update_profile(user_id):
-
-    data = request.get_json()
-
-    bio = (data.get("bio") or "").strip()
-    show_email = bool(data.get("show_email", False))
-    show_phone = bool(data.get("show_phone", False))
-
-    if len(bio) > 120:
-        return jsonify({
-            "message": "Bio cannot exceed 120 characters."
-        }), 400
+@profile_bp.route("/profile/<int:user_id>", methods=["GET"])
+def get_profile(user_id):
 
     conn = get_db()
     cursor = conn.cursor()
 
     try:
-
-        cursor.execute("""
-            UPDATE user_details
-            SET
-                bio = %s,
-                show_email = %s,
-                show_phone = %s
+        cursor.execute(
+            """
+            SELECT
+                firstname,
+                lastname,
+                phonenumber,
+                nationalidentity_id,
+                dob::text,
+                address,
+                national_id_front,
+                national_id_back,
+                profile_picture,
+                verify_status
+            FROM user_details
             WHERE user_id = %s
-        """, (
-            bio if bio else None,
-            show_email,
-            show_phone,
-            user_id
-        ))
+            """,
+            (user_id,)
+        )
 
-        if cursor.rowcount == 0:
+        profile = cursor.fetchone()
+
+        if profile is None:
             return jsonify({
-                "message": "Profile not found."
+                "message": "Profile not found"
             }), 404
 
-        conn.commit()
-
         return jsonify({
-            "success": True,
-            "message": "Profile updated successfully."
+            "firstname": profile[0],
+            "lastname": profile[1],
+            "phonenumber": profile[2],
+            "nationalidentity_id": profile[3],
+            "dob": profile[4],
+            "address": profile[5],
+            "national_id_front": profile[6],
+            "national_id_back": profile[7],
+            "profile_picture": profile[8],
+            "verify_status": profile[9]
         }), 200
 
     except Exception as e:
-
-        conn.rollback()
+        traceback.print_exc()
 
         return jsonify({
-            "success": False,
             "message": str(e)
         }), 500
 
     finally:
+        cursor.close()
+        conn.close()
 
+@profile_bp.route("/profile/<int:user_id>/picture", methods=["PUT"])
+def upload_profile_picture(user_id):
+
+    picture = request.files.get("profile_picture")
+
+    if picture is None or picture.filename == "":
+        return jsonify({"message": "No image selected"}), 400
+
+    if not allowed_file(picture.filename):
+        return jsonify({"message": "Image must be PNG, JPG or JPEG"}), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+        cursor.execute(
+            "SELECT user_id FROM user_details WHERE user_id = %s",
+            (user_id,)
+        )
+
+        if cursor.fetchone() is None:
+            return jsonify({"message": "Profile not found"}), 404
+
+        # Create user folder
+        user_folder = os.path.join(
+                PROFILE_PICTURE_FOLDER,
+                f"user_{user_id}")
+
+        os.makedirs(user_folder, exist_ok=True)
+
+                # Keep original extension
+        extension = picture.filename.rsplit(".", 1)[1].lower()
+
+        filename = f"profile.{extension}"
+
+        filepath = os.path.join(
+                    user_folder,
+                    filename
+                )
+
+        picture.save(filepath)
+
+        image_path = (
+                    f"uploads/profile_pictures/user_{user_id}/{filename}"
+                    )
+
+        cursor.execute(
+            """
+            UPDATE user_details
+            SET profile_picture = %s
+            WHERE user_id = %s
+            """,
+            (image_path, user_id)
+        )
+
+        conn.commit()
+
+        return jsonify({
+            "message": "Profile picture updated successfully",
+            "profile_picture": image_path
+        }), 200
+
+    except Exception as e:
+        conn.rollback()
+        traceback.print_exc()
+        return jsonify({"message": str(e)}), 500
+
+    finally:
         cursor.close()
         conn.close()

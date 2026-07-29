@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import "../Global.css";
 import "./FQA.css";
 import Footer from '../../Router/Footer';
+import API_URL from "../../lib/api";
 
 const CATEGORIES = [
   { id: "all", label: "All" },
@@ -35,6 +36,9 @@ const FQA = () => {
   const [search, setSearch] = useState("");
   const [openId, setOpenId] = useState(null);
 
+  const [askQuestion, setAskQuestion] = useState("");
+  const [askStatus, setAskStatus] = useState("idle"); // idle | sending | sent | error
+
   const filtered = FAQS.filter((f) => {
     const inCat = activeCat === "all" || f.cat === activeCat;
     const inSearch =
@@ -45,6 +49,36 @@ const FQA = () => {
 
   function toggle(id) {
     setOpenId((prev) => (prev === id ? null : id));
+  }
+
+  async function handleAskSubmit(e) {
+    e.preventDefault();
+    if (!askQuestion.trim()) return;
+
+    // Reuse the same session shape used elsewhere in the app
+    const storedUser = JSON.parse(localStorage.getItem("user") || "null");
+
+    setAskStatus("sending");
+    try {
+      const res = await fetch(`${API_URL}/api/faq/submit-question`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          user_id: storedUser?.user_id ?? null,
+          email: storedUser?.email ?? null,
+          firstname: storedUser?.firstname ?? null,
+          lastname: storedUser?.lastname ?? null,
+          question: askQuestion,
+        }),
+      });
+
+      if (!res.ok) throw new Error("Request failed");
+
+      setAskStatus("sent");
+      setAskQuestion("");
+    } catch (err) {
+      setAskStatus("error");
+    }
   }
 
   return (
@@ -76,22 +110,60 @@ const FQA = () => {
           ))}
         </div>
 
-        <div className="fa-list">
-          {filtered.map((f) => {
-            const isOpen = openId === f.id;
-            return (
-              <div key={f.id} className={`fa-item${isOpen ? " open" : ""}`}>
-                <button className="fa-question" onClick={() => toggle(f.id)}>
-                  <span>{f.q}</span>
-                  <span className="fa-icon">{isOpen ? "−" : "+"}</span>
+        <div className="fa-layout">
+          <div className="fa-list">
+            {filtered.map((f) => {
+              const isOpen = openId === f.id;
+              return (
+                <div key={f.id} className={`fa-item${isOpen ? " open" : ""}`}>
+                  <button className="fa-question" onClick={() => toggle(f.id)}>
+                    <span>{f.q}</span>
+                    <span className="fa-icon">{isOpen ? "−" : "+"}</span>
+                  </button>
+                  {isOpen && <div className="fa-answer">{f.a}</div>}
+                </div>
+              );
+            })}
+            {filtered.length === 0 && (
+              <p className="fa-empty">No questions match that search.</p>
+            )}
+          </div>
+
+          <div className="fa-ask-box">
+            <h2 className="fa-ask-title">Didn't find your answer?</h2>
+            <p className="fa-ask-subtitle">
+              Submit your question below and our admin team will review it.
+            </p>
+
+            {askStatus === "sent" ? (
+              <p className="fa-ask-success">
+                Thanks — your question was submitted. We'll get back to you.
+              </p>
+            ) : (
+              <form className="fa-ask-form" onSubmit={handleAskSubmit}>
+                <textarea
+                  placeholder="Type your question here..."
+                  value={askQuestion}
+                  onChange={(e) => setAskQuestion(e.target.value)}
+                  className="fa-ask-textarea"
+                  rows={4}
+                  required
+                />
+                <button
+                  type="submit"
+                  className="fa-ask-submit"
+                  disabled={askStatus === "sending"}
+                >
+                  {askStatus === "sending" ? "Sending..." : "Submit Question"}
                 </button>
-                {isOpen && <div className="fa-answer">{f.a}</div>}
-              </div>
-            );
-          })}
-          {filtered.length === 0 && (
-            <p className="fa-empty">No questions match that search.</p>
-          )}
+                {askStatus === "error" && (
+                  <p className="fa-ask-error">
+                    Something went wrong — please try again.
+                  </p>
+                )}
+              </form>
+            )}
+          </div>
         </div>
       </div>
 
