@@ -788,10 +788,13 @@ def reinvite_room(room_code):
         conn.close()
 
 
+# DELETE ROOM AFTER DEAL COMPLETED
 
 
 @room_bp.route("/rooms/<room_code>/", methods=["DELETE"])
 def delete_room(room_code):
+
+    user_id = request.args.get("user_id")
 
     conn = get_db()
     cur = conn.cursor()
@@ -799,15 +802,59 @@ def delete_room(room_code):
     try:
 
         cur.execute("""
+            SELECT
+                created_by,
+                invited_user_id,
+                status
+            FROM room
+            WHERE room_code = %s
+        """, (room_code,))
+
+        room = cur.fetchone()
+
+        if not room:
+            return jsonify({
+                "success": False,
+                "message": "Room not found."
+            }), 404
+
+        created_by, invited_user_id, status = room
+
+        # Only creator
+        if int(created_by) != int(user_id):
+            return jsonify({
+                "success": False,
+                "message": "Only the creator can delete this deal."
+            }), 403
+
+        # Only allow Waiting / Rejected
+        if status not in ["Waiting", "Rejected"]:
+            return jsonify({
+                "success": False,
+                "message": "This deal can no longer be deleted."
+            }), 400
+
+        cur.execute("""
             DELETE
             FROM room
-            WHERE room_code=%s
-        """,(room_code,))
+            WHERE room_code = %s
+        """, (room_code,))
 
         conn.commit()
 
+        socketio.emit(
+            "room_updated",
+            room=f"user_{created_by}"
+        )
+
+        socketio.emit(
+            "room_updated",
+            room=f"user_{invited_user_id}"
+        )
+
         return jsonify({
-            "success":True
+            "success": True,
+            "message": "Deal deleted successfully."
         })
 
     except Exception as e:
@@ -815,8 +862,9 @@ def delete_room(room_code):
         conn.rollback()
 
         return jsonify({
-            "error":str(e)
-        }),500
+            "success": False,
+            "error": str(e)
+        }), 500
 
     finally:
         cur.close()
