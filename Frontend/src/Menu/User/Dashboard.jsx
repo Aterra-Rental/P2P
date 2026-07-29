@@ -3,14 +3,24 @@ import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import "../Global.css";
 import defaultAvatar from "../../assets/default-avatar.png";
-import { getUserProfile } from "../../lib/profile";
+import {
+    getUserProfile,
+    updateUserProfile
+} from "../../lib/profile";
+
 
 const Dashboard = () => {
   const navigate = useNavigate();
 
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [user, setUser] = useState(null);
+  const [bio, setBio] = useState("");
+  const [isEditing, setIsEditing] = useState(false);
+  const [showEmail, setShowEmail] = useState(false);
+  const [showPhone, setShowPhone] = useState(false);
+
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
@@ -24,6 +34,9 @@ const Dashboard = () => {
       try {
         const data = await getUserProfile();
         setUser(data);
+        setBio(data.bio || "");
+        setShowEmail(data.show_email);
+        setShowPhone(data.show_phone);
       } catch (err) {
         console.error(err);
         if (err.message.includes("404")) {
@@ -47,6 +60,13 @@ const Dashboard = () => {
   };
 
   const handleRestrictedAction = (path) => {
+
+    if (!user) {
+        navigate("/CompleteProfile");
+        return;
+    }
+
+
     if (user.verify_status === "Pending") {
       alert(
         "Your account verification is still pending.\n\nPlease wait for an administrator to review and approve your account before trading."
@@ -63,7 +83,22 @@ const Dashboard = () => {
 
     navigate(path);
   };
+  const handleSaveProfile = async () => {
+    try {
+        await updateUserProfile({
+            bio,
+            show_email: showEmail,
+            show_phone: showPhone
+        });
 
+        const updated = await getUserProfile();
+        setUser(updated);
+
+        alert("Profile updated successfully.");
+    } catch (err) {
+        alert(err.message);
+    }
+};
   const handleCapturedImage = async (event) => {
     const file = event.target.files[0];
     if (!file) {
@@ -126,9 +161,7 @@ const Dashboard = () => {
           <h2>Complete Your Profile</h2>
 
           <p>
-            Your account has been created successfully.
-            <br />
-            Before you can use the P2P Escrow platform, you need to complete your personal profile and verify your identity.
+              Complete your profile to unlock all features.
           </p>
 
           <button
@@ -276,7 +309,36 @@ const Dashboard = () => {
             <span>Address</span>
             <strong>{user.address}</strong>
           </div>
+            <div className="profile-row verification-row">
+                <span>Bio</span>
 
+                <textarea
+                  value={bio}
+                  onChange={(e) => setBio(e.target.value)}
+                  maxLength={120}
+                  rows={3}
+                  className="profile-textarea"
+                  placeholder="Tell others a little about yourself..."
+                />
+              </div>
+              <div className="profile-row verification-row">
+                  <span>Show Email</span>
+
+                  <input
+                    type="checkbox"
+                    checked={showEmail}
+                    onChange={(e) => setShowEmail(e.target.checked)}
+                  />
+              </div>
+              <div className="profile-row verification-row">
+                    <span>Show Phone</span>
+
+                    <input
+                      type="checkbox"
+                      checked={showPhone}
+                      onChange={(e) => setShowPhone(e.target.checked)}
+                    />
+                  </div>
           <div className="profile-row verification-row">
             <span>Verification</span>
 
@@ -306,6 +368,12 @@ const Dashboard = () => {
               {user.verify_status}
             </button>
           </div>
+          <button
+              className="action-btn primary"
+              onClick={handleSaveProfile}
+            >
+              Save Changes
+          </button>
         </div>
 
         <div className="dashboard-card">

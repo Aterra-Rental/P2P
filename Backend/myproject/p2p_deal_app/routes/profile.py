@@ -42,14 +42,26 @@ def get_profile(user_id):
     cursor = conn.cursor()
     try:
         cursor.execute(
-            """
-            SELECT firstname, lastname, phonenumber, nationalidentity_id,
-                   dob::text, address, verify_status
-            FROM user_details
-            WHERE user_id = %s
-            """,
-            (user_id,)
-        )
+                """
+                    SELECT
+                        ud.firstname,
+                        ud.lastname,
+                        ul.email,
+                        ud.phonenumber,
+                        ud.nationalidentity_id,
+                        ud.dob::text,
+                        ud.address,
+                        ud.verify_status,
+                        ud.bio,
+                        ud.show_email,
+                        ud.show_phone
+                    FROM user_details ud
+                    JOIN user_login ul
+                        ON ud.user_id = ul.user_id
+                    WHERE ud.user_id = %s
+                """,
+                (user_id,)
+            )
         row = cursor.fetchone()
 
         if row is None:
@@ -58,14 +70,19 @@ def get_profile(user_id):
             return jsonify({"message": "Profile not found"}), 404
 
         return jsonify({
-            "firstname": row[0],
-            "lastname": row[1],
-            "phonenumber": row[2],
-            "nationalidentity_id": row[3],
-            "dob": row[4],
-            "address": row[5],
-            "verify_status": row[6],
-        }), 200
+                "firstname": row[0],
+                "lastname": row[1],
+                "email": row[2],
+                "phonenumber": row[3],
+                "nationalidentity_id": row[4],
+                "dob": row[5],
+                "address": row[6],
+                "verify_status": row[7],
+
+                "bio": row[8] or "",
+                "show_email": row[9],
+                "show_phone": row[10]
+            }), 200
 
     except Exception as e:
         traceback.print_exc()
@@ -258,5 +275,67 @@ def create_profile():
         }), 500
 
     finally:
+        cursor.close()
+        conn.close()
+# ==========================
+# Update Profile Settings
+# ==========================
+
+@profile_bp.route("/profile/<int:user_id>", methods=["PUT"])
+def update_profile(user_id):
+
+    data = request.get_json()
+
+    bio = (data.get("bio") or "").strip()
+    show_email = bool(data.get("show_email", False))
+    show_phone = bool(data.get("show_phone", False))
+
+    if len(bio) > 120:
+        return jsonify({
+            "message": "Bio cannot exceed 120 characters."
+        }), 400
+
+    conn = get_db()
+    cursor = conn.cursor()
+
+    try:
+
+        cursor.execute("""
+            UPDATE user_details
+            SET
+                bio = %s,
+                show_email = %s,
+                show_phone = %s
+            WHERE user_id = %s
+        """, (
+            bio if bio else None,
+            show_email,
+            show_phone,
+            user_id
+        ))
+
+        if cursor.rowcount == 0:
+            return jsonify({
+                "message": "Profile not found."
+            }), 404
+
+        conn.commit()
+
+        return jsonify({
+            "success": True,
+            "message": "Profile updated successfully."
+        }), 200
+
+    except Exception as e:
+
+        conn.rollback()
+
+        return jsonify({
+            "success": False,
+            "message": str(e)
+        }), 500
+
+    finally:
+
         cursor.close()
         conn.close()

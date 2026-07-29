@@ -566,3 +566,30 @@ width:100%;
     text-align:right;
     color:#777;
 }
+.profile-textarea{
+    width:100%;
+    min-height:80px;
+    resize:vertical;
+
+    border:1px solid var(--border);
+    border-radius:10px;
+
+    padding:10px 12px;
+
+    background:var(--bg-card);
+
+    color:var(--text-primary);
+
+    font-family:inherit;
+}
+
+.profile-textarea:focus{
+    outline:none;
+    border-color:var(--primary);
+}
+
+.profile-row input[type="checkbox"]{
+    width:18px;
+    height:18px;
+    cursor:pointer;
+}

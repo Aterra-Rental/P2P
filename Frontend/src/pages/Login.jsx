@@ -113,8 +113,7 @@ console.log(
           localStorage.setItem("user_id", data.user_id);
           localStorage.setItem("email", data.email);
 
-          alert("Please complete your profile first.");
-          navigate("/CompleteProfile");
+          navigate("/Dashboard");
 
         } else {
 
