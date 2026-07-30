@@ -1,6 +1,6 @@
 from flask import Blueprint, jsonify
 from database import get_db
-
+from socketio_instance import socketio
 verification_bp = Blueprint("admin_verification", __name__)
 
 
@@ -125,7 +125,13 @@ def approve_verification(user_id):
             }), 404
 
         conn.commit()
-
+        socketio.emit(
+            "verification_updated",
+            {
+                "status": "Verified"
+            },
+            room=f"user_{user_id}"
+        )
         return jsonify({
             "message": "User approved successfully"
         }), 200
@@ -162,7 +168,13 @@ def reject_verification(user_id):
             }), 404
 
         conn.commit()
-
+        socketio.emit(
+            "verification_updated",
+            {
+                "status": "Rejected"
+            },
+            room=f"user_{user_id}"
+        )
         return jsonify({
             "message": "User rejected successfully"
         }), 200

@@ -57,7 +57,11 @@ const FQA = () => {
 
     // Reuse the same session shape used elsewhere in the app
     const storedUser = JSON.parse(localStorage.getItem("user") || "null");
-
+    if (!storedUser?.user_id) {
+      setAskStatus("error");
+      alert("Please log in before submitting a question.");
+      return;
+    }
     setAskStatus("sending");
     try {
       const res = await fetch(`${API_URL}/api/faq/submit-question`, {
@@ -65,13 +69,9 @@ const FQA = () => {
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           user_id: storedUser?.user_id ?? null,
-          email: storedUser?.email ?? null,
-          firstname: storedUser?.firstname ?? null,
-          lastname: storedUser?.lastname ?? null,
-          question: askQuestion,
+          question: askQuestion.trim(),
         }),
       });
-
       if (!res.ok) throw new Error("Request failed");
 
       setAskStatus("sent");

@@ -4,7 +4,7 @@ import "./Dashboard.css";
 import "../Global.css";
 import defaultAvatar from "../../assets/default-avatar.png";
 import { getUserProfile } from "../../lib/profile";
-
+import { socket } from "../../lib/socket";
 
 const Dashboard = () => {
   const navigate = useNavigate();
@@ -21,6 +21,9 @@ const Dashboard = () => {
       navigate("/Login");
       return;
     }
+    socket.emit("join_user", {
+    user_id: userId,
+  });
 
     const fetchProfile = async () => {
       try {
@@ -41,6 +44,20 @@ const Dashboard = () => {
     };
 
     fetchProfile();
+    const handleVerificationUpdate = async () => {
+    try {
+        const latest = await getUserProfile();
+        setUser(latest);
+    } catch (err) {
+        console.error(err);
+    }
+      };
+
+      socket.on("verification_updated", handleVerificationUpdate);
+
+      return () => {
+          socket.off("verification_updated", handleVerificationUpdate);
+      };
   }, [navigate]);
 
   const handleLogout = () => {

@@ -2,7 +2,7 @@ import os
 from flask import Flask, send_from_directory
 from flask_cors import CORS
 from routes.faq import faq_bp
-
+from socketio_instance import socketio
 from admin import admin_bp
 from admin.verification import verification_bp
 from config import Config
@@ -15,6 +15,10 @@ app.config.from_object(Config)
 
 CORS(app)
 
+socketio.init_app(
+    app,
+    cors_allowed_origins="*"
+)
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 
@@ -39,4 +43,9 @@ app.register_blueprint(faq_bp)
 
 
 if __name__ == "__main__":
-    app.run(debug=True, port=8000)
+    socketio.run(
+        app,
+        host="0.0.0.0",
+        port=8000,
+        debug=True
+    )

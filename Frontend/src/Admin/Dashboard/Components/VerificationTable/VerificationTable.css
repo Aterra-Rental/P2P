@@ -126,3 +126,14 @@ td{
     background:#7C3AED;
 
 }
+.status.pending {
+    background: #ffe082;
+}
+
+.status.answered {
+    background: #c8e6c9;
+}
+
+.status.closed {
+    background: #e0e0e0;
+}

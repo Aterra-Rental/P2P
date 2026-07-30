@@ -62,10 +62,8 @@ const VerificationTable = () => {
 
                             <td>
 
-                                <span className="status pending">
-
+                                <span className={`status ${user.verify_status.toLowerCase()}`}>
                                     {user.verify_status}
-
                                 </span>
 
                             </td>
