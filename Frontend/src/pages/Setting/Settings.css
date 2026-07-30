@@ -1,0 +1,141 @@
+.settings-page {
+    min-height: 100vh;
+    background: #f4f7fb;
+    padding: 40px 20px;
+}
+
+.settings-container {
+    max-width: 1300px;
+    margin: auto;
+    display: grid;
+    grid-template-columns: 300px 1fr;
+    gap: 30px;
+    align-items: start;
+}
+
+/* ===========================
+   Sidebar
+=========================== */
+
+.settings-sidebar {
+    background: #fff;
+    border-radius: 18px;
+    box-shadow: 0 8px 30px rgba(0,0,0,.08);
+    overflow: hidden;
+}
+
+.settings-sidebar-header {
+    padding: 28px;
+    border-bottom: 1px solid #ececec;
+}
+
+.settings-sidebar-header h2 {
+    margin: 0;
+    color: #2563eb;
+    font-size: 24px;
+}
+
+.settings-sidebar-header p {
+    margin-top: 8px;
+    color: #777;
+    font-size: 14px;
+}
+
+.settings-menu {
+    padding: 12px;
+}
+
+.settings-menu-item {
+    width: 100%;
+    border: none;
+    background: transparent;
+    display: flex;
+    align-items: center;
+    gap: 15px;
+    padding: 16px;
+    border-radius: 14px;
+    cursor: pointer;
+    transition: .25s;
+    text-align: left;
+}
+
+.settings-menu-item:hover:not(:disabled) {
+    background: #eef5ff;
+}
+
+.settings-menu-item.active {
+    background: linear-gradient(
+        135deg,
+        #2563eb,
+        #3b82f6
+    );
+    color: white;
+}
+
+.settings-menu-item.active h4,
+.settings-menu-item.active span {
+    color: white;
+}
+
+.settings-menu-item:disabled {
+    opacity: .75;
+    cursor: not-allowed;
+}
+
+.menu-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: rgba(37,99,235,.1);
+}
+
+.settings-menu-item.active .menu-icon {
+    background: rgba(255,255,255,.18);
+}
+
+.menu-content {
+    flex: 1;
+}
+
+.menu-content h4 {
+    margin: 0;
+    font-size: 16px;
+}
+
+.menu-content span {
+    font-size: 13px;
+    color: #777;
+}
+
+.coming-soon {
+    font-size: 12px;
+    font-weight: 600;
+    color: #999;
+    background: #f3f4f6;
+    padding: 5px 10px;
+    border-radius: 20px;
+}
+
+/* ===========================
+   Right Content
+=========================== */
+
+.settings-right {
+    display: flex;
+    flex-direction: column;
+}
+
+/* ===========================
+   Mobile
+=========================== */
+
+@media (max-width:900px){
+
+.settings-container{
+    grid-template-columns:1fr;
+}
+
+}

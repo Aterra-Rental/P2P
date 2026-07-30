@@ -19,6 +19,7 @@ import TransactionHistory from "../pages/TransactionHistory/TransactionHistory.j
 import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.jsx";
 import DealHub from "../Menu/Home/pages/Dealhub.jsx";
 import DealWorkspace from "../Menu/Home/pages/DealWorkspace";
+import Settings from "../pages/Setting/Settings.jsx"
 // import InvitationPage  from '../Menu/Home/pages/InvitationPage.jsx'
 // Temporary importation 
 import BakongTest from '../testComponents/BakongTest.jsx'
@@ -49,6 +50,7 @@ const Layout = () => {
         <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>}/>
         <Route path="/transaction/:transactionId" element={<TransactionDetails />}/>
         <Route path="/deal/:roomCode" element={ <ProtectedRoute requireVerified={true}><DealWorkspace /> </ProtectedRoute>}/>
+        <Route path="/settings" element={<Settings />} />
         {/* temporary  */}
         <Route
     path="/bakong-test"

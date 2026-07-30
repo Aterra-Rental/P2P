@@ -10,6 +10,8 @@ import CameraModal from "../components/Camera/CameraModal";
 
 const CompleteProfile = () => {
   const navigate = useNavigate();
+  const [username, setUsername] = useState("");
+
   const [firstname, setFirstname] = useState("");
   const [lastname, setLastname] = useState("");
   const [phonenumber, setPhonenumber] = useState("");
@@ -91,6 +93,7 @@ const CompleteProfile = () => {
       const formData = new FormData();
 
       formData.append("user_id", user_id);
+      formData.append("username", username.trim());
       formData.append("firstname", firstname.trim());
       formData.append("lastname", lastname.trim());
       formData.append("phonenumber", phonenumber);
@@ -178,7 +181,28 @@ const CompleteProfile = () => {
               required
             />
           </div>
+              {/* Username (Optional) */}
+          <div className="InputGroup">
+            <label>Username (Optional)</label>
 
+            <input
+              type="text"
+              placeholder="Leave blank to auto-generate"
+              value={username}
+              maxLength={30}
+              onChange={(e) =>
+                setUsername(
+                  e.target.value
+                    .toLowerCase()
+                    .replace(/[^a-z0-9_]/g, "")
+                )
+              }
+            />
+
+            <small className="text-muted">
+              Optional
+            </small>
+          </div>
           {/* Phone Number */}
           <div className="InputGroup">
             <label>Phone Number</label>

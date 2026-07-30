@@ -3,10 +3,7 @@ import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import "../Global.css";
 import defaultAvatar from "../../assets/default-avatar.png";
-import {
-    getUserProfile,
-    updateUserProfile
-} from "../../lib/profile";
+import { getUserProfile } from "../../lib/profile";
 
 
 const Dashboard = () => {
@@ -14,10 +11,6 @@ const Dashboard = () => {
 
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [user, setUser] = useState(null);
-  const [bio, setBio] = useState("");
-  const [isEditing, setIsEditing] = useState(false);
-  const [showEmail, setShowEmail] = useState(false);
-  const [showPhone, setShowPhone] = useState(false);
 
   const [loading, setLoading] = useState(true);
   
@@ -34,9 +27,6 @@ const Dashboard = () => {
       try {
         const data = await getUserProfile();
         setUser(data);
-        setBio(data.bio || "");
-        setShowEmail(data.show_email);
-        setShowPhone(data.show_phone);
       } catch (err) {
         console.error(err);
         if (err.message.includes("404")) {
@@ -83,22 +73,6 @@ const Dashboard = () => {
 
     navigate(path);
   };
-  const handleSaveProfile = async () => {
-    try {
-        await updateUserProfile({
-            bio,
-            show_email: showEmail,
-            show_phone: showPhone
-        });
-
-        const updated = await getUserProfile();
-        setUser(updated);
-
-        alert("Profile updated successfully.");
-    } catch (err) {
-        alert(err.message);
-    }
-};
   const handleCapturedImage = async (event) => {
     const file = event.target.files[0];
     if (!file) {
@@ -286,13 +260,18 @@ const Dashboard = () => {
           </div>
 
           <div className="profile-row verification-row">
-            <span>Last Name</span>
-            <strong>{user.lastname}</strong>
-          </div>
+                <span>Last Name</span>
+                <strong>{user.lastname}</strong>
+            </div>
 
-          <div className="profile-row verification-row">
-            <span>Phone Number</span>
-            <strong>{user.phonenumber}</strong>
+            <div className="profile-row verification-row">
+                <span>Username</span>
+                <strong>@{user.username}</strong>
+            </div>
+
+            <div className="profile-row verification-row">
+                <span>Phone Number</span>
+                <strong>{user.phonenumber}</strong>
           </div>
 
           <div className="profile-row verification-row">
@@ -309,36 +288,8 @@ const Dashboard = () => {
             <span>Address</span>
             <strong>{user.address}</strong>
           </div>
-            <div className="profile-row verification-row">
-                <span>Bio</span>
 
-                <textarea
-                  value={bio}
-                  onChange={(e) => setBio(e.target.value)}
-                  maxLength={120}
-                  rows={3}
-                  className="profile-textarea"
-                  placeholder="Tell others a little about yourself..."
-                />
-              </div>
-              <div className="profile-row verification-row">
-                  <span>Show Email</span>
 
-                  <input
-                    type="checkbox"
-                    checked={showEmail}
-                    onChange={(e) => setShowEmail(e.target.checked)}
-                  />
-              </div>
-              <div className="profile-row verification-row">
-                    <span>Show Phone</span>
-
-                    <input
-                      type="checkbox"
-                      checked={showPhone}
-                      onChange={(e) => setShowPhone(e.target.checked)}
-                    />
-                  </div>
           <div className="profile-row verification-row">
             <span>Verification</span>
 
@@ -369,86 +320,13 @@ const Dashboard = () => {
             </button>
           </div>
           <button
-              className="action-btn primary"
-              onClick={handleSaveProfile}
+                className="action-btn primary"
+                onClick={() => navigate("/settings")}
             >
-              Save Changes
-          </button>
+                ⚙ Account Settings
+            </button>
         </div>
 
-        <div className="dashboard-card">
-
-          <h2>Quick Actions</h2>
-
-          <button
-            className="action-btn primary"
-            onClick={() => handleRestrictedAction("/create-deal")}
-          >
-            + Create Room
-          </button>
-
-          <div className="action-grid">
-
-            <button
-              className="action-btn"
-              onClick={() => handleRestrictedAction("/transactions")}
-            >
-              📜 Transaction History
-            </button>
-
-            <button
-              className="action-btn"
-              onClick={() => alert("Notifications page is coming soon.")}
-            >
-              🔔 Notifications
-            </button>
-
-            <button
-              className="action-btn"
-              onClick={() => alert("Wallet page is coming soon.")}
-            >
-              💳 Wallet
-            </button>
-
-          </div>
-
-          <div className="verification-message">
-
-            {user.verify_status === "Pending" && (
-              <p className="pending-text">
-                🟡 Your profile has been submitted successfully.
-                <br />
-                Please wait for an administrator to review and approve your account.
-              </p>
-            )}
-
-            {user.verify_status === "Rejected" && (
-              <>
-                <p className="rejected-text">
-                  🔴 Your verification was rejected.
-                  <br />
-                  Please update your profile and submit it again.
-                </p>
-
-                <button
-                  className="action-btn warning"
-                  onClick={() => navigate("/CompleteProfile")}
-                >
-                  Update Profile
-                </button>
-              </>
-            )}
-
-            {user.verify_status === "Verified" && (
-              <p className="verified-text">
-                🟢 Your account has been verified.
-                All trading features are available.
-              </p>
-            )}
-
-          </div>
-
-        </div>
 
         <div className="dashboard-card">
           <h2>Statistics</h2>

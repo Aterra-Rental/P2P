@@ -4,6 +4,8 @@ import traceback
 import re
 import os
 from werkzeug.utils import secure_filename
+import random
+import string
 
 profile_bp = Blueprint("profile", __name__)
 
@@ -32,6 +34,26 @@ def allowed_file(filename):
     )
 
 
+
+USERNAME_REGEX = r"^[a-zA-Z0-9_]{3,30}$"
+
+
+def generate_username(cursor, firstname="", lastname=""):
+    base = (firstname + lastname).lower().replace(" ", "")
+
+    if not base:
+        base = "user"
+
+    while True:
+        username = f"{base}{random.randint(1000,9999)}"
+
+        cursor.execute(
+            "SELECT 1 FROM user_details WHERE username = %s",
+            (username,)
+        )
+
+        if cursor.fetchone() is None:
+            return username
 # ==========================
 # Get Profile
 # ==========================
@@ -44,6 +66,7 @@ def get_profile(user_id):
         cursor.execute(
                 """
                     SELECT
+                        ud.username,
                         ud.firstname,
                         ud.lastname,
                         ul.email,
@@ -54,7 +77,9 @@ def get_profile(user_id):
                         ud.verify_status,
                         ud.bio,
                         ud.show_email,
-                        ud.show_phone
+                        ud.show_phone,
+                        ud.joined_at,
+                        ud.profile_visibility   
                     FROM user_details ud
                     JOIN user_login ul
                         ON ud.user_id = ul.user_id
@@ -70,19 +95,21 @@ def get_profile(user_id):
             return jsonify({"message": "Profile not found"}), 404
 
         return jsonify({
-                "firstname": row[0],
-                "lastname": row[1],
-                "email": row[2],
-                "phonenumber": row[3],
-                "nationalidentity_id": row[4],
-                "dob": row[5],
-                "address": row[6],
-                "verify_status": row[7],
-
-                "bio": row[8] or "",
-                "show_email": row[9],
-                "show_phone": row[10]
-            }), 200
+            "username": row[0],
+            "firstname": row[1],
+            "lastname": row[2],
+            "email": row[3],
+            "phonenumber": row[4],
+            "nationalidentity_id": row[5],
+            "dob": row[6],
+            "address": row[7],
+            "verify_status": row[8],
+            "bio": row[9] or "",
+            "show_email": row[10],
+            "show_phone": row[11],
+            "joined_at": row[12],
+            "profile_visibility": row[13]
+        }), 200
 
     except Exception as e:
         traceback.print_exc()
@@ -106,7 +133,7 @@ def create_profile():
     nationalidentity_id = request.form.get("nationalidentity_id", "").strip()
     dob = request.form.get("dob")
     address = request.form.get("address", "").strip()
-
+    username = request.form.get("username", "").strip().lower()
     national_id_front = request.files.get("national_id_front")
     national_id_back = request.files.get("national_id_back")
 
@@ -133,7 +160,10 @@ def create_profile():
 
     if len(address) < 5:
         return jsonify({"message": "Address must be at least 5 characters."}), 400
-
+    if username and not re.fullmatch(USERNAME_REGEX, username):
+        return jsonify({
+        "message": "Username must be 3–30 characters and contain only letters, numbers or underscores."
+        }), 400
     if national_id_front is None or national_id_front.filename == "":
         return jsonify({"message": "Front National ID image is required."}), 400
 
@@ -145,7 +175,7 @@ def create_profile():
 
     if not allowed_file(national_id_back.filename):
         return jsonify({"message": "Back image must be PNG, JPG or JPEG."}), 400
-
+    
     conn = get_db()
     cursor = conn.cursor()
 
@@ -158,7 +188,21 @@ def create_profile():
 
         if cursor.fetchone() is None:
             return jsonify({"message": "User not found"}), 404
+        if username:
+            cursor.execute(
+                "SELECT user_id FROM user_details WHERE username = %s",
+                (username,)
+            )
 
+        if cursor.fetchone():
+            return jsonify({
+                    "message": "Username already exists."}), 409
+        if not username:
+            username = generate_username(
+                cursor,
+                firstname,
+                lastname
+            )
         # --- FIX: check the EXISTING profile's verify_status instead of
         # blindly blocking whenever any row exists. Only Pending/Verified
         # profiles should block a new submission - a Rejected profile
@@ -227,12 +271,13 @@ def create_profile():
                 )
             )
         else:
-            # Insert profile
+    # Insert profile
             cursor.execute(
                 """
                 INSERT INTO user_details
                 (
                     user_id,
+                    username,
                     firstname,
                     lastname,
                     phonenumber,
@@ -243,10 +288,11 @@ def create_profile():
                     national_id_back,
                     verify_status
                 )
-                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
+                VALUES (%s,%s,%s,%s,%s,%s,%s,%s,%s,%s,%s)
                 """,
                 (
                     user_id,
+                    username,
                     firstname,
                     lastname,
                     phonenumber,
@@ -286,31 +332,85 @@ def update_profile(user_id):
 
     data = request.get_json()
 
+    username = (data.get("username") or "").strip().lower()
     bio = (data.get("bio") or "").strip()
+    address = (data.get("address") or "").strip()
+
     show_email = bool(data.get("show_email", False))
     show_phone = bool(data.get("show_phone", False))
+
+    profile_visibility = (
+        data.get("profile_visibility") or "public"
+    ).strip().lower()
+
+    if username and not re.fullmatch(USERNAME_REGEX, username):
+        return jsonify({
+            "message": "Username must be 3–30 characters and contain only letters, numbers or underscores."
+        }), 400
 
     if len(bio) > 120:
         return jsonify({
             "message": "Bio cannot exceed 120 characters."
         }), 400
 
+    if profile_visibility not in ("public", "private"):
+        return jsonify({
+        "message": "Invalid profile visibility."
+    }), 400
+
     conn = get_db()
     cursor = conn.cursor()
 
     try:
 
+        # Check if username is already taken by another user
+        # Get current username
+        cursor.execute(
+            "SELECT username FROM user_details WHERE user_id = %s",
+            (user_id,)
+        )
+
+        existing_user = cursor.fetchone()
+
+        if existing_user is None:
+            return jsonify({
+                "message": "Profile not found."
+            }), 404
+
+        # Keep current username if user didn't provide one
+        if not username:
+            username = existing_user[0]
+
+        # Check username uniqueness
+        cursor.execute("""
+            SELECT user_id
+            FROM user_details
+            WHERE username = %s
+            AND user_id <> %s
+        """, (username, user_id))
+
+        if cursor.fetchone():
+            return jsonify({
+                "message": "Username already exists."
+            }), 409
+
         cursor.execute("""
             UPDATE user_details
             SET
+                username = %s,
                 bio = %s,
+                address = %s,
                 show_email = %s,
-                show_phone = %s
+                show_phone = %s,
+                profile_visibility = %s
             WHERE user_id = %s
         """, (
+            username,
             bio if bio else None,
+            address,
             show_email,
             show_phone,
+            profile_visibility,
             user_id
         ))
 
