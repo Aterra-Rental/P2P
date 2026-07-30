@@ -60,24 +60,6 @@ const Login = () => {
         if (profileResponse.ok) {
 
           const profile = await profileResponse.json();
-          console.log("PROFILE FROM API:", profile);
-
-const userObject = {
-    user_id: data.user_id,
-    email: data.email,
-    firstname: profile.firstname,
-    lastname: profile.lastname,
-    verify_status: profile.verify_status,
-};
-
-console.log("Saving user:", userObject);
-
-localStorage.setItem("user", JSON.stringify(userObject));
-
-console.log(
-    "Stored user:",
-    JSON.parse(localStorage.getItem("user"))
-);
 
           // Store complete user object
           localStorage.setItem(
@@ -113,7 +95,8 @@ console.log(
           localStorage.setItem("user_id", data.user_id);
           localStorage.setItem("email", data.email);
 
-          navigate("/Dashboard");
+          alert("Please complete your profile first.");
+          navigate("/CompleteProfile");
 
         } else {
 

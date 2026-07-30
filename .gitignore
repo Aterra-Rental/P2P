@@ -1,5 +1,6 @@
-# macOS
-.DS_Store
+# Node
+node_modules/
+Frontend/node_modules/
 
 # Python
 .venv/
@@ -8,3 +9,6 @@ __pycache__/
 
 # Environment
 .env
+
+# macOS
+.DS_Store

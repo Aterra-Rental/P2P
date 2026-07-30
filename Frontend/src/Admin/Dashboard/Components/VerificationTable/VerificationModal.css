@@ -1,109 +1,155 @@
-.modal-overlay {
-    position: fixed;
-    inset: 0;
-    background: rgba(0, 0, 0, .75);
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    z-index: 999;
-    padding: 20px;
+.modal-overlay{
+
+    position:fixed;
+
+    inset:0;
+
+    background:rgba(0,0,0,.6);
+
+    display:flex;
+
+    justify-content:center;
+
+    align-items:center;
+
+    z-index:999;
+
 }
 
-.verification-modal {
-    width: 850px;
-    max-width: 95%;
-    max-height: 90vh; /* Limits modal height to 90% of screen height */
-    display: flex;
-    flex-direction: column;
-    background: #1E1633;
-    border-radius: 18px;
-    padding: 25px;
-    border: 1px solid rgba(255, 255, 255, .08);
-    box-sizing: border-box;
+.verification-modal{
+
+    width:850px;
+
+    max-width:95%;
+
+    background:#1E1633;
+
+    border-radius:18px;
+
+    padding:25px;
+
+    border:1px solid rgba(255,255,255,.08);
+
 }
 
-.modal-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-    flex-shrink: 0; /* Keeps header pinned at top */
+.modal-header{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:center;
+
+    margin-bottom:25px;
+
 }
 
-.modal-header h2 {
-    color: white;
-    margin: 0;
+.modal-header h2{
+
+    color:white;
+
+    margin:0;
+
 }
 
-.modal-header button {
-    background: none;
-    border: none;
-    color: white;
-    font-size: 22px;
-    cursor: pointer;
+.modal-header button{
+
+    background:none;
+
+    border:none;
+
+    color:white;
+
+    font-size:22px;
+
+    cursor:pointer;
+
 }
 
-.modal-body {
-    display: flex;
-    gap: 30px;
-    overflow-y: auto; /* Adds vertical scrollbar if content exceeds screen height */
-    padding-right: 6px; /* Prevents content from clipping into scrollbar */
+.modal-body{
+
+    display:flex;
+
+    gap:30px;
+
 }
 
-.user-info {
-    flex: 1;
+.user-info{
+
+    flex:1;
+
 }
 
-.user-info p {
-    color: white;
-    margin-bottom: 12px;
+.user-info p{
+
+    color:white;
+
+    margin-bottom:12px;
+
 }
 
-.id-images {
-    flex: 1;
-    display: flex;
-    flex-direction: column;
-    gap: 20px;
+.id-images{
+
+    flex:1;
+
+    display:flex;
+
+    flex-direction:column;
+
+    gap:20px;
+
 }
 
-.id-images img {
-    width: 100%;
-    max-height: 260px; /* Caps image height so huge scans don't stretch the modal */
-    object-fit: contain; /* Preserves aspect ratio without distorting the image */
-    background: #120c24; /* Fits image on clean dark canvas */
-    border-radius: 12px;
-    border: 1px solid rgba(255, 255, 255, .08);
+.id-images img{
+
+    width:100%;
+
+    border-radius:12px;
+
+    border:1px solid rgba(255,255,255,.08);
+
 }
 
-.modal-footer {
-    margin-top: 20px;
-    display: flex;
-    justify-content: flex-end;
-    gap: 15px;
-    flex-shrink: 0; /* Keeps approve/reject buttons pinned at bottom */
+.modal-footer{
+
+    margin-top:30px;
+
+    display:flex;
+
+    justify-content:flex-end;
+
+    gap:15px;
+
 }
 
-.reject-btn {
-    background: #DC2626;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
-    cursor: pointer;
+.reject-btn{
+
+    background:#DC2626;
+
+    color:white;
+
+    border:none;
+
+    padding:12px 24px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
 }
 
-.approve-btn {
-    background: #16A34A;
-    color: white;
-    border: none;
-    padding: 12px 24px;
-    border-radius: 10px;
-    cursor: pointer;
-}
+.approve-btn{
 
-/* Stacks layout cleanly on smaller screen sizes */
-@media (max-width: 640px) {
-    .modal-body {
-        flex-direction: column;
-    }
+    background:#16A34A;
+
+    color:white;
+
+    border:none;
+
+    padding:12px 24px;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
 }

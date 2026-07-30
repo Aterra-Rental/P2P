@@ -2,7 +2,7 @@ import "./VerificationModal.css";
 import { useEffect, useState } from "react";
 import API_URL from "../../../../lib/api";
 
-const VerificationModal = ({ user, onClose, onVerified, onRejected }) => {
+const VerificationModal = ({ user, onClose, onVerified }) => {
 
     const [details, setDetails] = useState(null);
 
@@ -45,17 +45,28 @@ const VerificationModal = ({ user, onClose, onVerified, onRejected }) => {
 };
 
 const handleReject = async () => {
+
     try {
+
         const res = await fetch(
             `${API_URL}/api/admin/verifications/${user.user_id}/reject`,
-            { method: "PUT" }
+            {
+                method: "PUT"
+            }
         );
+
         const data = await res.json();
+
         alert(data.message);
-        onRejected();   // <-- was onClose(); now removes the row + reloads, same as approve
+
+        onClose();
+
     } catch (err) {
+
         console.error(err);
+
     }
+
 };
     if (!user) return null;
 

@@ -23,17 +23,9 @@ const CompleteProfile = () => {
   const [nationalIdBack, setNationalIdBack] = useState(null);
   const [showCamera, setShowCamera] = useState(false);
   const [captureSide, setCaptureSide] = useState(null);
-
-  // NEW: guards against the button being clicked twice (or double-firing)
-  // while a submission is already in flight, which was causing two POSTs
-  // to race and the second one to come back with "Profile already exists".
-  const [isSubmitting, setIsSubmitting] = useState(false);
-
+  
   const handleSubmit = async (e) => {
     e.preventDefault();
-
-    // NEW: bail out immediately if a submission is already running.
-    if (isSubmitting) return;
 
     const user_id = localStorage.getItem("user_id");
 
@@ -86,9 +78,6 @@ const CompleteProfile = () => {
       return;
     }
 
-    // NEW: lock the form for the duration of the request.
-    setIsSubmitting(true);
-
     try {
       const formData = new FormData();
 
@@ -122,11 +111,6 @@ const CompleteProfile = () => {
     } catch (error) {
       console.error(error);
       alert("Cannot connect to the server.");
-    } finally {
-      // NEW: always release the lock, whether it succeeded, failed, or
-      // errored - otherwise a failed submit would permanently disable the
-      // button.
-      setIsSubmitting(false);
     }
   };
 
@@ -335,12 +319,8 @@ const CompleteProfile = () => {
             />
           </div>
 
-          <button
-            className="PrimaryButton"
-            type="submit"
-            disabled={isSubmitting}
-          >
-            {isSubmitting ? "Submitting..." : "Complete Profile"}
+          <button className="PrimaryButton" type="submit">
+            Complete Profile
           </button>
 
         </form>

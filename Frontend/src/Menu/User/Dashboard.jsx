@@ -13,7 +13,6 @@ const Dashboard = () => {
   const [user, setUser] = useState(null);
 
   const [loading, setLoading] = useState(true);
-  
 
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
@@ -23,56 +22,48 @@ const Dashboard = () => {
       return;
     }
 
-    const fetchProfile = async (isInitial = false) => {
+    const fetchProfile = async () => {
       try {
         const data = await getUserProfile();
         setUser(data);
       } catch (err) {
         console.error(err);
+
         if (err.message.includes("404")) {
           setUser(null);
           return;
         }
-        if (isInitial) alert("Unable to load your profile.");
+
+        alert("Unable to load your profile.");
       } finally {
         setLoading(false);
       }
     };
 
-    fetchProfile(true);
-    const interval = setInterval(() => fetchProfile(false), 3000);
-    return () => clearInterval(interval);
+    fetchProfile();
   }, [navigate]);
 
   const handleLogout = () => {
     localStorage.clear();
     navigate("/Login");
   };
-
   const handleRestrictedAction = (path) => {
-
-    if (!user) {
-        navigate("/CompleteProfile");
+    if (user.verify_status === "Pending") {
+        alert(
+            "Your account verification is still pending.\n\nPlease wait for an administrator to review and approve your account before trading."
+        );
         return;
     }
 
-
-    if (user.verify_status === "Pending") {
-      alert(
-        "Your account verification is still pending.\n\nPlease wait for an administrator to review and approve your account before trading."
-      );
-      return;
-    }
-
     if (user.verify_status === "Rejected") {
-      alert(
-        "Your verification was rejected.\n\nPlease update your profile and submit it again."
-      );
-      return;
+        alert(
+            "Your verification was rejected.\n\nPlease update your profile and submit it again."
+        );
+        return;
     }
 
     navigate(path);
-  };
+};
   const handleCapturedImage = async (event) => {
     const file = event.target.files[0];
     if (!file) {
@@ -114,7 +105,6 @@ const Dashboard = () => {
       alert("Upload failed.");
     }
   };
-
   if (loading) {
     return (
       <div className="user-container">
@@ -122,39 +112,39 @@ const Dashboard = () => {
       </div>
     );
   }
-
   if (!user) {
-    return (
-      <div className="no-profile-container">
-        <div className="no-profile-card">
+  return (
+    <div className="no-profile-container">
+      <div className="no-profile-card">
 
-          <div className="no-profile-icon">
-            📋
-          </div>
+        <div className="no-profile-icon">
+          📋
+        </div>
 
-          <h2>Complete Your Profile</h2>
+        <h2>Complete Your Profile</h2>
 
-          <p>
-              Complete your profile to unlock all features.
-          </p>
+        <p>
+          Your account has been created successfully.
+          <br />
+          Before you can use the P2P Escrow platform, you need to complete your personal profile and verify your identity.
+        </p>
 
-          <button
-            className="complete-profile-btn"
-            onClick={() => navigate("/CompleteProfile")}
-          >
-            Complete Profile
-          </button>
-          <button
+        <button
+          className="complete-profile-btn"
+          onClick={() => navigate("/CompleteProfile")}
+        >
+          Complete Profile
+        </button>
+                  <button
             className="logout-btn-secondary"
             onClick={handleLogout}
           >
             Logout
           </button>
-        </div>
       </div>
-    );
-  }
-
+    </div>
+  );
+}
   return (
     <div className="Global dashboard">
       <header className="dashboard-header">
@@ -169,27 +159,26 @@ const Dashboard = () => {
           Logout
         </button>
       </header>
-
       {user.verify_status === "Pending" && (
-        <div className="dashboard-banner pending">
-          ⏳ Your verification request has been submitted successfully.
-          Please wait for an administrator to review your account.
-        </div>
-      )}
+  <div className="dashboard-banner pending">
+    ⏳ Your verification request has been submitted successfully.
+    Please wait for an administrator to review your account.
+  </div>
+)}
 
-      {user.verify_status === "Verified" && (
-        <div className="dashboard-banner verified">
-          ✅ Your account has been verified.
-          You can now create and join deal rooms.
-        </div>
-      )}
+{user.verify_status === "Verified" && (
+  <div className="dashboard-banner verified">
+    ✅ Your account has been verified.
+    You can now create and join deal rooms.
+  </div>
+)}
 
-      {user.verify_status === "Rejected" && (
-        <div className="dashboard-banner rejected">
-          ❌ Your verification was rejected.
-          Please update your profile and submit it again.
-        </div>
-      )}
+{user.verify_status === "Rejected" && (
+  <div className="dashboard-banner rejected">
+    ❌ Your verification was rejected.
+    Please update your profile and submit it again.
+  </div>
+)}
 
       <div className="dashboard-grid">
         <div className="dashboard-card">
@@ -294,40 +283,119 @@ const Dashboard = () => {
             <span>Verification</span>
 
             <button
-              type="button"
-              className={`status ${(user.verify_status || "").toLowerCase()}`}
-              onClick={() => {
-                if (user.verify_status === "Pending") {
-                  alert(
-                    "Your verification request has been submitted successfully.\n\nPlease wait for an administrator to review your account."
-                  );
-                }
+    type="button"
+    className={`status ${(user.verify_status || "").toLowerCase()}`}
+    onClick={() => {
 
-                if (user.verify_status === "Rejected") {
-                  alert(
-                    "Your verification was rejected.\n\nPlease update your profile and submit it again."
-                  );
-                }
+        if (user.verify_status === "Pending") {
+            alert(
+                "Your verification request has been submitted successfully.\n\nPlease wait for an administrator to review your account."
+            );
+        }
 
-                if (user.verify_status === "Verified") {
-                  alert(
-                    "Your account is verified and ready to trade."
-                  );
-                }
-              }}
-            >
-              {user.verify_status}
-            </button>
+        if (user.verify_status === "Rejected") {
+            alert(
+                "Your verification was rejected.\n\nPlease update your profile and submit it again."
+            );
+        }
+
+        if (user.verify_status === "Verified") {
+            alert(
+                "Your account is verified and ready to trade."
+            );
+        }
+
+    }}
+>
+    {user.verify_status}
+</button>
           </div>
-          <button
-                className="action-btn primary"
-                onClick={() => navigate("/settings")}
+
+                 <button
+            className="action-btn primary"
+            onClick={() => navigate("/settings")}
+        >
+            ⚙ Account Settings
+        </button>
+
+      </div>
+
+      <div className="dashboard-card">
+
+        <h2>Quick Actions</h2>
+
+        <button
+            className="action-btn primary"
+            onClick={() => handleRestrictedAction("/create-deal")}
+        >
+            + Create Room
+        </button>
+
+        <div className="action-grid">
+
+            <button
+                className="action-btn"
+                onClick={() => handleRestrictedAction("/transactions")}
             >
-                ⚙ Account Settings
+                📜 Transaction History
             </button>
+
+            <button
+                className="action-btn"
+                onClick={() => alert("Notifications page is coming soon.")}
+            >
+                🔔 Notifications
+            </button>
+
+            <button
+                className="action-btn"
+                onClick={() => alert("Wallet page is coming soon.")}
+            >
+                💳 Wallet
+            </button>
+
         </div>
 
+        <div className="verification-message">
 
+            {user.verify_status === "Pending" && (
+                <p className="pending-text">
+                    🟡 Your profile has been submitted successfully.
+                    <br />
+                    Please wait for an administrator to review and approve your account.
+                </p>
+            )}
+
+            {user.verify_status === "Rejected" && (
+                <>
+                    <p className="rejected-text">
+                        🔴 Your verification was rejected.
+                        <br />
+                        Please update your profile and submit it again.
+                    </p>
+
+                    <button
+                        className="action-btn warning"
+                        onClick={() => navigate("/CompleteProfile")}
+                    >
+                        Update Profile
+                    </button>
+                </>
+            )}
+
+            {user.verify_status === "Verified" && (
+                <p className="verified-text">
+                    🟢 Your account has been verified.
+                    All trading features are available.
+                </p>
+            )}
+
+        </div>
+
+      </div>
+
+
+          
         <div className="dashboard-card">
           <h2>Statistics</h2>
 
@@ -358,5 +426,4 @@ const Dashboard = () => {
     </div>
   );
 };
-
 export default Dashboard;
