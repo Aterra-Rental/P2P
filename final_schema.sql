@@ -115,9 +115,73 @@ ALTER SEQUENCE public.deal_proofs_proof_id_seq OWNER TO postgres;
 -- Name: deal_proofs_proof_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
 --
 
+--
+-- Name: faq_questions; Type: TABLE; Schema: public; Owner: postgres
+--
 ALTER SEQUENCE public.deal_proofs_proof_id_seq OWNED BY public.deal_proofs.proof_id;
 
+CREATE TABLE public.faq_questions (
+    question_id integer NOT NULL,
+    user_id integer NOT NULL,
+    question text NOT NULL,
+    status character varying(20) DEFAULT 'Pending'::character varying NOT NULL,
+    admin_reply text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    answered_at timestamp without time zone,
+    answered_by integer,
+    CONSTRAINT faq_questions_status_check
+CHECK (
+    (status)::text = ANY (
+        ARRAY[
+            'Pending'::character varying,
+            'Answered'::character varying,
+            'Closed'::character varying
+        ]::text[]
+    )
+)
+);
+--
+-- Name: faq_questions_question_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+ALTER TABLE public.faq_questions OWNER TO postgres;
 
+--
+-- Name: faq_questions_question_id_seq; Type: SEQUENCE; Schema: public; Owner: postgres
+--
+
+CREATE SEQUENCE public.faq_questions_question_id_seq
+    AS integer
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
+ALTER SEQUENCE public.faq_questions_question_id_seq OWNER TO postgres;
+
+--
+-- Name: faq_questions_question_id_seq; Type: SEQUENCE OWNED BY; Schema: public; Owner: postgres
+--
+
+ALTER SEQUENCE public.faq_questions_question_id_seq
+OWNED BY public.faq_questions.question_id;
+--
+-- Name: faq_questions question_id; Type: DEFAULT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.faq_questions
+ALTER COLUMN question_id
+SET DEFAULT nextval('public.faq_questions_question_id_seq'::regclass);
+
+--
+-- Name: faq_questions faq_questions_pkey; Type: CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.faq_questions
+    ADD CONSTRAINT faq_questions_pkey
+    PRIMARY KEY (question_id);
+
+ 
 --
 -- Name: dispute_resolution; Type: TABLE; Schema: public; Owner: postgres
 --
@@ -877,6 +941,25 @@ ALTER TABLE ONLY public.room
 ALTER TABLE ONLY public.user_wallet
     ADD CONSTRAINT user_wallet_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE;
 
+   --
+-- Name: faq_questions fk_faq_user; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.faq_questions
+    ADD CONSTRAINT fk_faq_user
+    FOREIGN KEY (user_id)
+    REFERENCES public.user_login(user_id)
+    ON DELETE CASCADE;
+
+    --
+-- Name: faq_questions fk_faq_answered_by; Type: FK CONSTRAINT; Schema: public; Owner: postgres
+--
+
+ALTER TABLE ONLY public.faq_questions
+    ADD CONSTRAINT fk_faq_answered_by
+    FOREIGN KEY (answered_by)
+    REFERENCES public.admin_login(admin_id)
+    ON DELETE SET NULL;
 
 --
 -- PostgreSQL database dump complete

@@ -27,102 +27,50 @@ const Login = () => {
   };
 
   const handleSubmit = async (e) => {
-
     e.preventDefault();
 
     setLoading(true);
     setError("");
 
     try {
+        const response = await fetch("http://127.0.0.1:8000/api/login", {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify(formData),
+        });
 
-      const response = await fetch("http://127.0.0.1:8000/api/login", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
+        const data = await response.json();
 
-      const data = await response.json();
-
-      if (!response.ok) {
-        setError(data.message || "Login failed.");
-        return;
-      }
-
-      try {
-
-        // Check whether the user has completed their profile
-        const profileResponse = await fetch(
-          `http://127.0.0.1:8000/api/profile/${data.user_id}`
-        );
-
-        if (profileResponse.ok) {
-
-          const profile = await profileResponse.json();
-
-          // Store complete user object
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              user_id: data.user_id,
-              email: data.email,
-              firstname: profile.firstname,
-              lastname: profile.lastname,
-              verify_status: profile.verify_status,
-            })
-          );
-
-          // Keep old storage for compatibility
-          localStorage.setItem("user_id", data.user_id);
-          localStorage.setItem("email", data.email);
-
-          alert("Login Successful!");
-          navigate("/Dashboard");
-
-        } else if (profileResponse.status === 404) {
-
-          // User exists but has not completed profile yet
-          localStorage.setItem(
-            "user",
-            JSON.stringify({
-              user_id: data.user_id,
-              email: data.email,
-              verify_status: null,
-            })
-          );
-
-          localStorage.setItem("user_id", data.user_id);
-          localStorage.setItem("email", data.email);
-
-          alert("Please complete your profile first.");
-          navigate("/CompleteProfile");
-
-        } else {
-
-          setError("Unable to verify your profile.");
-
+        if (!response.ok) {
+            setError(data.message || "Login failed.");
+            return;
         }
 
-      } catch (err) {
+        // Store login information
+        localStorage.setItem("user_id", data.user_id);
+        localStorage.setItem("email", data.email);
 
-        console.error(err);
-        setError("Unable to connect to the server.");
+        localStorage.setItem(
+            "user",
+            JSON.stringify({
+                user_id: data.user_id,
+                email: data.email,
+            })
+        );
 
-      }
+        alert("Login Successful!");
+
+        navigate("/Home");
 
     } catch (err) {
-
-      console.error(err);
-      setError("Unable to connect to the server.");
-
+        console.error(err);
+        setError("Unable to connect to the server.");
     } finally {
-
-      setLoading(false);
-
+        setLoading(false);
     }
-
-  };
+};
 
   return (
     <div className="AuthPage">
