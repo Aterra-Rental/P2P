@@ -112,7 +112,6 @@ def approve_verification(user_id):
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             UPDATE user_details
             SET verify_status = 'Verified'
@@ -125,19 +124,33 @@ def approve_verification(user_id):
             }), 404
 
         conn.commit()
+
+        # Notify the user
         socketio.emit(
             "verification_updated",
             {
+                "user_id": user_id,
                 "status": "Verified"
             },
             room=f"user_{user_id}"
         )
+
+        # Notify all admin dashboards
+        socketio.emit(
+            "verification_updated",
+            {
+                "user_id": user_id,
+                "status": "Verified",
+                "message": "A user was approved."
+            },
+            room="admins"
+        )
+
         return jsonify({
             "message": "User approved successfully"
         }), 200
 
     except Exception as e:
-
         conn.rollback()
 
         return jsonify({
@@ -145,7 +158,6 @@ def approve_verification(user_id):
         }), 500
 
     finally:
-
         cur.close()
         conn.close()
 @verification_bp.route("/verifications/<int:user_id>/reject", methods=["PUT"])
@@ -155,7 +167,6 @@ def reject_verification(user_id):
     cur = conn.cursor()
 
     try:
-
         cur.execute("""
             UPDATE user_details
             SET verify_status = 'Rejected'
@@ -168,19 +179,33 @@ def reject_verification(user_id):
             }), 404
 
         conn.commit()
+
+        # Notify the user
         socketio.emit(
             "verification_updated",
             {
+                "user_id": user_id,
                 "status": "Rejected"
             },
             room=f"user_{user_id}"
         )
+
+        # Notify all admin dashboards
+        socketio.emit(
+            "verification_updated",
+            {
+                "user_id": user_id,
+                "status": "Rejected",
+                "message": "A user was rejected."
+            },
+            room="admins"
+        )
+
         return jsonify({
             "message": "User rejected successfully"
         }), 200
 
     except Exception as e:
-
         conn.rollback()
 
         return jsonify({
@@ -188,6 +213,5 @@ def reject_verification(user_id):
         }), 500
 
     finally:
-
         cur.close()
         conn.close()

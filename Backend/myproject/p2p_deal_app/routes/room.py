@@ -8,6 +8,37 @@ from socketio_instance import socketio
 room_bp = Blueprint("room", __name__)
 
 
+
+
+
+
+
+def emit_room_updated(
+    room_code,
+    created_by,
+    invited_user_id,
+    status=None,
+    deleted=False,
+):
+    socket_data = {
+        "room_code": room_code,
+        "status": status,
+        "deleted": deleted,
+    }
+
+    socketio.emit(
+        "room_updated",
+        socket_data,
+        room=f"user_{created_by}",
+    )
+
+    socketio.emit(
+        "room_updated",
+        socket_data,
+        room=f"user_{invited_user_id}",
+    )
+
+
 # ------------------------------------------------------
 # Generate Unique Room Code
 # ------------------------------------------------------
@@ -235,7 +266,12 @@ def create_room():
         room_id = cur.fetchone()[0]
 
         conn.commit()
-
+        emit_room_updated(
+            room_code=room_code,
+            created_by=data["created_by"],
+            invited_user_id=data["invited_user_id"],
+            status="Waiting",
+        )
         return jsonify({
             "success":True,
             "room_id":room_id,
@@ -544,7 +580,6 @@ def update_room(room_code):
 # ======================================================
 @room_bp.route("/rooms/<room_code>/accept", methods=["POST"])
 def accept_room(room_code):
-
     data = request.get_json(silent=True) or {}
     user_id = data.get("user_id")
 
@@ -560,6 +595,7 @@ def accept_room(room_code):
     try:
         cur.execute("""
             SELECT
+                created_by,
                 invited_user_id,
                 status
             FROM room
@@ -574,8 +610,7 @@ def accept_room(room_code):
                 "message": "Room not found."
             }), 404
 
-        invited_user_id = room[0]
-        status = room[1]
+        created_by, invited_user_id, status = room
 
         if str(invited_user_id) != str(user_id):
             return jsonify({
@@ -597,6 +632,13 @@ def accept_room(room_code):
 
         conn.commit()
 
+        emit_room_updated(
+            room_code=room_code,
+            created_by=created_by,
+            invited_user_id=invited_user_id,
+            status="Accepted",
+        )
+
         return jsonify({
             "success": True,
             "message": "Invitation accepted."
@@ -605,7 +647,6 @@ def accept_room(room_code):
     except Exception as e:
         conn.rollback()
         traceback.print_exc()
-
         return jsonify({
             "success": False,
             "error": str(e),
@@ -622,7 +663,6 @@ def accept_room(room_code):
 # ======================================================
 @room_bp.route("/rooms/<room_code>/reject", methods=["POST"])
 def reject_room(room_code):
-
     data = request.get_json(silent=True) or {}
     user_id = data.get("user_id")
 
@@ -638,6 +678,7 @@ def reject_room(room_code):
     try:
         cur.execute("""
             SELECT
+                created_by,
                 invited_user_id,
                 status
             FROM room
@@ -652,8 +693,7 @@ def reject_room(room_code):
                 "message": "Room not found."
             }), 404
 
-        invited_user_id = room[0]
-        status = room[1]
+        created_by, invited_user_id, status = room
 
         if str(invited_user_id) != str(user_id):
             return jsonify({
@@ -675,6 +715,13 @@ def reject_room(room_code):
 
         conn.commit()
 
+        emit_room_updated(
+            room_code=room_code,
+            created_by=created_by,
+            invited_user_id=invited_user_id,
+            status="Rejected",
+        )
+
         return jsonify({
             "success": True,
             "message": "Invitation rejected."
@@ -683,7 +730,6 @@ def reject_room(room_code):
     except Exception as e:
         conn.rollback()
         traceback.print_exc()
-
         return jsonify({
             "success": False,
             "error": str(e),
@@ -693,10 +739,10 @@ def reject_room(room_code):
     finally:
         cur.close()
         conn.close()
-        
+
+
 @room_bp.route("/rooms/<room_code>/", methods=["DELETE"])
 def delete_room(room_code):
-
     data = request.get_json(silent=True) or {}
     user_id = data.get("user_id")
 
@@ -713,6 +759,7 @@ def delete_room(room_code):
         cur.execute("""
             SELECT
                 created_by,
+                invited_user_id,
                 status
             FROM room
             WHERE room_code = %s
@@ -726,8 +773,7 @@ def delete_room(room_code):
                 "message": "Room not found."
             }), 404
 
-        created_by = room[0]
-        status = room[1]
+        created_by, invited_user_id, status = room
 
         if str(created_by) != str(user_id):
             return jsonify({
@@ -748,6 +794,14 @@ def delete_room(room_code):
 
         conn.commit()
 
+        emit_room_updated(
+            room_code=room_code,
+            created_by=created_by,
+            invited_user_id=invited_user_id,
+            status="Deleted",
+            deleted=True,
+        )
+
         return jsonify({
             "success": True,
             "message": "Room deleted successfully."
@@ -756,7 +810,6 @@ def delete_room(room_code):
     except Exception as e:
         conn.rollback()
         traceback.print_exc()
-
         return jsonify({
             "success": False,
             "error": str(e),
@@ -766,6 +819,7 @@ def delete_room(room_code):
     finally:
         cur.close()
         conn.close()
+
 
 # ======================================================
 # RE-INVITE USER
@@ -841,6 +895,13 @@ def reinvite_room(room_code):
         updated_count = cur.fetchone()[0]
 
         conn.commit()
+
+        emit_room_updated(
+            room_code=room_code,
+            created_by=created_by,
+            invited_user_id=invited_user_id,
+            status="Waiting",
+        )
 
         return jsonify({
             "success": True,

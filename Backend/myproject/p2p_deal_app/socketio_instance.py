@@ -1,5 +1,5 @@
 from flask_socketio import SocketIO, join_room
-
+from flask_socketio import join_room
 socketio = SocketIO(cors_allowed_origins="*")
 
 
@@ -7,6 +7,11 @@ socketio = SocketIO(cors_allowed_origins="*")
 def handle_connect():
     print("Client connected")
 
+
+@socketio.on("join_admin")
+def handle_join_admin():
+    join_room("admins")
+    print("Admin joined Socket.IO room: admins")
 
 @socketio.on("join_user")
 def handle_join(data):

@@ -93,9 +93,18 @@ const DealHub = () => {
 
     refreshData(true);
 
-    socket.emit("join_user", {
-      user_id: currentUserId,
-    });
+    const joinPersonalRoom = () => {
+      socket.emit("join_user", {
+        user_id: currentUserId,
+      });
+    };
+
+    // Join now if connected, and join again after every reconnection.
+    if (socket.connected) {
+      joinPersonalRoom();
+    }
+
+    socket.on("connect", joinPersonalRoom);
 
     const handleRoomUpdated = () => {
       refreshData();
@@ -118,6 +127,7 @@ const DealHub = () => {
     socket.on("partner_reminded", handlePartnerReminded);
 
     return () => {
+      socket.off("connect", joinPersonalRoom);
       socket.off("room_updated", handleRoomUpdated);
       socket.off("partner_reminded", handlePartnerReminded);
     };

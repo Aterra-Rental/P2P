@@ -1,12 +1,12 @@
 from flask import Blueprint, request, jsonify
 from database import get_db
+from socketio_instance import socketio
 import traceback
 import re
 import os
 from werkzeug.utils import secure_filename
 import random
 import string
-
 profile_bp = Blueprint("profile", __name__)
 
 
@@ -300,13 +300,26 @@ def create_profile():
 
         conn.commit()
 
-        return jsonify({
-            "message": "Profile created successfully"
-        }), 201
+        conn.commit()
+
+    # Notify all connected admin dashboards
+        socketio.emit(
+            "verification_updated",
+            {
+                "user_id": user_id,
+                "firstname": firstname,
+                "lastname": lastname,
+                "status": "Pending",
+                "message": "A new verification request has been submitted."
+            },
+            room="admins"
+        )
 
         return jsonify({
             "message": "Profile created successfully"
-        }), 201
+        }), 201             
+
+        
 
     except Exception as e:
         conn.rollback()

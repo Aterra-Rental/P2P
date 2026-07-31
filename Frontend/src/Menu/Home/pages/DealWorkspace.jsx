@@ -61,9 +61,11 @@ const DealWorkspace = () => {
     };
 
     socket.on("room_updated", handleRoomUpdated);
+    socket.on("roles_selected", handleRoomUpdated);
 
     return () => {
       socket.off("room_updated", handleRoomUpdated);
+      socket.off("roles_selected", handleRoomUpdated);
     };
   }, [roomCode]);
 
