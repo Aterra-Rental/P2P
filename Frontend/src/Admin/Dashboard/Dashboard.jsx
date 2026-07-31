@@ -12,7 +12,7 @@ import AdminLayout from "../Components/Layout/AdminLayout";
 import StatCard from "./Components/StatCard/StatCard";
 import SubmittedQuestions from "./Components/SubmittedQuestions/SubmittedQuestions";
 
-import API_URL from "../../lib/api";
+import {API_URL} from "../../lib/api";
 
 import "./Dashboard.css";
 

@@ -486,21 +486,38 @@ def get_room(room_code):
 
         cur.execute("""
             SELECT
-                room_id,
-                room_code,
-                created_by,
-                invited_user_id,
-                item_name,
-                item_description,
-                agreed_price,
-                status,
-                created_at,
-                payment_status,
-                bakong_transaction_id,
-                payment_verified_at,
-                payment_provider
-            FROM room
-            WHERE room_code = %s
+    r.room_id,
+    r.room_code,
+    r.created_by,
+    r.invited_user_id,
+    r.item_name,
+    r.item_description,
+    r.agreed_price,
+    r.status,
+    r.current_step,
+    r.created_at,
+    r.payment_status,
+    r.bakong_transaction_id,
+    r.payment_verified_at,
+    r.payment_provider,
+
+    b.buyer_id,
+    COALESCE(b.ready, FALSE) AS buyer_ready,
+    COALESCE(b.amount_confirmed, FALSE) AS buyer_amount_confirmed,
+
+    s.seller_id,
+    COALESCE(s.ready, FALSE) AS seller_ready,
+    COALESCE(s.amount_confirmed, FALSE) AS seller_amount_confirmed
+
+FROM room r
+
+LEFT JOIN buyer b
+    ON b.room_id = r.room_id
+
+LEFT JOIN seller s
+    ON s.room_id = r.room_id
+
+WHERE r.room_code = %s
         """, (room_code,))
 
         room = cur.fetchone()

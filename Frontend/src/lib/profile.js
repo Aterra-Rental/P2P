@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:8000/api";
+import { API_URL } from "../lib/api";
 
 export const getUserProfile = async () => {
 

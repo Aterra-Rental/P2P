@@ -1,6 +1,6 @@
 import "../VerificationTable/VerificationTable.css";
 import { useState, useEffect } from "react";
-import API_URL from "../../../../lib/api";
+import {API_URL} from "../../../../lib/api";
 
 const SubmittedQuestions = () => {
   const [questions, setQuestions] = useState([]);

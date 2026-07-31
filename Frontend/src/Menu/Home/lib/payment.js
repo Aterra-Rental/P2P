@@ -1,4 +1,4 @@
-const API_URL = "http://127.0.0.1:8000/api";
+import { API_URL } from "../../../lib/api";
 
 const getHeaders = () => ({
     "Content-Type": "application/json",

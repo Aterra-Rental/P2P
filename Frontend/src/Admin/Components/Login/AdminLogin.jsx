@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FaUserShield, FaEye, FaEyeSlash } from "react-icons/fa";
-import API_URL from "../../../lib/api";
+import {API_URL} from "../../../lib/api";
 import "./AdminLogin.css";
 
 const AdminLogin = () => {

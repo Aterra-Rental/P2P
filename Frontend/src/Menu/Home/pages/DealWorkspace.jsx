@@ -3,7 +3,6 @@ import { useParams } from "react-router-dom";
 import "./DealWorkspace.css";
 import { getRoom, remindPartner } from "../lib/room";
 import { socket } from "../../../lib/socket";
-
 import DealHeader from "../components/Deal/DealHeader";
 import ParticipantsPanel from "../components/Deal/ParticipantsPanel";
 import RoleSelector from "../components/Deal/RoleSelector";
@@ -18,8 +17,8 @@ const DealWorkspace = () => {
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindSuccess, setRemindSuccess] = useState("");
   const [remindError, setRemindError] = useState("");
-    const [remindCooldown, setRemindCooldown] = useState(0);
-
+  const [remindCooldown, setRemindCooldown] = useState(0);
+ 
     useEffect(() => {
     if (remindCooldown <= 0) return;
 
@@ -115,13 +114,34 @@ const DealWorkspace = () => {
     remindError={remindError}
     remindCooldown={remindCooldown}
 />
+        {/* <ParticipantsPanel room={room} /> */}
+
         <ParticipantsPanel room={room} />
 
-        <RoleSelector room={room} />
+{room.status === "Accepted" &&
+  (!room.current_step ||
+    room.current_step === "RoleSelection") && (
+    <RoleSelector room={room} />
+)}
 
-        <ChatBox room={room} />
+{room.current_step === "DealConfirmation" && (
+  <div className="deal-stage-placeholder">
+    <h2>Deal Confirmation</h2>
+    <p>
+      Roles are assigned. Amount negotiation is the next
+      stage.
+    </p>
+  </div>
+)}
 
-        <PaymentPanel room={room} />
+{room.current_step === "Payment" && (
+  <PaymentPanel room={room} />
+)}
+
+<ChatBox room={room} />
+
+        
+
       </div>
     </div>
   );

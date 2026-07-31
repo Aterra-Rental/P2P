@@ -1,8 +1,8 @@
 import React, { useState } from "react";
 import "../Global.css";
 import "./FQA.css";
-import Footer from '../../Router/Footer';
-import API_URL from "../../lib/api";
+// import Footer from '../../Router/Footer';
+import {API_URL} from "../../lib/api";
 
 const CATEGORIES = [
   { id: "all", label: "All" },
