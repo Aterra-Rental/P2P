@@ -1,0 +1,803 @@
++---------------+----------------+----------------+-------------+-------------------------------------------------------------------------+-------------------------------+
+| database_name | connected_user | server_address | server_port |                           postgresql_version                            |       report_created_at       |
++---------------+----------------+----------------+-------------+-------------------------------------------------------------------------+-------------------------------+
+| p2p_deal_db   | postgres       | ::1            |        3319 | PostgreSQL 18.4 on x86_64-windows, compiled by msvc-19.44.35227, 64-bit | 2026-07-31 23:50:58.016925+07 |
++---------------+----------------+----------------+-------------+-------------------------------------------------------------------------+-------------------------------+
+(1 row)
+
++---------------+---------------+
+| database_name | database_size |
++---------------+---------------+
+| p2p_deal_db   | 9022 kB       |
++---------------+---------------+
+(1 row)
+
++--------------------+
+|    schema_name     |
++--------------------+
+| information_schema |
+| pg_catalog         |
+| pg_toast           |
+| public             |
++--------------------+
+(4 rows)
+
++------------+----------------------+------------+------------+
+| schemaname |      tablename       | tableowner | total_size |
++------------+----------------------+------------+------------+
+| public     | admin_login          | postgres   | 48 kB      |
+| public     | buyer                | postgres   | 24 kB      |
+| public     | deal_proofs          | postgres   | 16 kB      |
+| public     | dispute_resolution   | postgres   | 16 kB      |
+| public     | disputes             | postgres   | 16 kB      |
+| public     | faq_questions        | postgres   | 16 kB      |
+| public     | room                 | postgres   | 64 kB      |
+| public     | room_messages        | postgres   | 16 kB      |
+| public     | room_reminders       | postgres   | 56 kB      |
+| public     | seller               | postgres   | 24 kB      |
+| public     | transactions_history | postgres   | 24 kB      |
+| public     | user_details         | postgres   | 64 kB      |
+| public     | user_login           | postgres   | 48 kB      |
+| public     | user_wallet          | postgres   | 40 kB      |
++------------+----------------------+------------+------------+
+(14 rows)
+
++--------------------+-----------+
+|     table_name     | row_count |
++--------------------+-----------+
+| public.admin_login |         1 |
++--------------------+-----------+
+(1 row)
+
++--------------+-----------+
+|  table_name  | row_count |
++--------------+-----------+
+| public.buyer |         2 |
++--------------+-----------+
+(1 row)
+
++--------------------+-----------+
+|     table_name     | row_count |
++--------------------+-----------+
+| public.deal_proofs |         0 |
++--------------------+-----------+
+(1 row)
+
++---------------------------+-----------+
+|        table_name         | row_count |
++---------------------------+-----------+
+| public.dispute_resolution |         0 |
++---------------------------+-----------+
+(1 row)
+
++-----------------+-----------+
+|   table_name    | row_count |
++-----------------+-----------+
+| public.disputes |         0 |
++-----------------+-----------+
+(1 row)
+
++----------------------+-----------+
+|      table_name      | row_count |
++----------------------+-----------+
+| public.faq_questions |         0 |
++----------------------+-----------+
+(1 row)
+
++-------------+-----------+
+| table_name  | row_count |
++-------------+-----------+
+| public.room |         4 |
++-------------+-----------+
+(1 row)
+
++----------------------+-----------+
+|      table_name      | row_count |
++----------------------+-----------+
+| public.room_messages |         0 |
++----------------------+-----------+
+(1 row)
+
++-----------------------+-----------+
+|      table_name       | row_count |
++-----------------------+-----------+
+| public.room_reminders |         7 |
++-----------------------+-----------+
+(1 row)
+
++---------------+-----------+
+|  table_name   | row_count |
++---------------+-----------+
+| public.seller |         2 |
++---------------+-----------+
+(1 row)
+
++-----------------------------+-----------+
+|         table_name          | row_count |
++-----------------------------+-----------+
+| public.transactions_history |         0 |
++-----------------------------+-----------+
+(1 row)
+
++---------------------+-----------+
+|     table_name      | row_count |
++---------------------+-----------+
+| public.user_details |         2 |
++---------------------+-----------+
+(1 row)
+
++-------------------+-----------+
+|    table_name     | row_count |
++-------------------+-----------+
+| public.user_login |         4 |
++-------------------+-----------+
+(1 row)
+
++--------------------+-----------+
+|     table_name     | row_count |
++--------------------+-----------+
+| public.user_wallet |         2 |
++--------------------+-----------+
+(1 row)
+
++----------------------+------------------+-------------------------+-----------------------------+--------------------------+-------------------+---------------+-------------+--------------------------------------------------------------+
+|      table_name      | ordinal_position |       column_name       |          data_type          | character_maximum_length | numeric_precision | numeric_scale | is_nullable |                        column_default                        |
++----------------------+------------------+-------------------------+-----------------------------+--------------------------+-------------------+---------------+-------------+--------------------------------------------------------------+
+| admin_login          |                1 | admin_id                | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('admin_login_admin_id_seq'::regclass)                |
+| admin_login          |                2 | email                   | character varying           |                      255 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| admin_login          |                3 | passwordhash            | character varying           |                      255 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| admin_login          |                4 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| buyer                |                1 | room_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| buyer                |                2 | buyer_id                | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| buyer                |                3 | agreed_amount           | numeric                     |                   [NULL] |                12 |             2 | YES         | [NULL]                                                       |
+| buyer                |                4 | ready                   | boolean                     |                   [NULL] |            [NULL] |        [NULL] | NO          | false                                                        |
+| buyer                |                5 | joined_at               | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| buyer                |                6 | amount_confirmed        | boolean                     |                   [NULL] |            [NULL] |        [NULL] | NO          | false                                                        |
+| deal_proofs          |                1 | proof_id                | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('deal_proofs_proof_id_seq'::regclass)                |
+| deal_proofs          |                2 | room_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| deal_proofs          |                3 | user_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| deal_proofs          |                4 | proof_type              | character varying           |                       30 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| deal_proofs          |                5 | file_path               | character varying           |                      255 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| deal_proofs          |                6 | uploaded_at             | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| deal_proofs          |                7 | description             | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| deal_proofs          |                8 | courier_name            | character varying           |                      100 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| deal_proofs          |                9 | tracking_number         | character varying           |                      100 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| deal_proofs          |               10 | reviewed                | boolean                     |                   [NULL] |            [NULL] |        [NULL] | YES         | false                                                        |
+| deal_proofs          |               11 | admin_note              | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| dispute_resolution   |                1 | resolution_id           | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('dispute_resolution_resolution_id_seq'::regclass)    |
+| dispute_resolution   |                2 | dispute_id              | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| dispute_resolution   |                3 | resolved_by             | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| dispute_resolution   |                4 | decision                | character varying           |                       50 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| dispute_resolution   |                5 | refund_amount           | numeric                     |                   [NULL] |                10 |             2 | YES         | 0.00                                                         |
+| dispute_resolution   |                6 | winner_user             | integer                     |                   [NULL] |                32 |             0 | YES         | [NULL]                                                       |
+| dispute_resolution   |                7 | resolution_note         | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| dispute_resolution   |                8 | resolved_at             | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | now()                                                        |
+| disputes             |                1 | dispute_id              | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('disputes_dispute_id_seq'::regclass)                 |
+| disputes             |                2 | room_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| disputes             |                3 | opened_by               | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| disputes             |                4 | against_user            | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| disputes             |                5 | dispute_type            | character varying           |                       50 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| disputes             |                6 | buyer_choice            | character varying           |                       30 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| disputes             |                7 | status                  | character varying           |                       30 |            [NULL] |        [NULL] | YES         | 'Open'::character varying                                    |
+| disputes             |                8 | reason                  | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| disputes             |                9 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | now()                                                        |
+| disputes             |               10 | closed_at               | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| faq_questions        |                1 | question_id             | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('faq_questions_question_id_seq'::regclass)           |
+| faq_questions        |                2 | user_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| faq_questions        |                3 | question                | text                        |                   [NULL] |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| faq_questions        |                4 | status                  | character varying           |                       20 |            [NULL] |        [NULL] | YES         | 'Pending'::character varying                                 |
+| faq_questions        |                5 | admin_reply             | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| faq_questions        |                6 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| faq_questions        |                7 | answered_at             | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| faq_questions        |                8 | answered_by             | integer                     |                   [NULL] |                32 |             0 | YES         | [NULL]                                                       |
+| room                 |                1 | room_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('room_room_id_seq'::regclass)                        |
+| room                 |                2 | room_code               | character varying           |                       10 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| room                 |                3 | created_by              | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| room                 |                4 | status                  | character varying           |                       20 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| room                 |                5 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| room                 |                6 | archived_until          | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |                7 | item_name               | character varying           |                      255 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |                8 | item_description        | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |                9 | agreed_price            | numeric                     |                   [NULL] |                12 |             2 | YES         | [NULL]                                                       |
+| room                 |               10 | payment_status          | character varying           |                       20 |            [NULL] |        [NULL] | YES         | 'Waiting'::character varying                                 |
+| room                 |               11 | bakong_transaction_id   | character varying           |                      100 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |               12 | payment_verified_at     | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |               13 | payment_provider        | character varying           |                       30 |            [NULL] |        [NULL] | YES         | 'Bakong'::character varying                                  |
+| room                 |               14 | invited_user_id         | integer                     |                   [NULL] |                32 |             0 | YES         | [NULL]                                                       |
+| room                 |               15 | escrow_fee              | numeric                     |                   [NULL] |                10 |             2 | YES         | 0                                                            |
+| room                 |               16 | total_paid              | numeric                     |                   [NULL] |                10 |             2 | YES         | 0                                                            |
+| room                 |               17 | shipping_status         | character varying           |                       30 |            [NULL] |        [NULL] | YES         | 'NotShipped'::character varying                              |
+| room                 |               18 | courier_name            | character varying           |                      100 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |               19 | tracking_number         | character varying           |                      100 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |               20 | cancel_requested_by     | integer                     |                   [NULL] |                32 |             0 | YES         | [NULL]                                                       |
+| room                 |               21 | cancel_reason           | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |               22 | completed_at            | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| room                 |               23 | reinvite_count          | integer                     |                   [NULL] |                32 |             0 | NO          | 0                                                            |
+| room                 |               24 | max_reinvites           | integer                     |                   [NULL] |                32 |             0 | NO          | 3                                                            |
+| room                 |               25 | product_type            | character varying           |                       20 |            [NULL] |        [NULL] | YES         | 'Physical'::character varying                                |
+| room                 |               26 | current_step            | character varying           |                       30 |            [NULL] |        [NULL] | YES         | 'RoleSelection'::character varying                           |
+| room_messages        |                1 | message_id              | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('room_messages_message_id_seq'::regclass)            |
+| room_messages        |                2 | room_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| room_messages        |                3 | sender_id               | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| room_messages        |                4 | message                 | text                        |                   [NULL] |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| room_messages        |                5 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| room_reminders       |                1 | reminder_id             | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('room_reminders_reminder_id_seq'::regclass)          |
+| room_reminders       |                2 | room_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| room_reminders       |                3 | sender_id               | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| room_reminders       |                4 | receiver_id             | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| room_reminders       |                5 | is_read                 | boolean                     |                   [NULL] |            [NULL] |        [NULL] | NO          | false                                                        |
+| room_reminders       |                6 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | NO          | now()                                                        |
+| seller               |                1 | room_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| seller               |                2 | seller_id               | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| seller               |                3 | agreed_amount           | numeric                     |                   [NULL] |                12 |             2 | YES         | [NULL]                                                       |
+| seller               |                4 | ready                   | boolean                     |                   [NULL] |            [NULL] |        [NULL] | NO          | false                                                        |
+| seller               |                5 | joined_at               | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| seller               |                6 | amount_confirmed        | boolean                     |                   [NULL] |            [NULL] |        [NULL] | NO          | false                                                        |
+| transactions_history |                1 | transaction_id          | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('transactions_history_transaction_id_seq'::regclass) |
+| transactions_history |                2 | room_id                 | integer                     |                   [NULL] |                32 |             0 | YES         | [NULL]                                                       |
+| transactions_history |                3 | room_code               | character varying           |                       10 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |                4 | buyer_id                | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| transactions_history |                5 | seller_id               | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| transactions_history |                6 | item_name               | character varying           |                      255 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |                7 | item_description        | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |                8 | agreed_price            | numeric                     |                   [NULL] |                12 |             2 | YES         | [NULL]                                                       |
+| transactions_history |                9 | transaction_amount      | numeric                     |                   [NULL] |                12 |             2 | NO          | [NULL]                                                       |
+| transactions_history |               10 | fee_amount              | numeric                     |                   [NULL] |                12 |             2 | NO          | [NULL]                                                       |
+| transactions_history |               11 | seller_receive          | numeric                     |                   [NULL] |                12 |             2 | NO          | [NULL]                                                       |
+| transactions_history |               12 | platform_income         | numeric                     |                   [NULL] |                12 |             2 | NO          | [NULL]                                                       |
+| transactions_history |               13 | fulfillment_proof       | character varying           |                      255 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |               14 | fulfillment_uploaded_at | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |               15 | payment_verified_at     | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |               16 | released_at             | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |               17 | transaction_status      | character varying           |                       20 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| transactions_history |               18 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| transactions_history |               19 | completed_at            | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |               20 | bakong_transaction_id   | character varying           |                      100 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| transactions_history |               21 | payment_provider        | character varying           |                       30 |            [NULL] |        [NULL] | YES         | 'Bakong'::character varying                                  |
+| user_details         |                1 | user_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| user_details         |                2 | firstname               | character varying           |                       50 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_details         |                3 | lastname                | character varying           |                       50 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_details         |                4 | phonenumber             | character varying           |                       20 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_details         |                5 | nationalidentity_id     | character varying           |                       30 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_details         |                6 | dob                     | date                        |                   [NULL] |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_details         |                7 | address                 | text                        |                   [NULL] |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_details         |                8 | verify_status           | character varying           |                       20 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_details         |                9 | national_id_front       | character varying           |                      255 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               10 | national_id_back        | character varying           |                      255 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               11 | profile_picture         | character varying           |                      255 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               12 | reject_reason           | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               13 | reject_comment          | text                        |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               14 | reviewed_at             | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               15 | reviewed_by             | integer                     |                   [NULL] |                32 |             0 | YES         | [NULL]                                                       |
+| user_details         |               16 | bio                     | character varying           |                      120 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               17 | show_email              | boolean                     |                   [NULL] |            [NULL] |        [NULL] | YES         | false                                                        |
+| user_details         |               18 | show_phone              | boolean                     |                   [NULL] |            [NULL] |        [NULL] | YES         | false                                                        |
+| user_details         |               19 | profile_visibility      | character varying           |                       20 |            [NULL] |        [NULL] | YES         | 'public'::character varying                                  |
+| user_details         |               20 | username                | character varying           |                       30 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               21 | display_name            | character varying           |                       50 |            [NULL] |        [NULL] | YES         | [NULL]                                                       |
+| user_details         |               22 | joined_at               | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| user_login           |                1 | user_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('user_login_user_id_seq'::regclass)                  |
+| user_login           |                2 | email                   | character varying           |                      255 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_login           |                3 | passwordhash            | character varying           |                      255 |            [NULL] |        [NULL] | NO          | [NULL]                                                       |
+| user_login           |                4 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| user_wallet          |                1 | wallet_id               | integer                     |                   [NULL] |                32 |             0 | NO          | nextval('user_wallet_wallet_id_seq'::regclass)               |
+| user_wallet          |                2 | user_id                 | integer                     |                   [NULL] |                32 |             0 | NO          | [NULL]                                                       |
+| user_wallet          |                3 | available_balance       | numeric                     |                   [NULL] |                12 |             2 | NO          | 0.00                                                         |
+| user_wallet          |                4 | pending_balance         | numeric                     |                   [NULL] |                12 |             2 | NO          | 0.00                                                         |
+| user_wallet          |                5 | total_received          | numeric                     |                   [NULL] |                12 |             2 | NO          | 0.00                                                         |
+| user_wallet          |                6 | total_withdrawn         | numeric                     |                   [NULL] |                12 |             2 | NO          | 0.00                                                         |
+| user_wallet          |                7 | created_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
+| user_wallet          |                8 | updated_at              | timestamp without time zone |                   [NULL] |            [NULL] |        [NULL] | YES         | CURRENT_TIMESTAMP                                            |
++----------------------+------------------+-------------------------+-----------------------------+--------------------------+-------------------+---------------+-------------+--------------------------------------------------------------+
+(145 rows)
+
++----------------------+---------------------------------------------------+-----------------+-----------------------+
+|      table_name      |                  constraint_name                  | constraint_type |        columns        |
++----------------------+---------------------------------------------------+-----------------+-----------------------+
+| admin_login          | admin_login_admin_id_not_null                     | CHECK           | [NULL]                |
+| admin_login          | admin_login_email_not_null                        | CHECK           | [NULL]                |
+| admin_login          | admin_login_passwordhash_not_null                 | CHECK           | [NULL]                |
+| admin_login          | admin_login_pkey                                  | PRIMARY KEY     | admin_id              |
+| admin_login          | admin_login_email_key                             | UNIQUE          | email                 |
+| buyer                | buyer_amount_confirmed_not_null                   | CHECK           | [NULL]                |
+| buyer                | buyer_buyer_id_not_null                           | CHECK           | [NULL]                |
+| buyer                | buyer_ready_not_null                              | CHECK           | [NULL]                |
+| buyer                | buyer_room_id_not_null                            | CHECK           | [NULL]                |
+| buyer                | fk_buyer_room                                     | FOREIGN KEY     | room_id               |
+| buyer                | fk_buyer_user                                     | FOREIGN KEY     | buyer_id              |
+| buyer                | buyer_pkey                                        | PRIMARY KEY     | room_id               |
+| deal_proofs          | deal_proofs_file_path_not_null                    | CHECK           | [NULL]                |
+| deal_proofs          | deal_proofs_proof_id_not_null                     | CHECK           | [NULL]                |
+| deal_proofs          | deal_proofs_proof_type_not_null                   | CHECK           | [NULL]                |
+| deal_proofs          | deal_proofs_room_id_not_null                      | CHECK           | [NULL]                |
+| deal_proofs          | deal_proofs_type_check                            | CHECK           | [NULL]                |
+| deal_proofs          | deal_proofs_user_id_not_null                      | CHECK           | [NULL]                |
+| deal_proofs          | fk_proof_room                                     | FOREIGN KEY     | room_id               |
+| deal_proofs          | fk_proof_user                                     | FOREIGN KEY     | user_id               |
+| deal_proofs          | deal_proofs_pkey                                  | PRIMARY KEY     | proof_id              |
+| dispute_resolution   | dispute_resolution_decision_not_null              | CHECK           | [NULL]                |
+| dispute_resolution   | dispute_resolution_dispute_id_not_null            | CHECK           | [NULL]                |
+| dispute_resolution   | dispute_resolution_resolution_id_not_null         | CHECK           | [NULL]                |
+| dispute_resolution   | dispute_resolution_resolved_by_not_null           | CHECK           | [NULL]                |
+| dispute_resolution   | dispute_resolution_dispute_id_fkey                | FOREIGN KEY     | dispute_id            |
+| dispute_resolution   | dispute_resolution_resolved_by_fkey               | FOREIGN KEY     | resolved_by           |
+| dispute_resolution   | dispute_resolution_winner_user_fkey               | FOREIGN KEY     | winner_user           |
+| dispute_resolution   | dispute_resolution_pkey                           | PRIMARY KEY     | resolution_id         |
+| disputes             | disputes_against_user_not_null                    | CHECK           | [NULL]                |
+| disputes             | disputes_dispute_id_not_null                      | CHECK           | [NULL]                |
+| disputes             | disputes_dispute_type_not_null                    | CHECK           | [NULL]                |
+| disputes             | disputes_opened_by_not_null                       | CHECK           | [NULL]                |
+| disputes             | disputes_room_id_not_null                         | CHECK           | [NULL]                |
+| disputes             | disputes_against_user_fkey                        | FOREIGN KEY     | against_user          |
+| disputes             | disputes_opened_by_fkey                           | FOREIGN KEY     | opened_by             |
+| disputes             | disputes_room_id_fkey                             | FOREIGN KEY     | room_id               |
+| disputes             | disputes_pkey                                     | PRIMARY KEY     | dispute_id            |
+| faq_questions        | faq_questions_question_id_not_null                | CHECK           | [NULL]                |
+| faq_questions        | faq_questions_question_not_null                   | CHECK           | [NULL]                |
+| faq_questions        | faq_questions_user_id_not_null                    | CHECK           | [NULL]                |
+| faq_questions        | faq_questions_answered_by_fkey                    | FOREIGN KEY     | answered_by           |
+| faq_questions        | faq_questions_user_id_fkey                        | FOREIGN KEY     | user_id               |
+| faq_questions        | faq_questions_pkey                                | PRIMARY KEY     | question_id           |
+| room                 | room_created_by_not_null                          | CHECK           | [NULL]                |
+| room                 | room_current_step_check                           | CHECK           | [NULL]                |
+| room                 | room_max_reinvites_not_null                       | CHECK           | [NULL]                |
+| room                 | room_payment_status_check                         | CHECK           | [NULL]                |
+| room                 | room_product_type_check                           | CHECK           | [NULL]                |
+| room                 | room_reinvite_count_not_null                      | CHECK           | [NULL]                |
+| room                 | room_room_code_not_null                           | CHECK           | [NULL]                |
+| room                 | room_room_id_not_null                             | CHECK           | [NULL]                |
+| room                 | room_status_check                                 | CHECK           | [NULL]                |
+| room                 | room_status_not_null                              | CHECK           | [NULL]                |
+| room                 | fk_room_creator                                   | FOREIGN KEY     | created_by            |
+| room                 | room_cancel_requested_by_fkey                     | FOREIGN KEY     | cancel_requested_by   |
+| room                 | room_invited_user_id_fkey                         | FOREIGN KEY     | invited_user_id       |
+| room                 | room_pkey                                         | PRIMARY KEY     | room_id               |
+| room                 | room_bakong_transaction_id_unique                 | UNIQUE          | bakong_transaction_id |
+| room                 | room_room_code_key                                | UNIQUE          | room_code             |
+| room_messages        | room_messages_message_id_not_null                 | CHECK           | [NULL]                |
+| room_messages        | room_messages_message_not_null                    | CHECK           | [NULL]                |
+| room_messages        | room_messages_room_id_not_null                    | CHECK           | [NULL]                |
+| room_messages        | room_messages_sender_id_not_null                  | CHECK           | [NULL]                |
+| room_messages        | fk_room_message_room                              | FOREIGN KEY     | room_id               |
+| room_messages        | fk_room_message_sender                            | FOREIGN KEY     | sender_id             |
+| room_messages        | room_messages_pkey                                | PRIMARY KEY     | message_id            |
+| room_reminders       | chk_room_reminders_different_users                | CHECK           | [NULL]                |
+| room_reminders       | room_reminders_created_at_not_null                | CHECK           | [NULL]                |
+| room_reminders       | room_reminders_is_read_not_null                   | CHECK           | [NULL]                |
+| room_reminders       | room_reminders_receiver_id_not_null               | CHECK           | [NULL]                |
+| room_reminders       | room_reminders_reminder_id_not_null               | CHECK           | [NULL]                |
+| room_reminders       | room_reminders_room_id_not_null                   | CHECK           | [NULL]                |
+| room_reminders       | room_reminders_sender_id_not_null                 | CHECK           | [NULL]                |
+| room_reminders       | fk_room_reminders_receiver                        | FOREIGN KEY     | receiver_id           |
+| room_reminders       | fk_room_reminders_room                            | FOREIGN KEY     | room_id               |
+| room_reminders       | fk_room_reminders_sender                          | FOREIGN KEY     | sender_id             |
+| room_reminders       | room_reminders_pkey                               | PRIMARY KEY     | reminder_id           |
+| seller               | seller_amount_confirmed_not_null                  | CHECK           | [NULL]                |
+| seller               | seller_ready_not_null                             | CHECK           | [NULL]                |
+| seller               | seller_room_id_not_null                           | CHECK           | [NULL]                |
+| seller               | seller_seller_id_not_null                         | CHECK           | [NULL]                |
+| seller               | fk_seller_room                                    | FOREIGN KEY     | room_id               |
+| seller               | fk_seller_user                                    | FOREIGN KEY     | seller_id             |
+| seller               | seller_pkey                                       | PRIMARY KEY     | room_id               |
+| transactions_history | transactions_history_buyer_id_not_null            | CHECK           | [NULL]                |
+| transactions_history | transactions_history_fee_amount_not_null          | CHECK           | [NULL]                |
+| transactions_history | transactions_history_platform_income_not_null     | CHECK           | [NULL]                |
+| transactions_history | transactions_history_seller_id_not_null           | CHECK           | [NULL]                |
+| transactions_history | transactions_history_seller_receive_not_null      | CHECK           | [NULL]                |
+| transactions_history | transactions_history_status_check                 | CHECK           | [NULL]                |
+| transactions_history | transactions_history_transaction_amount_not_null  | CHECK           | [NULL]                |
+| transactions_history | transactions_history_transaction_id_not_null      | CHECK           | [NULL]                |
+| transactions_history | transactions_history_transaction_status_not_null  | CHECK           | [NULL]                |
+| transactions_history | fk_transaction_buyer                              | FOREIGN KEY     | buyer_id              |
+| transactions_history | fk_transaction_seller                             | FOREIGN KEY     | seller_id             |
+| transactions_history | transactions_history_pkey                         | PRIMARY KEY     | transaction_id        |
+| transactions_history | transactions_history_bakong_transaction_id_unique | UNIQUE          | bakong_transaction_id |
+| user_details         | chk_profile_visibility                            | CHECK           | [NULL]                |
+| user_details         | chk_username_format                               | CHECK           | [NULL]                |
+| user_details         | chk_username_length                               | CHECK           | [NULL]                |
+| user_details         | user_details_address_not_null                     | CHECK           | [NULL]                |
+| user_details         | user_details_dob_not_null                         | CHECK           | [NULL]                |
+| user_details         | user_details_firstname_not_null                   | CHECK           | [NULL]                |
+| user_details         | user_details_lastname_not_null                    | CHECK           | [NULL]                |
+| user_details         | user_details_nationalidentity_id_not_null         | CHECK           | [NULL]                |
+| user_details         | user_details_phonenumber_not_null                 | CHECK           | [NULL]                |
+| user_details         | user_details_user_id_not_null                     | CHECK           | [NULL]                |
+| user_details         | user_details_verify_status_check                  | CHECK           | [NULL]                |
+| user_details         | user_details_verify_status_not_null               | CHECK           | [NULL]                |
+| user_details         | fk_user_details_reviewed_by                       | FOREIGN KEY     | reviewed_by           |
+| user_details         | fk_userdetails_login                              | FOREIGN KEY     | user_id               |
+| user_details         | user_details_pkey                                 | PRIMARY KEY     | user_id               |
+| user_details         | user_details_nationalidentity_id_key              | UNIQUE          | nationalidentity_id   |
+| user_login           | user_login_email_not_null                         | CHECK           | [NULL]                |
+| user_login           | user_login_passwordhash_not_null                  | CHECK           | [NULL]                |
+| user_login           | user_login_user_id_not_null                       | CHECK           | [NULL]                |
+| user_login           | user_login_pkey                                   | PRIMARY KEY     | user_id               |
+| user_login           | user_login_email_key                              | UNIQUE          | email                 |
+| user_wallet          | user_wallet_available_balance_not_null            | CHECK           | [NULL]                |
+| user_wallet          | user_wallet_pending_balance_not_null              | CHECK           | [NULL]                |
+| user_wallet          | user_wallet_total_received_not_null               | CHECK           | [NULL]                |
+| user_wallet          | user_wallet_total_withdrawn_not_null              | CHECK           | [NULL]                |
+| user_wallet          | user_wallet_user_id_not_null                      | CHECK           | [NULL]                |
+| user_wallet          | user_wallet_wallet_id_not_null                    | CHECK           | [NULL]                |
+| user_wallet          | user_wallet_user_id_fkey                          | FOREIGN KEY     | user_id               |
+| user_wallet          | user_wallet_pkey                                  | PRIMARY KEY     | wallet_id             |
+| user_wallet          | user_wallet_user_id_key                           | UNIQUE          | user_id               |
++----------------------+---------------------------------------------------+-----------------+-----------------------+
+(128 rows)
+
++----------------------+-------------------------------------+---------------------+------------------+-------------------+-------------+-------------+
+|      table_name      |           constraint_name           |     column_name     | referenced_table | referenced_column | update_rule | delete_rule |
++----------------------+-------------------------------------+---------------------+------------------+-------------------+-------------+-------------+
+| buyer                | fk_buyer_room                       | room_id             | room             | room_id           | NO ACTION   | CASCADE     |
+| buyer                | fk_buyer_user                       | buyer_id            | user_details     | user_id           | NO ACTION   | RESTRICT    |
+| deal_proofs          | fk_proof_room                       | room_id             | room             | room_id           | NO ACTION   | CASCADE     |
+| deal_proofs          | fk_proof_user                       | user_id             | user_details     | user_id           | NO ACTION   | RESTRICT    |
+| dispute_resolution   | dispute_resolution_dispute_id_fkey  | dispute_id          | disputes         | dispute_id        | NO ACTION   | CASCADE     |
+| dispute_resolution   | dispute_resolution_resolved_by_fkey | resolved_by         | admin_login      | admin_id          | NO ACTION   | NO ACTION   |
+| dispute_resolution   | dispute_resolution_winner_user_fkey | winner_user         | user_login       | user_id           | NO ACTION   | NO ACTION   |
+| disputes             | disputes_against_user_fkey          | against_user        | user_login       | user_id           | NO ACTION   | NO ACTION   |
+| disputes             | disputes_opened_by_fkey             | opened_by           | user_login       | user_id           | NO ACTION   | NO ACTION   |
+| disputes             | disputes_room_id_fkey               | room_id             | room             | room_id           | NO ACTION   | CASCADE     |
+| faq_questions        | faq_questions_answered_by_fkey      | answered_by         | admin_login      | admin_id          | NO ACTION   | NO ACTION   |
+| faq_questions        | faq_questions_user_id_fkey          | user_id             | user_login       | user_id           | NO ACTION   | CASCADE     |
+| room                 | fk_room_creator                     | created_by          | user_details     | user_id           | NO ACTION   | RESTRICT    |
+| room                 | room_cancel_requested_by_fkey       | cancel_requested_by | user_login       | user_id           | NO ACTION   | NO ACTION   |
+| room                 | room_invited_user_id_fkey           | invited_user_id     | user_details     | user_id           | NO ACTION   | NO ACTION   |
+| room_messages        | fk_room_message_room                | room_id             | room             | room_id           | NO ACTION   | CASCADE     |
+| room_messages        | fk_room_message_sender              | sender_id           | user_details     | user_id           | NO ACTION   | RESTRICT    |
+| room_reminders       | fk_room_reminders_receiver          | receiver_id         | user_login       | user_id           | NO ACTION   | CASCADE     |
+| room_reminders       | fk_room_reminders_room              | room_id             | room             | room_id           | NO ACTION   | CASCADE     |
+| room_reminders       | fk_room_reminders_sender            | sender_id           | user_login       | user_id           | NO ACTION   | CASCADE     |
+| seller               | fk_seller_room                      | room_id             | room             | room_id           | NO ACTION   | CASCADE     |
+| seller               | fk_seller_user                      | seller_id           | user_details     | user_id           | NO ACTION   | RESTRICT    |
+| transactions_history | fk_transaction_buyer                | buyer_id            | user_details     | user_id           | NO ACTION   | RESTRICT    |
+| transactions_history | fk_transaction_seller               | seller_id           | user_details     | user_id           | NO ACTION   | RESTRICT    |
+| user_details         | fk_user_details_reviewed_by         | reviewed_by         | admin_login      | admin_id          | NO ACTION   | SET NULL    |
+| user_details         | fk_userdetails_login                | user_id             | user_login       | user_id           | NO ACTION   | CASCADE     |
+| user_wallet          | user_wallet_user_id_fkey            | user_id             | user_login       | user_id           | NO ACTION   | CASCADE     |
++----------------------+-------------------------------------+---------------------+------------------+-------------------+-------------+-------------+
+(27 rows)
+
++-------------+----------------------+---------------------------------------------------+-----------------+-----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| schema_name |      table_name      |                  constraint_name                  | constraint_type | validated |                                                                                                                                              definition                                                                                                                                              |
++-------------+----------------------+---------------------------------------------------+-----------------+-----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+| public      | admin_login          | admin_login_admin_id_not_null                     | n               | t         | NOT NULL admin_id                                                                                                                                                                                                                                                                                    |
+| public      | admin_login          | admin_login_email_key                             | UNIQUE          | t         | UNIQUE (email)                                                                                                                                                                                                                                                                                       |
+| public      | admin_login          | admin_login_email_not_null                        | n               | t         | NOT NULL email                                                                                                                                                                                                                                                                                       |
+| public      | admin_login          | admin_login_passwordhash_not_null                 | n               | t         | NOT NULL passwordhash                                                                                                                                                                                                                                                                                |
+| public      | admin_login          | admin_login_pkey                                  | PRIMARY KEY     | t         | PRIMARY KEY (admin_id)                                                                                                                                                                                                                                                                               |
+| public      | buyer                | buyer_amount_confirmed_not_null                   | n               | t         | NOT NULL amount_confirmed                                                                                                                                                                                                                                                                            |
+| public      | buyer                | buyer_buyer_id_not_null                           | n               | t         | NOT NULL buyer_id                                                                                                                                                                                                                                                                                    |
+| public      | buyer                | buyer_pkey                                        | PRIMARY KEY     | t         | PRIMARY KEY (room_id)                                                                                                                                                                                                                                                                                |
+| public      | buyer                | buyer_ready_not_null                              | n               | t         | NOT NULL ready                                                                                                                                                                                                                                                                                       |
+| public      | buyer                | buyer_room_id_not_null                            | n               | t         | NOT NULL room_id                                                                                                                                                                                                                                                                                     |
+| public      | buyer                | fk_buyer_room                                     | FOREIGN KEY     | t         | FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE                                                                                                                                                                                                                                     |
+| public      | buyer                | fk_buyer_user                                     | FOREIGN KEY     | t         | FOREIGN KEY (buyer_id) REFERENCES user_details(user_id) ON DELETE RESTRICT                                                                                                                                                                                                                           |
+| public      | deal_proofs          | deal_proofs_file_path_not_null                    | n               | t         | NOT NULL file_path                                                                                                                                                                                                                                                                                   |
+| public      | deal_proofs          | deal_proofs_pkey                                  | PRIMARY KEY     | t         | PRIMARY KEY (proof_id)                                                                                                                                                                                                                                                                               |
+| public      | deal_proofs          | deal_proofs_proof_id_not_null                     | n               | t         | NOT NULL proof_id                                                                                                                                                                                                                                                                                    |
+| public      | deal_proofs          | deal_proofs_proof_type_not_null                   | n               | t         | NOT NULL proof_type                                                                                                                                                                                                                                                                                  |
+| public      | deal_proofs          | deal_proofs_room_id_not_null                      | n               | t         | NOT NULL room_id                                                                                                                                                                                                                                                                                     |
+| public      | deal_proofs          | deal_proofs_type_check                            | CHECK           | t         | CHECK (((proof_type)::text = 'Fulfillment'::text))                                                                                                                                                                                                                                                   |
+| public      | deal_proofs          | deal_proofs_user_id_not_null                      | n               | t         | NOT NULL user_id                                                                                                                                                                                                                                                                                     |
+| public      | deal_proofs          | fk_proof_room                                     | FOREIGN KEY     | t         | FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE                                                                                                                                                                                                                                     |
+| public      | deal_proofs          | fk_proof_user                                     | FOREIGN KEY     | t         | FOREIGN KEY (user_id) REFERENCES user_details(user_id) ON DELETE RESTRICT                                                                                                                                                                                                                            |
+| public      | dispute_resolution   | dispute_resolution_decision_not_null              | n               | t         | NOT NULL decision                                                                                                                                                                                                                                                                                    |
+| public      | dispute_resolution   | dispute_resolution_dispute_id_fkey                | FOREIGN KEY     | t         | FOREIGN KEY (dispute_id) REFERENCES disputes(dispute_id) ON DELETE CASCADE                                                                                                                                                                                                                           |
+| public      | dispute_resolution   | dispute_resolution_dispute_id_not_null            | n               | t         | NOT NULL dispute_id                                                                                                                                                                                                                                                                                  |
+| public      | dispute_resolution   | dispute_resolution_pkey                           | PRIMARY KEY     | t         | PRIMARY KEY (resolution_id)                                                                                                                                                                                                                                                                          |
+| public      | dispute_resolution   | dispute_resolution_resolution_id_not_null         | n               | t         | NOT NULL resolution_id                                                                                                                                                                                                                                                                               |
+| public      | dispute_resolution   | dispute_resolution_resolved_by_fkey               | FOREIGN KEY     | t         | FOREIGN KEY (resolved_by) REFERENCES admin_login(admin_id)                                                                                                                                                                                                                                           |
+| public      | dispute_resolution   | dispute_resolution_resolved_by_not_null           | n               | t         | NOT NULL resolved_by                                                                                                                                                                                                                                                                                 |
+| public      | dispute_resolution   | dispute_resolution_winner_user_fkey               | FOREIGN KEY     | t         | FOREIGN KEY (winner_user) REFERENCES user_login(user_id)                                                                                                                                                                                                                                             |
+| public      | disputes             | disputes_against_user_fkey                        | FOREIGN KEY     | t         | FOREIGN KEY (against_user) REFERENCES user_login(user_id)                                                                                                                                                                                                                                            |
+| public      | disputes             | disputes_against_user_not_null                    | n               | t         | NOT NULL against_user                                                                                                                                                                                                                                                                                |
+| public      | disputes             | disputes_dispute_id_not_null                      | n               | t         | NOT NULL dispute_id                                                                                                                                                                                                                                                                                  |
+| public      | disputes             | disputes_dispute_type_not_null                    | n               | t         | NOT NULL dispute_type                                                                                                                                                                                                                                                                                |
+| public      | disputes             | disputes_opened_by_fkey                           | FOREIGN KEY     | t         | FOREIGN KEY (opened_by) REFERENCES user_login(user_id)                                                                                                                                                                                                                                               |
+| public      | disputes             | disputes_opened_by_not_null                       | n               | t         | NOT NULL opened_by                                                                                                                                                                                                                                                                                   |
+| public      | disputes             | disputes_pkey                                     | PRIMARY KEY     | t         | PRIMARY KEY (dispute_id)                                                                                                                                                                                                                                                                             |
+| public      | disputes             | disputes_room_id_fkey                             | FOREIGN KEY     | t         | FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE                                                                                                                                                                                                                                     |
+| public      | disputes             | disputes_room_id_not_null                         | n               | t         | NOT NULL room_id                                                                                                                                                                                                                                                                                     |
+| public      | faq_questions        | faq_questions_answered_by_fkey                    | FOREIGN KEY     | t         | FOREIGN KEY (answered_by) REFERENCES admin_login(admin_id)                                                                                                                                                                                                                                           |
+| public      | faq_questions        | faq_questions_pkey                                | PRIMARY KEY     | t         | PRIMARY KEY (question_id)                                                                                                                                                                                                                                                                            |
+| public      | faq_questions        | faq_questions_question_id_not_null                | n               | t         | NOT NULL question_id                                                                                                                                                                                                                                                                                 |
+| public      | faq_questions        | faq_questions_question_not_null                   | n               | t         | NOT NULL question                                                                                                                                                                                                                                                                                    |
+| public      | faq_questions        | faq_questions_user_id_fkey                        | FOREIGN KEY     | t         | FOREIGN KEY (user_id) REFERENCES user_login(user_id) ON DELETE CASCADE                                                                                                                                                                                                                               |
+| public      | faq_questions        | faq_questions_user_id_not_null                    | n               | t         | NOT NULL user_id                                                                                                                                                                                                                                                                                     |
+| public      | room                 | fk_room_creator                                   | FOREIGN KEY     | t         | FOREIGN KEY (created_by) REFERENCES user_details(user_id) ON DELETE RESTRICT                                                                                                                                                                                                                         |
+| public      | room                 | room_bakong_transaction_id_unique                 | UNIQUE          | t         | UNIQUE (bakong_transaction_id)                                                                                                                                                                                                                                                                       |
+| public      | room                 | room_cancel_requested_by_fkey                     | FOREIGN KEY     | t         | FOREIGN KEY (cancel_requested_by) REFERENCES user_login(user_id)                                                                                                                                                                                                                                     |
+| public      | room                 | room_created_by_not_null                          | n               | t         | NOT NULL created_by                                                                                                                                                                                                                                                                                  |
+| public      | room                 | room_current_step_check                           | CHECK           | t         | CHECK (((current_step)::text = ANY (ARRAY[('RoleSelection'::character varying)::text, ('DealConfirmation'::character varying)::text, ('Payment'::character varying)::text, ('Delivery'::character varying)::text, ('Completed'::character varying)::text, ('Cancelled'::character varying)::text]))) |
+| public      | room                 | room_invited_user_id_fkey                         | FOREIGN KEY     | t         | FOREIGN KEY (invited_user_id) REFERENCES user_details(user_id)                                                                                                                                                                                                                                       |
+| public      | room                 | room_max_reinvites_not_null                       | n               | t         | NOT NULL max_reinvites                                                                                                                                                                                                                                                                               |
+| public      | room                 | room_payment_status_check                         | CHECK           | t         | CHECK (((payment_status)::text = ANY (ARRAY[('Waiting'::character varying)::text, ('Paid'::character varying)::text, ('Released'::character varying)::text, ('Refunded'::character varying)::text])))                                                                                                |
+| public      | room                 | room_pkey                                         | PRIMARY KEY     | t         | PRIMARY KEY (room_id)                                                                                                                                                                                                                                                                                |
+| public      | room                 | room_product_type_check                           | CHECK           | t         | CHECK (((product_type)::text = ANY (ARRAY[('Physical'::character varying)::text, ('Digital'::character varying)::text])))                                                                                                                                                                            |
+| public      | room                 | room_reinvite_count_not_null                      | n               | t         | NOT NULL reinvite_count                                                                                                                                                                                                                                                                              |
+| public      | room                 | room_room_code_key                                | UNIQUE          | t         | UNIQUE (room_code)                                                                                                                                                                                                                                                                                   |
+| public      | room                 | room_room_code_not_null                           | n               | t         | NOT NULL room_code                                                                                                                                                                                                                                                                                   |
+| public      | room                 | room_room_id_not_null                             | n               | t         | NOT NULL room_id                                                                                                                                                                                                                                                                                     |
+| public      | room                 | room_status_check                                 | CHECK           | t         | CHECK (((status)::text = ANY (ARRAY[('Waiting'::character varying)::text, ('Accepted'::character varying)::text, ('Rejected'::character varying)::text, ('RolesAssigned'::character varying)::text, ('Completed'::character varying)::text, ('Cancelled'::character varying)::text])))               |
+| public      | room                 | room_status_not_null                              | n               | t         | NOT NULL status                                                                                                                                                                                                                                                                                      |
+| public      | room_messages        | fk_room_message_room                              | FOREIGN KEY     | t         | FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE                                                                                                                                                                                                                                     |
+| public      | room_messages        | fk_room_message_sender                            | FOREIGN KEY     | t         | FOREIGN KEY (sender_id) REFERENCES user_details(user_id) ON DELETE RESTRICT                                                                                                                                                                                                                          |
+| public      | room_messages        | room_messages_message_id_not_null                 | n               | t         | NOT NULL message_id                                                                                                                                                                                                                                                                                  |
+| public      | room_messages        | room_messages_message_not_null                    | n               | t         | NOT NULL message                                                                                                                                                                                                                                                                                     |
+| public      | room_messages        | room_messages_pkey                                | PRIMARY KEY     | t         | PRIMARY KEY (message_id)                                                                                                                                                                                                                                                                             |
+| public      | room_messages        | room_messages_room_id_not_null                    | n               | t         | NOT NULL room_id                                                                                                                                                                                                                                                                                     |
+| public      | room_messages        | room_messages_sender_id_not_null                  | n               | t         | NOT NULL sender_id                                                                                                                                                                                                                                                                                   |
+| public      | room_reminders       | chk_room_reminders_different_users                | CHECK           | t         | CHECK ((sender_id <> receiver_id))                                                                                                                                                                                                                                                                   |
+| public      | room_reminders       | fk_room_reminders_receiver                        | FOREIGN KEY     | t         | FOREIGN KEY (receiver_id) REFERENCES user_login(user_id) ON DELETE CASCADE                                                                                                                                                                                                                           |
+| public      | room_reminders       | fk_room_reminders_room                            | FOREIGN KEY     | t         | FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE                                                                                                                                                                                                                                     |
+| public      | room_reminders       | fk_room_reminders_sender                          | FOREIGN KEY     | t         | FOREIGN KEY (sender_id) REFERENCES user_login(user_id) ON DELETE CASCADE                                                                                                                                                                                                                             |
+| public      | room_reminders       | room_reminders_created_at_not_null                | n               | t         | NOT NULL created_at                                                                                                                                                                                                                                                                                  |
+| public      | room_reminders       | room_reminders_is_read_not_null                   | n               | t         | NOT NULL is_read                                                                                                                                                                                                                                                                                     |
+| public      | room_reminders       | room_reminders_pkey                               | PRIMARY KEY     | t         | PRIMARY KEY (reminder_id)                                                                                                                                                                                                                                                                            |
+| public      | room_reminders       | room_reminders_receiver_id_not_null               | n               | t         | NOT NULL receiver_id                                                                                                                                                                                                                                                                                 |
+| public      | room_reminders       | room_reminders_reminder_id_not_null               | n               | t         | NOT NULL reminder_id                                                                                                                                                                                                                                                                                 |
+| public      | room_reminders       | room_reminders_room_id_not_null                   | n               | t         | NOT NULL room_id                                                                                                                                                                                                                                                                                     |
+| public      | room_reminders       | room_reminders_sender_id_not_null                 | n               | t         | NOT NULL sender_id                                                                                                                                                                                                                                                                                   |
+| public      | seller               | fk_seller_room                                    | FOREIGN KEY     | t         | FOREIGN KEY (room_id) REFERENCES room(room_id) ON DELETE CASCADE                                                                                                                                                                                                                                     |
+| public      | seller               | fk_seller_user                                    | FOREIGN KEY     | t         | FOREIGN KEY (seller_id) REFERENCES user_details(user_id) ON DELETE RESTRICT                                                                                                                                                                                                                          |
+| public      | seller               | seller_amount_confirmed_not_null                  | n               | t         | NOT NULL amount_confirmed                                                                                                                                                                                                                                                                            |
+| public      | seller               | seller_pkey                                       | PRIMARY KEY     | t         | PRIMARY KEY (room_id)                                                                                                                                                                                                                                                                                |
+| public      | seller               | seller_ready_not_null                             | n               | t         | NOT NULL ready                                                                                                                                                                                                                                                                                       |
+| public      | seller               | seller_room_id_not_null                           | n               | t         | NOT NULL room_id                                                                                                                                                                                                                                                                                     |
+| public      | seller               | seller_seller_id_not_null                         | n               | t         | NOT NULL seller_id                                                                                                                                                                                                                                                                                   |
+| public      | transactions_history | fk_transaction_buyer                              | FOREIGN KEY     | t         | FOREIGN KEY (buyer_id) REFERENCES user_details(user_id) ON DELETE RESTRICT                                                                                                                                                                                                                           |
+| public      | transactions_history | fk_transaction_seller                             | FOREIGN KEY     | t         | FOREIGN KEY (seller_id) REFERENCES user_details(user_id) ON DELETE RESTRICT                                                                                                                                                                                                                          |
+| public      | transactions_history | transactions_history_bakong_transaction_id_unique | UNIQUE          | t         | UNIQUE (bakong_transaction_id)                                                                                                                                                                                                                                                                       |
+| public      | transactions_history | transactions_history_buyer_id_not_null            | n               | t         | NOT NULL buyer_id                                                                                                                                                                                                                                                                                    |
+| public      | transactions_history | transactions_history_fee_amount_not_null          | n               | t         | NOT NULL fee_amount                                                                                                                                                                                                                                                                                  |
+| public      | transactions_history | transactions_history_pkey                         | PRIMARY KEY     | t         | PRIMARY KEY (transaction_id)                                                                                                                                                                                                                                                                         |
+| public      | transactions_history | transactions_history_platform_income_not_null     | n               | t         | NOT NULL platform_income                                                                                                                                                                                                                                                                             |
+| public      | transactions_history | transactions_history_seller_id_not_null           | n               | t         | NOT NULL seller_id                                                                                                                                                                                                                                                                                   |
+| public      | transactions_history | transactions_history_seller_receive_not_null      | n               | t         | NOT NULL seller_receive                                                                                                                                                                                                                                                                              |
+| public      | transactions_history | transactions_history_status_check                 | CHECK           | t         | CHECK (((transaction_status)::text = ANY (ARRAY[('Completed'::character varying)::text, ('Cancelled'::character varying)::text])))                                                                                                                                                                   |
+| public      | transactions_history | transactions_history_transaction_amount_not_null  | n               | t         | NOT NULL transaction_amount                                                                                                                                                                                                                                                                          |
+| public      | transactions_history | transactions_history_transaction_id_not_null      | n               | t         | NOT NULL transaction_id                                                                                                                                                                                                                                                                              |
+| public      | transactions_history | transactions_history_transaction_status_not_null  | n               | t         | NOT NULL transaction_status                                                                                                                                                                                                                                                                          |
+| public      | user_details         | chk_profile_visibility                            | CHECK           | t         | CHECK (((profile_visibility)::text = ANY (ARRAY[('public'::character varying)::text, ('partners'::character varying)::text, ('private'::character varying)::text])))                                                                                                                                 |
+| public      | user_details         | chk_username_format                               | CHECK           | t         | CHECK (((username IS NULL) OR ((username)::text ~ '^[a-z0-9_]{3,30}$'::text)))                                                                                                                                                                                                                       |
+| public      | user_details         | chk_username_length                               | CHECK           | t         | CHECK (((username IS NULL) OR ((length((username)::text) >= 3) AND (length((username)::text) <= 30))))                                                                                                                                                                                               |
+| public      | user_details         | fk_user_details_reviewed_by                       | FOREIGN KEY     | t         | FOREIGN KEY (reviewed_by) REFERENCES admin_login(admin_id) ON DELETE SET NULL                                                                                                                                                                                                                        |
+| public      | user_details         | fk_userdetails_login                              | FOREIGN KEY     | t         | FOREIGN KEY (user_id) REFERENCES user_login(user_id) ON DELETE CASCADE                                                                                                                                                                                                                               |
+| public      | user_details         | user_details_address_not_null                     | n               | t         | NOT NULL address                                                                                                                                                                                                                                                                                     |
+| public      | user_details         | user_details_dob_not_null                         | n               | t         | NOT NULL dob                                                                                                                                                                                                                                                                                         |
+| public      | user_details         | user_details_firstname_not_null                   | n               | t         | NOT NULL firstname                                                                                                                                                                                                                                                                                   |
+| public      | user_details         | user_details_lastname_not_null                    | n               | t         | NOT NULL lastname                                                                                                                                                                                                                                                                                    |
+| public      | user_details         | user_details_nationalidentity_id_key              | UNIQUE          | t         | UNIQUE (nationalidentity_id)                                                                                                                                                                                                                                                                         |
+| public      | user_details         | user_details_nationalidentity_id_not_null         | n               | t         | NOT NULL nationalidentity_id                                                                                                                                                                                                                                                                         |
+| public      | user_details         | user_details_phonenumber_not_null                 | n               | t         | NOT NULL phonenumber                                                                                                                                                                                                                                                                                 |
+| public      | user_details         | user_details_pkey                                 | PRIMARY KEY     | t         | PRIMARY KEY (user_id)                                                                                                                                                                                                                                                                                |
+| public      | user_details         | user_details_user_id_not_null                     | n               | t         | NOT NULL user_id                                                                                                                                                                                                                                                                                     |
+| public      | user_details         | user_details_verify_status_check                  | CHECK           | t         | CHECK (((verify_status)::text = ANY (ARRAY[('Pending'::character varying)::text, ('Verified'::character varying)::text, ('Rejected'::character varying)::text])))                                                                                                                                    |
+| public      | user_details         | user_details_verify_status_not_null               | n               | t         | NOT NULL verify_status                                                                                                                                                                                                                                                                               |
+| public      | user_login           | user_login_email_key                              | UNIQUE          | t         | UNIQUE (email)                                                                                                                                                                                                                                                                                       |
+| public      | user_login           | user_login_email_not_null                         | n               | t         | NOT NULL email                                                                                                                                                                                                                                                                                       |
+| public      | user_login           | user_login_passwordhash_not_null                  | n               | t         | NOT NULL passwordhash                                                                                                                                                                                                                                                                                |
+| public      | user_login           | user_login_pkey                                   | PRIMARY KEY     | t         | PRIMARY KEY (user_id)                                                                                                                                                                                                                                                                                |
+| public      | user_login           | user_login_user_id_not_null                       | n               | t         | NOT NULL user_id                                                                                                                                                                                                                                                                                     |
+| public      | user_wallet          | user_wallet_available_balance_not_null            | n               | t         | NOT NULL available_balance                                                                                                                                                                                                                                                                           |
+| public      | user_wallet          | user_wallet_pending_balance_not_null              | n               | t         | NOT NULL pending_balance                                                                                                                                                                                                                                                                             |
+| public      | user_wallet          | user_wallet_pkey                                  | PRIMARY KEY     | t         | PRIMARY KEY (wallet_id)                                                                                                                                                                                                                                                                              |
+| public      | user_wallet          | user_wallet_total_received_not_null               | n               | t         | NOT NULL total_received                                                                                                                                                                                                                                                                              |
+| public      | user_wallet          | user_wallet_total_withdrawn_not_null              | n               | t         | NOT NULL total_withdrawn                                                                                                                                                                                                                                                                             |
+| public      | user_wallet          | user_wallet_user_id_fkey                          | FOREIGN KEY     | t         | FOREIGN KEY (user_id) REFERENCES user_login(user_id) ON DELETE CASCADE                                                                                                                                                                                                                               |
+| public      | user_wallet          | user_wallet_user_id_key                           | UNIQUE          | t         | UNIQUE (user_id)                                                                                                                                                                                                                                                                                     |
+| public      | user_wallet          | user_wallet_user_id_not_null                      | n               | t         | NOT NULL user_id                                                                                                                                                                                                                                                                                     |
+| public      | user_wallet          | user_wallet_wallet_id_not_null                    | n               | t         | NOT NULL wallet_id                                                                                                                                                                                                                                                                                   |
++-------------+----------------------+---------------------------------------------------+-----------------+-----------+------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------+
+(128 rows)
+
++------------+----------------------+---------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| schemaname |      tablename       |                     indexname                     |                                                                 indexdef                                                                 |
++------------+----------------------+---------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+| public     | admin_login          | admin_login_email_key                             | CREATE UNIQUE INDEX admin_login_email_key ON public.admin_login USING btree (email)                                                      |
+| public     | admin_login          | admin_login_pkey                                  | CREATE UNIQUE INDEX admin_login_pkey ON public.admin_login USING btree (admin_id)                                                        |
+| public     | buyer                | buyer_pkey                                        | CREATE UNIQUE INDEX buyer_pkey ON public.buyer USING btree (room_id)                                                                     |
+| public     | deal_proofs          | deal_proofs_pkey                                  | CREATE UNIQUE INDEX deal_proofs_pkey ON public.deal_proofs USING btree (proof_id)                                                        |
+| public     | dispute_resolution   | dispute_resolution_pkey                           | CREATE UNIQUE INDEX dispute_resolution_pkey ON public.dispute_resolution USING btree (resolution_id)                                     |
+| public     | disputes             | disputes_pkey                                     | CREATE UNIQUE INDEX disputes_pkey ON public.disputes USING btree (dispute_id)                                                            |
+| public     | faq_questions        | faq_questions_pkey                                | CREATE UNIQUE INDEX faq_questions_pkey ON public.faq_questions USING btree (question_id)                                                 |
+| public     | room                 | room_bakong_transaction_id_unique                 | CREATE UNIQUE INDEX room_bakong_transaction_id_unique ON public.room USING btree (bakong_transaction_id)                                 |
+| public     | room                 | room_pkey                                         | CREATE UNIQUE INDEX room_pkey ON public.room USING btree (room_id)                                                                       |
+| public     | room                 | room_room_code_key                                | CREATE UNIQUE INDEX room_room_code_key ON public.room USING btree (room_code)                                                            |
+| public     | room_messages        | room_messages_pkey                                | CREATE UNIQUE INDEX room_messages_pkey ON public.room_messages USING btree (message_id)                                                  |
+| public     | room_reminders       | idx_room_reminders_cooldown                       | CREATE INDEX idx_room_reminders_cooldown ON public.room_reminders USING btree (room_id, sender_id, created_at DESC)                      |
+| public     | room_reminders       | idx_room_reminders_unread                         | CREATE INDEX idx_room_reminders_unread ON public.room_reminders USING btree (receiver_id, is_read, created_at DESC)                      |
+| public     | room_reminders       | room_reminders_pkey                               | CREATE UNIQUE INDEX room_reminders_pkey ON public.room_reminders USING btree (reminder_id)                                               |
+| public     | seller               | seller_pkey                                       | CREATE UNIQUE INDEX seller_pkey ON public.seller USING btree (room_id)                                                                   |
+| public     | transactions_history | transactions_history_bakong_transaction_id_unique | CREATE UNIQUE INDEX transactions_history_bakong_transaction_id_unique ON public.transactions_history USING btree (bakong_transaction_id) |
+| public     | transactions_history | transactions_history_pkey                         | CREATE UNIQUE INDEX transactions_history_pkey ON public.transactions_history USING btree (transaction_id)                                |
+| public     | user_details         | idx_user_details_username                         | CREATE UNIQUE INDEX idx_user_details_username ON public.user_details USING btree (username)                                              |
+| public     | user_details         | user_details_nationalidentity_id_key              | CREATE UNIQUE INDEX user_details_nationalidentity_id_key ON public.user_details USING btree (nationalidentity_id)                        |
+| public     | user_details         | user_details_pkey                                 | CREATE UNIQUE INDEX user_details_pkey ON public.user_details USING btree (user_id)                                                       |
+| public     | user_login           | user_login_email_key                              | CREATE UNIQUE INDEX user_login_email_key ON public.user_login USING btree (email)                                                        |
+| public     | user_login           | user_login_pkey                                   | CREATE UNIQUE INDEX user_login_pkey ON public.user_login USING btree (user_id)                                                           |
+| public     | user_wallet          | user_wallet_pkey                                  | CREATE UNIQUE INDEX user_wallet_pkey ON public.user_wallet USING btree (wallet_id)                                                       |
+| public     | user_wallet          | user_wallet_user_id_key                           | CREATE UNIQUE INDEX user_wallet_user_id_key ON public.user_wallet USING btree (user_id)                                                  |
++------------+----------------------+---------------------------------------------------+------------------------------------------------------------------------------------------------------------------------------------------+
+(24 rows)
+
++------------+-----------------------------------------+-----------+-------------+-----------+------------+--------------+-------+------------+------------+
+| schemaname |              sequencename               | data_type | start_value | min_value | max_value  | increment_by | cycle | cache_size | last_value |
++------------+-----------------------------------------+-----------+-------------+-----------+------------+--------------+-------+------------+------------+
+| public     | admin_login_admin_id_seq                | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |          1 |
+| public     | deal_proofs_proof_id_seq                | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |     [NULL] |
+| public     | dispute_resolution_resolution_id_seq    | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |     [NULL] |
+| public     | disputes_dispute_id_seq                 | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |     [NULL] |
+| public     | faq_questions_question_id_seq           | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |     [NULL] |
+| public     | room_messages_message_id_seq            | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |     [NULL] |
+| public     | room_reminders_reminder_id_seq          | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |          7 |
+| public     | room_room_id_seq                        | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |         11 |
+| public     | transactions_history_transaction_id_seq | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |     [NULL] |
+| public     | user_login_user_id_seq                  | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |          4 |
+| public     | user_wallet_wallet_id_seq               | integer   |           1 |         1 | 2147483647 |            1 | f     |          1 |          2 |
++------------+-----------------------------------------+-----------+-------------+-----------+------------+--------------+-------+------------+------------+
+(11 rows)
+
++---------+-------------+----------------------------+
+| user_id |    email    |         created_at         |
++---------+-------------+----------------------------+
+|       1 | a@gmail.com | 2026-07-29 14:28:16.336418 |
+|       2 | b@gmail.com | 2026-07-29 14:35:57.35509  |
+|       3 | z@gmail.com | 2026-07-30 11:49:19.656058 |
+|       4 | p@gmail.com | 2026-07-30 11:58:48.36298  |
++---------+-------------+----------------------------+
+(4 rows)
+
++----------+-------------------+---------------------------+
+| admin_id |       email       |        created_at         |
++----------+-------------------+---------------------------+
+|        1 | admin@p2pdeal.com | 2026-07-27 11:00:26.34587 |
++----------+-------------------+---------------------------+
+(1 row)
+
++---------+-----------+----------+---------------+---------------------+------------+--------------------+---------------+-----------------------------------------------------------+----------------------------------------------------------------------------------------+-----------------+---------------+----------------+-------------+-------------+------------------------------+------------+------------+--------------------+--------------+--------------+----------------------------+
+| user_id | firstname | lastname |  phonenumber  | nationalidentity_id |    dob     |      address       | verify_status |                     national_id_front                     |                                    national_id_back                                    | profile_picture | reject_reason | reject_comment | reviewed_at | reviewed_by |             bio              | show_email | show_phone | profile_visibility |   username   | display_name |         joined_at          |
++---------+-----------+----------+---------------+---------------------+------------+--------------------+---------------+-----------------------------------------------------------+----------------------------------------------------------------------------------------+-----------------+---------------+----------------+-------------+-------------+------------------------------+------------+------------+--------------------+--------------+--------------+----------------------------+
+|       1 | HENG      | HENG     | +855123456789 | 918275819           | 2000-12-21 | wagagga            | Verified      | uploads/national_ids/user_1_front_capture.jpg             | uploads/national_ids/user_1_back_capture.jpg                                           | [NULL]          | [NULL]        | [NULL]         | [NULL]      |      [NULL] | [NULL]                       | f          | f          | public             | hengheng1232 | [NULL]       | 2026-07-30 12:20:17.110583 |
+|       2 | SOKHENG   | SOUR     | +855123456789 | 123456789           | 2006-01-19 | 21414wfa321 213124 | Verified      | uploads/national_ids/user_2_front_2026-01-10_15.15.25.jpg | uploads/national_ids/user_2_back_Screenshot_2026-01-04_at_1.23.02_in_the_afternoon.png | [NULL]          | [NULL]        | [NULL]         | [NULL]      |      [NULL] | Nah, i would win and forever | f          | f          | public             | lord_ozai    | [NULL]       | 2026-07-29 14:45:35.904509 |
++---------+-----------+----------+---------------+---------------------+------------+--------------------+---------------+-----------------------------------------------------------+----------------------------------------------------------------------------------------+-----------------+---------------+----------------+-------------+-------------+------------------------------+------------+------------+--------------------+--------------+--------------+----------------------------+
+(2 rows)
+
++-----------+---------+-------------------+-----------------+----------------+-----------------+----------------------------+----------------------------+
+| wallet_id | user_id | available_balance | pending_balance | total_received | total_withdrawn |         created_at         |         updated_at         |
++-----------+---------+-------------------+-----------------+----------------+-----------------+----------------------------+----------------------------+
+|         1 |       1 |              0.00 |            0.00 |           0.00 |            0.00 | 2026-07-29 14:28:16.336418 | 2026-07-29 14:28:16.336418 |
+|         2 |       2 |              0.00 |            0.00 |           0.00 |            0.00 | 2026-07-29 14:35:57.35509  | 2026-07-29 14:35:57.35509  |
++-----------+---------+-------------------+-----------------+----------------+-----------------+----------------------------+----------------------------+
+(2 rows)
+
++---------+-----------+------------+---------------+----------------------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+------------------+
+| room_id | room_code | created_by |    status     |         created_at         | archived_until | item_name | item_description | agreed_price | payment_status | bakong_transaction_id | payment_verified_at | payment_provider | invited_user_id | escrow_fee | total_paid | shipping_status | courier_name | tracking_number | cancel_requested_by | cancel_reason | completed_at | reinvite_count | max_reinvites | product_type |   current_step   |
++---------+-----------+------------+---------------+----------------------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+------------------+
+|       1 | 87PZUH    |          2 | Accepted      | 2026-07-31 10:32:24.674955 | [NULL]         | test 1    | 241              |         2.00 | Waiting        | [NULL]                | [NULL]              | Bakong           |               1 |       0.00 |       0.00 | NotShipped      | [NULL]       | [NULL]          |              [NULL] | [NULL]        | [NULL]       |              3 |             3 | Physical     | RoleSelection    |
+|       2 | QA7KF3    |          2 | RolesAssigned | 2026-07-31 10:49:01.671766 | [NULL]         | test 2    | wrq              |         2.00 | Waiting        | [NULL]                | [NULL]              | Bakong           |               1 |       0.00 |       0.00 | NotShipped      | [NULL]       | [NULL]          |              [NULL] | [NULL]        | [NULL]       |              0 |             3 | Physical     | DealConfirmation |
+|      10 | EV9FYS    |          1 | RolesAssigned | 2026-07-31 15:39:15.808705 | [NULL]         | pull      |                  |         3.00 | Waiting        | [NULL]                | [NULL]              | Bakong           |               2 |       0.00 |       0.00 | NotShipped      | [NULL]       | [NULL]          |              [NULL] | [NULL]        | [NULL]       |              0 |             3 | Physical     | DealConfirmation |
+|      11 | Z2QRZL    |          2 | Accepted      | 2026-07-31 17:02:53.202815 | [NULL]         | Test role | 231              |         1.00 | Waiting        | [NULL]                | [NULL]              | Bakong           |               1 |       0.00 |       0.00 | NotShipped      | [NULL]       | [NULL]          |              [NULL] | [NULL]        | [NULL]       |              0 |             3 | Physical     | RoleSelection    |
++---------+-----------+------------+---------------+----------------------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+------------------+
+(4 rows)
+
++---------+----------+---------------+-------+----------------------------+------------------+
+| room_id | buyer_id | agreed_amount | ready |         joined_at          | amount_confirmed |
++---------+----------+---------------+-------+----------------------------+------------------+
+|       2 |        1 |        100.00 | t     | 2026-07-31 13:54:41.267432 | f                |
+|      10 |        2 |        [NULL] | f     | 2026-07-31 16:30:02.860499 | f                |
++---------+----------+---------------+-------+----------------------------+------------------+
+(2 rows)
+
++---------+-----------+---------------+-------+----------------------------+------------------+
+| room_id | seller_id | agreed_amount | ready |         joined_at          | amount_confirmed |
++---------+-----------+---------------+-------+----------------------------+------------------+
+|       2 |         2 |        100.00 | t     | 2026-07-31 13:54:41.267432 | f                |
+|      10 |         1 |        [NULL] | f     | 2026-07-31 16:30:02.860499 | f                |
++---------+-----------+---------------+-------+----------------------------+------------------+
+(2 rows)
+
++------------+---------+-----------+---------+------------+
+| message_id | room_id | sender_id | message | created_at |
++------------+---------+-----------+---------+------------+
++------------+---------+-----------+---------+------------+
+(0 rows)
+
++-------------+---------+-----------+-------------+---------+----------------------------+
+| reminder_id | room_id | sender_id | receiver_id | is_read |         created_at         |
++-------------+---------+-----------+-------------+---------+----------------------------+
+|           1 |       2 |         1 |           2 | t       | 2026-07-31 12:57:31.701574 |
+|           2 |       2 |         1 |           2 | t       | 2026-07-31 13:09:42.581669 |
+|           3 |       2 |         1 |           2 | t       | 2026-07-31 13:22:30.435773 |
+|           4 |       2 |         1 |           2 | t       | 2026-07-31 13:36:47.445254 |
+|           5 |       2 |         1 |           2 | f       | 2026-07-31 14:18:59.697514 |
+|           6 |      10 |         2 |           1 | t       | 2026-07-31 16:13:22.317197 |
+|           7 |      10 |         1 |           2 | f       | 2026-07-31 16:16:08.593363 |
++-------------+---------+-----------+-------------+---------+----------------------------+
+(7 rows)
+
++----------+---------+---------+------------+-----------+-------------+-------------+--------------+-----------------+----------+------------+
+| proof_id | room_id | user_id | proof_type | file_path | uploaded_at | description | courier_name | tracking_number | reviewed | admin_note |
++----------+---------+---------+------------+-----------+-------------+-------------+--------------+-----------------+----------+------------+
++----------+---------+---------+------------+-----------+-------------+-------------+--------------+-----------------+----------+------------+
+(0 rows)
+
++------------+---------+-----------+--------------+--------------+--------------+--------+--------+------------+-----------+
+| dispute_id | room_id | opened_by | against_user | dispute_type | buyer_choice | status | reason | created_at | closed_at |
++------------+---------+-----------+--------------+--------------+--------------+--------+--------+------------+-----------+
++------------+---------+-----------+--------------+--------------+--------------+--------+--------+------------+-----------+
+(0 rows)
+
++---------------+------------+-------------+----------+---------------+-------------+-----------------+-------------+
+| resolution_id | dispute_id | resolved_by | decision | refund_amount | winner_user | resolution_note | resolved_at |
++---------------+------------+-------------+----------+---------------+-------------+-----------------+-------------+
++---------------+------------+-------------+----------+---------------+-------------+-----------------+-------------+
+(0 rows)
+
++-------------+---------+----------+--------+-------------+------------+-------------+-------------+
+| question_id | user_id | question | status | admin_reply | created_at | answered_at | answered_by |
++-------------+---------+----------+--------+-------------+------------+-------------+-------------+
++-------------+---------+----------+--------+-------------+------------+-------------+-------------+
+(0 rows)
+
++----------------+---------+-----------+----------+-----------+-----------+------------------+--------------+--------------------+------------+----------------+-----------------+-------------------+-------------------------+---------------------+-------------+--------------------+------------+--------------+-----------------------+------------------+
+| transaction_id | room_id | room_code | buyer_id | seller_id | item_name | item_description | agreed_price | transaction_amount | fee_amount | seller_receive | platform_income | fulfillment_proof | fulfillment_uploaded_at | payment_verified_at | released_at | transaction_status | created_at | completed_at | bakong_transaction_id | payment_provider |
++----------------+---------+-----------+----------+-----------+-----------+------------------+--------------+--------------------+------------+----------------+-----------------+-------------------+-------------------------+---------------------+-------------+--------------------+------------+--------------+-----------------------+------------------+
++----------------+---------+-----------+----------+-----------+-----------+------------------+--------------+--------------------+------------+----------------+-----------------+-------------------+-------------------------+---------------------+-------------+--------------------+------------+--------------+-----------------------+------------------+
+(0 rows)
+
++---------+-----------+----------+-------------+---------------------+-----+---------+---------------+-------------------+------------------+-----------------+---------------+----------------+-------------+-------------+-----+------------+------------+--------------------+----------+--------------+-----------+
+| user_id | firstname | lastname | phonenumber | nationalidentity_id | dob | address | verify_status | national_id_front | national_id_back | profile_picture | reject_reason | reject_comment | reviewed_at | reviewed_by | bio | show_email | show_phone | profile_visibility | username | display_name | joined_at |
++---------+-----------+----------+-------------+---------------------+-----+---------+---------------+-------------------+------------------+-----------------+---------------+----------------+-------------+-------------+-----+------------+------------+--------------------+----------+--------------+-----------+
++---------+-----------+----------+-------------+---------------------+-----+---------+---------------+-------------------+------------------+-----------------+---------------+----------------+-------------+-------------+-----+------------+------------+--------------------+----------+--------------+-----------+
+(0 rows)
+
++-----------+---------+-------------------+-----------------+----------------+-----------------+------------+------------+
+| wallet_id | user_id | available_balance | pending_balance | total_received | total_withdrawn | created_at | updated_at |
++-----------+---------+-------------------+-----------------+----------------+-----------------+------------+------------+
++-----------+---------+-------------------+-----------------+----------------+-----------------+------------+------------+
+(0 rows)
+
++---------+-----------+------------+--------+------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+--------------+
+| room_id | room_code | created_by | status | created_at | archived_until | item_name | item_description | agreed_price | payment_status | bakong_transaction_id | payment_verified_at | payment_provider | invited_user_id | escrow_fee | total_paid | shipping_status | courier_name | tracking_number | cancel_requested_by | cancel_reason | completed_at | reinvite_count | max_reinvites | product_type | current_step |
++---------+-----------+------------+--------+------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+--------------+
++---------+-----------+------------+--------+------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+--------------+
+(0 rows)
+
++---------+-----------+------------+--------+------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+--------------+
+| room_id | room_code | created_by | status | created_at | archived_until | item_name | item_description | agreed_price | payment_status | bakong_transaction_id | payment_verified_at | payment_provider | invited_user_id | escrow_fee | total_paid | shipping_status | courier_name | tracking_number | cancel_requested_by | cancel_reason | completed_at | reinvite_count | max_reinvites | product_type | current_step |
++---------+-----------+------------+--------+------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+--------------+
++---------+-----------+------------+--------+------------+----------------+-----------+------------------+--------------+----------------+-----------------------+---------------------+------------------+-----------------+------------+------------+-----------------+--------------+-----------------+---------------------+---------------+--------------+----------------+---------------+--------------+--------------+
+(0 rows)
+
++---------+----------+---------------+-------+-----------+------------------+
+| room_id | buyer_id | agreed_amount | ready | joined_at | amount_confirmed |
++---------+----------+---------------+-------+-----------+------------------+
++---------+----------+---------------+-------+-----------+------------------+
+(0 rows)
+
++---------+-----------+---------------+-------+-----------+------------------+
+| room_id | seller_id | agreed_amount | ready | joined_at | amount_confirmed |
++---------+-----------+---------------+-------+-----------+------------------+
++---------+-----------+---------------+-------+-----------+------------------+
+(0 rows)
+
++-------+-----------------+
+| email | duplicate_count |
++-------+-----------------+
++-------+-----------------+
+(0 rows)
+
++----------+-----------------+
+| username | duplicate_count |
++----------+-----------------+
++----------+-----------------+
+(0 rows)
+
++-----------+-----------------+
+| room_code | duplicate_count |
++-----------+-----------------+
++-----------+-----------------+
+(0 rows)
+
