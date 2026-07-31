@@ -19,9 +19,29 @@ const VerificationTable = () => {
 
     useEffect(() => {
 
-        loadPendingUsers();
+    const handleVerificationUpdate = () => {
+        console.log(
+            "Refreshing pending verification table"
+        );
 
-    }, []);
+        loadPendingUsers();
+    };
+
+    loadPendingUsers();
+
+    window.addEventListener(
+        "admin-verification-updated",
+        handleVerificationUpdate
+    );
+
+    return () => {
+        window.removeEventListener(
+            "admin-verification-updated",
+            handleVerificationUpdate
+        );
+    };
+
+}, []);
     return (
 
         <div className="verification-table">
