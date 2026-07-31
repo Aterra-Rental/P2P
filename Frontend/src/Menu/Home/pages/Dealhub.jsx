@@ -9,7 +9,7 @@ import InvitationCard from "../components/Deal/InvitationCard";
 import "./Dealhub.css";
 import styles from "../lib/styles";
 import { acceptInvitation, rejectInvitation } from "../lib/room";
-import { getRooms, getInvitations } from "../lib/room";
+import { getRooms, getInvitations, markRoomRemindersRead } from "../lib/room";
 
 const DealHub = () => {
   const navigate = useNavigate();
@@ -21,74 +21,146 @@ const DealHub = () => {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
 
-  const handleOpenRoom = (room) => {
+  const handleOpenRoom = async (room) => {
+    try {
+      if (room.has_unread_reminder || room.reminded) {
+        await markRoomRemindersRead(room.room_code, currentUserId);
+
+        setRooms((previousRooms) =>
+          previousRooms.map((currentRoom) =>
+            currentRoom.room_code === room.room_code
+              ? {
+                  ...currentRoom,
+                  reminded: false,
+                  has_unread_reminder: false,
+                }
+              : currentRoom,
+          ),
+        );
+      }
+    } catch (error) {
+      console.error("Failed to mark reminder as read:", error);
+    }
+
     navigate(`/deal/${room.room_code}`);
   };
-  const refreshData = useCallback(async () => {
-    if (!currentUserId) return;
+  const refreshData = useCallback(
+    async (showLoading = false) => {
+      if (!currentUserId) return;
 
-    setLoading(true);
+      if (showLoading) {
+        setLoading(true);
+      }
 
-    try {
-      const [roomResponse, invitationResponse] = await Promise.all([
-        getRooms(currentUserId),
-        getInvitations(currentUserId),
-      ]);
+      try {
+        const [roomResponse, invitationResponse] = await Promise.all([
+          getRooms(currentUserId),
+          getInvitations(currentUserId),
+        ]);
 
-      setRooms(roomResponse.success ? roomResponse.rooms : []);
-      setInvitations(
-        invitationResponse.success ? invitationResponse.invitations : [],
-      );
-    } catch (err) {
-      console.error(err);
-      setRooms([]);
-      setInvitations([]);
-    } finally {
-      setLoading(false);
-    }
-  }, [currentUserId]);
+        setRooms((previousRooms) => {
+          const newRooms = roomResponse.success ? roomResponse.rooms : [];
+
+          return newRooms.map((newRoom) => {
+            const previousRoom = previousRooms.find(
+              (room) => room.room_code === newRoom.room_code,
+            );
+
+            return {
+              ...newRoom,
+              reminded: previousRoom?.reminded || false,
+            };
+          });
+        });
+        setInvitations(
+          invitationResponse.success ? invitationResponse.invitations : [],
+        );
+      } catch (err) {
+        console.error(err);
+        setRooms([]);
+        setInvitations([]);
+      } finally {
+        setLoading(false);
+      }
+    },
+    [currentUserId],
+  );
 
   useEffect(() => {
-    refreshData();
+    if (!currentUserId) {
+      return;
+    }
+
+    refreshData(true);
 
     socket.emit("join_user", {
-        user_id: currentUserId,
+      user_id: currentUserId,
     });
 
-    socket.on("room_updated", () => {
-        refreshData();
-    });
+    const handleRoomUpdated = () => {
+      refreshData();
+    };
+
+    const handlePartnerReminded = (data) => {
+      setRooms((previousRooms) =>
+        previousRooms.map((room) =>
+          room.room_code === data.room_code
+            ? {
+                ...room,
+                reminded: true,
+              }
+            : room,
+        ),
+      );
+    };
+
+    socket.on("room_updated", handleRoomUpdated);
+    socket.on("partner_reminded", handlePartnerReminded);
 
     return () => {
-        socket.off("room_updated");
+      socket.off("room_updated", handleRoomUpdated);
+      socket.off("partner_reminded", handlePartnerReminded);
     };
-}, [refreshData, currentUserId]);
-    const handleAccept = async (roomCode) => {
-        try {
-            const response = await acceptInvitation(roomCode, currentUserId);
+  }, [refreshData, currentUserId]);
+  const handleAccept = async (roomCode) => {
+    try {
+      const response = await acceptInvitation(roomCode, currentUserId);
 
-            console.log(response);
+      console.log(response);
 
-            if (response.success) {
-                navigate(`/deal/${roomCode}`);
-            }
-
-        } catch (err) {
-            console.error(err);
-        }
-    };
+      if (response.success) {
+        navigate(`/deal/${roomCode}`);
+      }
+    } catch (err) {
+      console.error(err);
+    }
+  };
 
   const handleReject = async (roomCode) => {
     try {
       const response = await rejectInvitation(roomCode, currentUserId);
       console.log(response);
 
-      await refreshData();
+      await refreshData(true);
     } catch (err) {
       console.error(err);
     }
   };
+  const invitationRoomCodes = new Set(
+    invitations.map((invitation) => invitation.room_code),
+  );
 
+  const visibleRooms = rooms.filter((room) => {
+    const isCreator = String(room.created_by) === String(currentUserId);
+
+    const isRejectedInvitee = room.status === "Rejected" && !isCreator;
+
+    if (isRejectedInvitee) {
+      return false;
+    }
+
+    return !invitationRoomCodes.has(room.room_code);
+  });
   return (
     <div style={styles.page}>
       <div style={styles.modalContainer}>
@@ -143,39 +215,42 @@ const DealHub = () => {
                   >
                     All
                   </button>
+
                   <button
                     className={filter === "active" ? "active" : ""}
                     onClick={() => setFilter("active")}
                   >
-                    {" "}
                     Active
                   </button>
+
                   <button
                     className={filter === "invitation" ? "active" : ""}
                     onClick={() => setFilter("invitation")}
                   >
-                    Invitations{" "}
+                    Invitations
                   </button>
                 </div>
+
                 <div className="room-list" style={styles.roomList}>
                   {/* All */}
                   {filter === "all" && (
                     <>
                       {invitations.map((invitation) => (
                         <InvitationCard
-                          key={invitation.room_code}
+                          key={`invitation-${invitation.room_code}`}
                           invitation={invitation}
                           onAccept={handleAccept}
                           onReject={handleReject}
                         />
                       ))}
 
-                      {rooms.map((room) => (
+                      {visibleRooms.map((room) => (
                         <RoomCard
-                          key={room.room_code}
+                          key={`room-${room.room_code}`}
                           room={room}
                           currentUserId={currentUserId}
                           onOpen={handleOpenRoom}
+                          onUpdated={refreshData}
                         />
                       ))}
                     </>
@@ -183,20 +258,23 @@ const DealHub = () => {
 
                   {/* Active */}
                   {filter === "active" &&
-                    rooms.map((room) => (
-                      <RoomCard
-                        key={room.room_code}
-                        room={room}
-                        currentUserId={currentUserId}
-                        onOpen={handleOpenRoom}
-                      />
-                    ))}
+                    visibleRooms
+                      .filter((room) => room.status === "Accepted")
+                      .map((room) => (
+                        <RoomCard
+                          key={`active-${room.room_code}`}
+                          room={room}
+                          currentUserId={currentUserId}
+                          onOpen={handleOpenRoom}
+                          onUpdated={refreshData}
+                        />
+                      ))}
 
                   {/* Invitations */}
                   {filter === "invitation" &&
                     invitations.map((invitation) => (
                       <InvitationCard
-                        key={invitation.room_code}
+                        key={`invitation-only-${invitation.room_code}`}
                         invitation={invitation}
                         onAccept={handleAccept}
                         onReject={handleReject}

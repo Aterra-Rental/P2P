@@ -3,16 +3,7 @@ const API_URL = "http://127.0.0.1:8000/api";
 const getHeaders = () => ({
     "Content-Type": "application/json",
 });
-// export const checkUser = async (userId) => {
-//     const response = await fetch(
-//         `${API_URL}/check-user/${userId}`,
-//         {
-//             headers: getHeaders(),
-//         }
-//     );
 
-//     return await response.json();
-// };
 export const checkUser = async (userId) => {
     const response = await fetch(`${API_URL}/check-user/${userId}`, {
         headers: getHeaders(),
@@ -37,12 +28,20 @@ export const createRoom = async (roomData) => {
     const data = await response.json();
 
     if (!response.ok) {
-        console.error("Backend Error:", data);
-        throw new Error(data.message || "Failed to create room");
-    }
+    console.error("Backend Error:", data);
 
+    throw new Error(
+        data.message ||
+        data.error ||
+        "Failed to create room"
+    );
+}
     return data;
 };
+
+
+
+
 export const getRooms = async (userId) => {
     const response = await fetch(
         `${API_URL}/rooms/?user_id=${userId}`,
@@ -138,16 +137,27 @@ export const updateRoom = async (roomCode, updates) => {
 
     return await response.json();
 };
-export const deleteRoom = async (roomCode) => {
+export const deleteRoom = async (roomCode, userId) => {
     const response = await fetch(
         `${API_URL}/rooms/${roomCode}/`,
         {
             method: "DELETE",
             headers: getHeaders(),
+            body: JSON.stringify({
+                user_id: userId,
+            }),
         }
     );
 
-    return await response.json();
+    const data = await response.json();
+
+    if (!response.ok) {
+        throw new Error(
+            data.message || data.error || "Failed to delete room"
+        );
+    }
+
+    return data;
 };
 export const reinviteRoom = async (roomCode, userId) => {
     const response = await fetch(
@@ -164,4 +174,53 @@ export const reinviteRoom = async (roomCode, userId) => {
     );
 
     return await response.json();
+};
+
+export const remindPartner = async (roomCode, userId) => {
+
+    const response = await fetch(
+        `${API_URL}/rooms/${roomCode}/remind`,
+        {
+            method: "POST",
+
+            headers: {
+                "Content-Type": "application/json"
+            },
+
+            body: JSON.stringify({
+                user_id: userId
+            })
+        }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+    const error = new Error(
+        data.message || "Failed to send reminder."
+    );
+
+    error.remainingSeconds = data.remaining_seconds || 0;
+
+    throw error;
+}
+
+    return data;
+};
+export const markRoomRemindersRead = async (roomCode, userId) => {
+
+    const response = await fetch(
+        `${API_URL}/rooms/${roomCode}/reminders/read`,
+        {
+            method: "PUT",
+            headers: {
+                "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+                user_id: userId
+            })
+        }
+    );
+
+    return response.json();
 };

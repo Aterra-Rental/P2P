@@ -1,11 +1,13 @@
 import React, { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useAuth } from "../components/AuthContext";
 import { Flame } from "lucide-react";
 import "./Auth.css";
 
 const Login = () => {
 
   const navigate = useNavigate();
+  const { refreshUser } = useAuth();
 
   const [formData, setFormData] = useState({
     email: "",
@@ -59,7 +61,7 @@ const Login = () => {
                 email: data.email,
             })
         );
-
+        await refreshUser();
         alert("Login Successful!");
 
         navigate("/Home");

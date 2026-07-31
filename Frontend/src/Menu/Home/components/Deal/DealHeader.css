@@ -85,3 +85,90 @@
     background:rgba(239,68,68,.15);
     color:#f87171;
 }
+
+
+
+
+.deal-header-top{
+
+    display:flex;
+
+    justify-content:space-between;
+
+    align-items:flex-start;
+
+    gap:20px;
+
+    margin-bottom:25px;
+}
+
+.deal-header-actions{
+
+    display:flex;
+
+    flex-direction:column;
+
+    align-items:flex-end;
+}
+
+.remind-btn{
+
+    padding:8px 16px;
+
+    border:none;
+
+    border-radius:10px;
+
+    cursor:pointer;
+
+    font-size:14px;
+
+    font-weight:600;
+
+    transition:.25s;
+    background: rgba(241, 241, 75, 0.877);
+}
+
+.remind-btn:hover{
+
+    transform:translateY(-1px);
+}
+
+.remind-btn:disabled{
+    background: rgba(241, 241, 75, 0.291);
+    opacity:.6;
+
+    cursor:not-allowed;
+}
+
+.remind-success{
+
+    margin-top:8px;
+
+    font-size:13px;
+
+    color:#22c55e;
+
+    text-align:right;
+}
+
+.remind-error{
+
+    margin-top:8px;
+
+    font-size:13px;
+
+    color:#ef4444;
+
+    text-align:right;
+}
+.remind-btn:disabled {
+    background: rgba(241, 241, 75, 0.291);
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+.remind-btn:not(:disabled):hover {
+    transform: translateY(-1px);
+}

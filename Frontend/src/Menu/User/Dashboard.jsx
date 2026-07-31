@@ -5,15 +5,11 @@ import "../Global.css";
 import defaultAvatar from "../../assets/default-avatar.png";
 import { getUserProfile } from "../../lib/profile";
 import { socket } from "../../lib/socket";
-
+import { useAuth } from "../../components/AuthContext"
 const Dashboard = () => {
   const navigate = useNavigate();
-
+  const { user, loading, refreshUser } = useAuth();
   const [showUploadOptions, setShowUploadOptions] = useState(false);
-  const [user, setUser] = useState(null);
-
-  const [loading, setLoading] = useState(true);
-
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
 
@@ -25,29 +21,12 @@ const Dashboard = () => {
     user_id: userId,
   });
 
-    const fetchProfile = async () => {
-      try {
-        const data = await getUserProfile();
-        setUser(data);
-      } catch (err) {
-        console.error(err);
+    
 
-        if (err.message.includes("404")) {
-          setUser(null);
-          return;
-        }
-
-        alert("Unable to load your profile.");
-      } finally {
-        setLoading(false);
-      }
-    };
-
-    fetchProfile();
+    
     const handleVerificationUpdate = async () => {
     try {
-        const latest = await getUserProfile();
-        setUser(latest);
+        await refreshUser();
     } catch (err) {
         console.error(err);
     }
@@ -113,8 +92,7 @@ const Dashboard = () => {
         return;
       }
 
-      const updatedUser = await getUserProfile();
-      setUser(updatedUser);
+       await getUserProfile();
 
       alert("Profile picture updated successfully!");
     } catch (err) {

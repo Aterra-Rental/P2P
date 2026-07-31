@@ -1,0 +1,304 @@
+-- P2P Deal database installer generated from p2p_deal_db_backup.dump
+-- PostgreSQL 18 compatible
+-- Safe to run repeatedly: tables, sequences, constraints, and indexes are created only when missing.
+
+BEGIN;
+
+CREATE SCHEMA IF NOT EXISTS public;
+
+-- Sequences
+CREATE SEQUENCE IF NOT EXISTS public.user_login_user_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.admin_login_admin_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.user_wallet_wallet_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.room_room_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.room_messages_message_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.transactions_history_transaction_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.deal_proofs_proof_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.disputes_dispute_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.dispute_resolution_resolution_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.faq_questions_question_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+CREATE SEQUENCE IF NOT EXISTS public.room_reminders_reminder_id_seq AS integer START WITH 1 INCREMENT BY 1 NO MINVALUE NO MAXVALUE CACHE 1;
+
+-- Core authentication tables
+CREATE TABLE IF NOT EXISTS public.user_login (
+    user_id integer NOT NULL DEFAULT nextval('public.user_login_user_id_seq'::regclass),
+    email character varying(255) NOT NULL,
+    passwordhash character varying(255) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS public.admin_login (
+    admin_id integer NOT NULL DEFAULT nextval('public.admin_login_admin_id_seq'::regclass),
+    email character varying(255) NOT NULL,
+    passwordhash character varying(255) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS public.user_details (
+    user_id integer NOT NULL,
+    firstname character varying(50) NOT NULL,
+    lastname character varying(50) NOT NULL,
+    phonenumber character varying(20) NOT NULL,
+    nationalidentity_id character varying(30) NOT NULL,
+    dob date NOT NULL,
+    address text NOT NULL,
+    verify_status character varying(20) NOT NULL,
+    national_id_front character varying(255),
+    national_id_back character varying(255),
+    profile_picture character varying(255),
+    reject_reason text,
+    reject_comment text,
+    reviewed_at timestamp without time zone,
+    reviewed_by integer,
+    bio character varying(120),
+    show_email boolean DEFAULT false,
+    show_phone boolean DEFAULT false,
+    profile_visibility character varying(20) DEFAULT 'public'::character varying,
+    username character varying(30),
+    display_name character varying(50),
+    joined_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    CONSTRAINT chk_profile_visibility CHECK (profile_visibility::text = ANY (ARRAY['public','partners','private']::text[])),
+    CONSTRAINT chk_username_format CHECK (username IS NULL OR username::text ~ '^[a-z0-9_]{3,30}$'::text),
+    CONSTRAINT chk_username_length CHECK (username IS NULL OR (length(username::text) >= 3 AND length(username::text) <= 30)),
+    CONSTRAINT user_details_verify_status_check CHECK (verify_status::text = ANY (ARRAY['Pending','Verified','Rejected']::text[]))
+);
+
+CREATE TABLE IF NOT EXISTS public.user_wallet (
+    wallet_id integer NOT NULL DEFAULT nextval('public.user_wallet_wallet_id_seq'::regclass),
+    user_id integer NOT NULL,
+    available_balance numeric(12,2) DEFAULT 0.00 NOT NULL,
+    pending_balance numeric(12,2) DEFAULT 0.00 NOT NULL,
+    total_received numeric(12,2) DEFAULT 0.00 NOT NULL,
+    total_withdrawn numeric(12,2) DEFAULT 0.00 NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    updated_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+-- Deal tables
+CREATE TABLE IF NOT EXISTS public.room (
+    room_id integer NOT NULL DEFAULT nextval('public.room_room_id_seq'::regclass),
+    room_code character varying(10) NOT NULL,
+    created_by integer NOT NULL,
+    status character varying(20) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    archived_until timestamp without time zone,
+    item_name character varying(255),
+    item_description text,
+    agreed_price numeric(12,2),
+    payment_status character varying(20) DEFAULT 'Waiting'::character varying,
+    bakong_transaction_id character varying(100),
+    payment_verified_at timestamp without time zone,
+    payment_provider character varying(30) DEFAULT 'Bakong'::character varying,
+    invited_user_id integer,
+    escrow_fee numeric(10,2) DEFAULT 0,
+    total_paid numeric(10,2) DEFAULT 0,
+    shipping_status character varying(30) DEFAULT 'NotShipped'::character varying,
+    courier_name character varying(100),
+    tracking_number character varying(100),
+    cancel_requested_by integer,
+    cancel_reason text,
+    completed_at timestamp without time zone,
+    reinvite_count integer DEFAULT 0 NOT NULL,
+    max_reinvites integer DEFAULT 3 NOT NULL,
+    product_type character varying(20) DEFAULT 'Physical'::character varying,
+    current_step character varying(30) DEFAULT 'RoleSelection'::character varying,
+    CONSTRAINT room_current_step_check CHECK (current_step::text = ANY (ARRAY['RoleSelection','DealConfirmation','Payment','Delivery','Completed','Cancelled']::text[])),
+    CONSTRAINT room_payment_status_check CHECK (payment_status::text = ANY (ARRAY['Waiting','Paid','Released','Refunded']::text[])),
+    CONSTRAINT room_product_type_check CHECK (product_type::text = ANY (ARRAY['Physical','Digital']::text[])),
+    CONSTRAINT room_status_check CHECK (status::text = ANY (ARRAY['Waiting','Accepted','Rejected','RolesAssigned','Completed','Cancelled']::text[]))
+);
+
+CREATE TABLE IF NOT EXISTS public.buyer (
+    room_id integer NOT NULL,
+    buyer_id integer NOT NULL,
+    agreed_amount numeric(12,2),
+    ready boolean DEFAULT false NOT NULL,
+    joined_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS public.seller (
+    room_id integer NOT NULL,
+    seller_id integer NOT NULL,
+    agreed_amount numeric(12,2),
+    ready boolean DEFAULT false NOT NULL,
+    joined_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS public.room_messages (
+    message_id integer NOT NULL DEFAULT nextval('public.room_messages_message_id_seq'::regclass),
+    room_id integer NOT NULL,
+    sender_id integer NOT NULL,
+    message text NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP
+);
+
+CREATE TABLE IF NOT EXISTS public.deal_proofs (
+    proof_id integer NOT NULL DEFAULT nextval('public.deal_proofs_proof_id_seq'::regclass),
+    room_id integer NOT NULL,
+    user_id integer NOT NULL,
+    proof_type character varying(30) NOT NULL,
+    file_path character varying(255) NOT NULL,
+    uploaded_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    description text,
+    courier_name character varying(100),
+    tracking_number character varying(100),
+    reviewed boolean DEFAULT false,
+    admin_note text,
+    CONSTRAINT deal_proofs_type_check CHECK (proof_type::text = 'Fulfillment'::text)
+);
+
+CREATE TABLE IF NOT EXISTS public.transactions_history (
+    transaction_id integer NOT NULL DEFAULT nextval('public.transactions_history_transaction_id_seq'::regclass),
+    room_id integer,
+    room_code character varying(10),
+    buyer_id integer NOT NULL,
+    seller_id integer NOT NULL,
+    item_name character varying(255),
+    item_description text,
+    agreed_price numeric(12,2),
+    transaction_amount numeric(12,2) NOT NULL,
+    fee_amount numeric(12,2) NOT NULL,
+    seller_receive numeric(12,2) NOT NULL,
+    platform_income numeric(12,2) NOT NULL,
+    fulfillment_proof character varying(255),
+    fulfillment_uploaded_at timestamp without time zone,
+    payment_verified_at timestamp without time zone,
+    released_at timestamp without time zone,
+    transaction_status character varying(20) NOT NULL,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    completed_at timestamp without time zone,
+    bakong_transaction_id character varying(100),
+    payment_provider character varying(30) DEFAULT 'Bakong'::character varying,
+    CONSTRAINT transactions_history_status_check CHECK (transaction_status::text = ANY (ARRAY['Completed','Cancelled']::text[]))
+);
+
+-- Dispute and support tables
+CREATE TABLE IF NOT EXISTS public.disputes (
+    dispute_id integer NOT NULL DEFAULT nextval('public.disputes_dispute_id_seq'::regclass),
+    room_id integer NOT NULL,
+    opened_by integer NOT NULL,
+    against_user integer NOT NULL,
+    dispute_type character varying(50) NOT NULL,
+    buyer_choice character varying(30),
+    status character varying(30) DEFAULT 'Open'::character varying,
+    reason text,
+    created_at timestamp without time zone DEFAULT now(),
+    closed_at timestamp without time zone
+);
+
+CREATE TABLE IF NOT EXISTS public.dispute_resolution (
+    resolution_id integer NOT NULL DEFAULT nextval('public.dispute_resolution_resolution_id_seq'::regclass),
+    dispute_id integer NOT NULL,
+    resolved_by integer NOT NULL,
+    decision character varying(50) NOT NULL,
+    refund_amount numeric(10,2) DEFAULT 0.00,
+    winner_user integer,
+    resolution_note text,
+    resolved_at timestamp without time zone DEFAULT now()
+);
+
+CREATE TABLE IF NOT EXISTS public.faq_questions (
+    question_id integer NOT NULL DEFAULT nextval('public.faq_questions_question_id_seq'::regclass),
+    user_id integer NOT NULL,
+    question text NOT NULL,
+    status character varying(20) DEFAULT 'Pending'::character varying,
+    admin_reply text,
+    created_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
+    answered_at timestamp without time zone,
+    answered_by integer
+);
+
+CREATE TABLE IF NOT EXISTS public.room_reminders (
+    reminder_id integer NOT NULL DEFAULT nextval('public.room_reminders_reminder_id_seq'::regclass),
+    room_id integer NOT NULL,
+    sender_id integer NOT NULL,
+    receiver_id integer NOT NULL,
+    is_read boolean DEFAULT false NOT NULL,
+    created_at timestamp without time zone DEFAULT now() NOT NULL,
+    CONSTRAINT chk_room_reminders_different_users CHECK (sender_id <> receiver_id)
+);
+
+-- Sequence ownership
+ALTER SEQUENCE public.user_login_user_id_seq OWNED BY public.user_login.user_id;
+ALTER SEQUENCE public.admin_login_admin_id_seq OWNED BY public.admin_login.admin_id;
+ALTER SEQUENCE public.user_wallet_wallet_id_seq OWNED BY public.user_wallet.wallet_id;
+ALTER SEQUENCE public.room_room_id_seq OWNED BY public.room.room_id;
+ALTER SEQUENCE public.room_messages_message_id_seq OWNED BY public.room_messages.message_id;
+ALTER SEQUENCE public.transactions_history_transaction_id_seq OWNED BY public.transactions_history.transaction_id;
+ALTER SEQUENCE public.deal_proofs_proof_id_seq OWNED BY public.deal_proofs.proof_id;
+ALTER SEQUENCE public.disputes_dispute_id_seq OWNED BY public.disputes.dispute_id;
+ALTER SEQUENCE public.dispute_resolution_resolution_id_seq OWNED BY public.dispute_resolution.resolution_id;
+ALTER SEQUENCE public.faq_questions_question_id_seq OWNED BY public.faq_questions.question_id;
+ALTER SEQUENCE public.room_reminders_reminder_id_seq OWNED BY public.room_reminders.reminder_id;
+
+-- Primary keys and unique constraints
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='user_login_pkey' AND conrelid='public.user_login'::regclass) THEN ALTER TABLE public.user_login ADD CONSTRAINT user_login_pkey PRIMARY KEY (user_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='user_login_email_key' AND conrelid='public.user_login'::regclass) THEN ALTER TABLE public.user_login ADD CONSTRAINT user_login_email_key UNIQUE (email); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='admin_login_pkey' AND conrelid='public.admin_login'::regclass) THEN ALTER TABLE public.admin_login ADD CONSTRAINT admin_login_pkey PRIMARY KEY (admin_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='admin_login_email_key' AND conrelid='public.admin_login'::regclass) THEN ALTER TABLE public.admin_login ADD CONSTRAINT admin_login_email_key UNIQUE (email); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='user_details_pkey' AND conrelid='public.user_details'::regclass) THEN ALTER TABLE public.user_details ADD CONSTRAINT user_details_pkey PRIMARY KEY (user_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='user_details_nationalidentity_id_key' AND conrelid='public.user_details'::regclass) THEN ALTER TABLE public.user_details ADD CONSTRAINT user_details_nationalidentity_id_key UNIQUE (nationalidentity_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='user_wallet_pkey' AND conrelid='public.user_wallet'::regclass) THEN ALTER TABLE public.user_wallet ADD CONSTRAINT user_wallet_pkey PRIMARY KEY (wallet_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='user_wallet_user_id_key' AND conrelid='public.user_wallet'::regclass) THEN ALTER TABLE public.user_wallet ADD CONSTRAINT user_wallet_user_id_key UNIQUE (user_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='room_pkey' AND conrelid='public.room'::regclass) THEN ALTER TABLE public.room ADD CONSTRAINT room_pkey PRIMARY KEY (room_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='room_room_code_key' AND conrelid='public.room'::regclass) THEN ALTER TABLE public.room ADD CONSTRAINT room_room_code_key UNIQUE (room_code); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='room_bakong_transaction_id_unique' AND conrelid='public.room'::regclass) THEN ALTER TABLE public.room ADD CONSTRAINT room_bakong_transaction_id_unique UNIQUE (bakong_transaction_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='buyer_pkey' AND conrelid='public.buyer'::regclass) THEN ALTER TABLE public.buyer ADD CONSTRAINT buyer_pkey PRIMARY KEY (room_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='seller_pkey' AND conrelid='public.seller'::regclass) THEN ALTER TABLE public.seller ADD CONSTRAINT seller_pkey PRIMARY KEY (room_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='room_messages_pkey' AND conrelid='public.room_messages'::regclass) THEN ALTER TABLE public.room_messages ADD CONSTRAINT room_messages_pkey PRIMARY KEY (message_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='deal_proofs_pkey' AND conrelid='public.deal_proofs'::regclass) THEN ALTER TABLE public.deal_proofs ADD CONSTRAINT deal_proofs_pkey PRIMARY KEY (proof_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='transactions_history_pkey' AND conrelid='public.transactions_history'::regclass) THEN ALTER TABLE public.transactions_history ADD CONSTRAINT transactions_history_pkey PRIMARY KEY (transaction_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='transactions_history_bakong_transaction_id_unique' AND conrelid='public.transactions_history'::regclass) THEN ALTER TABLE public.transactions_history ADD CONSTRAINT transactions_history_bakong_transaction_id_unique UNIQUE (bakong_transaction_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='disputes_pkey' AND conrelid='public.disputes'::regclass) THEN ALTER TABLE public.disputes ADD CONSTRAINT disputes_pkey PRIMARY KEY (dispute_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='dispute_resolution_pkey' AND conrelid='public.dispute_resolution'::regclass) THEN ALTER TABLE public.dispute_resolution ADD CONSTRAINT dispute_resolution_pkey PRIMARY KEY (resolution_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='faq_questions_pkey' AND conrelid='public.faq_questions'::regclass) THEN ALTER TABLE public.faq_questions ADD CONSTRAINT faq_questions_pkey PRIMARY KEY (question_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='room_reminders_pkey' AND conrelid='public.room_reminders'::regclass) THEN ALTER TABLE public.room_reminders ADD CONSTRAINT room_reminders_pkey PRIMARY KEY (reminder_id); END IF; END $$;
+
+-- Foreign keys
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_userdetails_login' AND conrelid='public.user_details'::regclass) THEN ALTER TABLE public.user_details ADD CONSTRAINT fk_userdetails_login FOREIGN KEY (user_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_user_details_reviewed_by' AND conrelid='public.user_details'::regclass) THEN ALTER TABLE public.user_details ADD CONSTRAINT fk_user_details_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES public.admin_login(admin_id) ON DELETE SET NULL; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='user_wallet_user_id_fkey' AND conrelid='public.user_wallet'::regclass) THEN ALTER TABLE public.user_wallet ADD CONSTRAINT user_wallet_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_creator' AND conrelid='public.room'::regclass) THEN ALTER TABLE public.room ADD CONSTRAINT fk_room_creator FOREIGN KEY (created_by) REFERENCES public.user_details(user_id) ON DELETE RESTRICT; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='room_invited_user_id_fkey' AND conrelid='public.room'::regclass) THEN ALTER TABLE public.room ADD CONSTRAINT room_invited_user_id_fkey FOREIGN KEY (invited_user_id) REFERENCES public.user_details(user_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='room_cancel_requested_by_fkey' AND conrelid='public.room'::regclass) THEN ALTER TABLE public.room ADD CONSTRAINT room_cancel_requested_by_fkey FOREIGN KEY (cancel_requested_by) REFERENCES public.user_login(user_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_buyer_room' AND conrelid='public.buyer'::regclass) THEN ALTER TABLE public.buyer ADD CONSTRAINT fk_buyer_room FOREIGN KEY (room_id) REFERENCES public.room(room_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_buyer_user' AND conrelid='public.buyer'::regclass) THEN ALTER TABLE public.buyer ADD CONSTRAINT fk_buyer_user FOREIGN KEY (buyer_id) REFERENCES public.user_details(user_id) ON DELETE RESTRICT; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_seller_room' AND conrelid='public.seller'::regclass) THEN ALTER TABLE public.seller ADD CONSTRAINT fk_seller_room FOREIGN KEY (room_id) REFERENCES public.room(room_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_seller_user' AND conrelid='public.seller'::regclass) THEN ALTER TABLE public.seller ADD CONSTRAINT fk_seller_user FOREIGN KEY (seller_id) REFERENCES public.user_details(user_id) ON DELETE RESTRICT; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_message_room' AND conrelid='public.room_messages'::regclass) THEN ALTER TABLE public.room_messages ADD CONSTRAINT fk_room_message_room FOREIGN KEY (room_id) REFERENCES public.room(room_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_message_sender' AND conrelid='public.room_messages'::regclass) THEN ALTER TABLE public.room_messages ADD CONSTRAINT fk_room_message_sender FOREIGN KEY (sender_id) REFERENCES public.user_details(user_id) ON DELETE RESTRICT; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_proof_room' AND conrelid='public.deal_proofs'::regclass) THEN ALTER TABLE public.deal_proofs ADD CONSTRAINT fk_proof_room FOREIGN KEY (room_id) REFERENCES public.room(room_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_proof_user' AND conrelid='public.deal_proofs'::regclass) THEN ALTER TABLE public.deal_proofs ADD CONSTRAINT fk_proof_user FOREIGN KEY (user_id) REFERENCES public.user_details(user_id) ON DELETE RESTRICT; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_transaction_buyer' AND conrelid='public.transactions_history'::regclass) THEN ALTER TABLE public.transactions_history ADD CONSTRAINT fk_transaction_buyer FOREIGN KEY (buyer_id) REFERENCES public.user_details(user_id) ON DELETE RESTRICT; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_transaction_seller' AND conrelid='public.transactions_history'::regclass) THEN ALTER TABLE public.transactions_history ADD CONSTRAINT fk_transaction_seller FOREIGN KEY (seller_id) REFERENCES public.user_details(user_id) ON DELETE RESTRICT; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='disputes_room_id_fkey' AND conrelid='public.disputes'::regclass) THEN ALTER TABLE public.disputes ADD CONSTRAINT disputes_room_id_fkey FOREIGN KEY (room_id) REFERENCES public.room(room_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='disputes_opened_by_fkey' AND conrelid='public.disputes'::regclass) THEN ALTER TABLE public.disputes ADD CONSTRAINT disputes_opened_by_fkey FOREIGN KEY (opened_by) REFERENCES public.user_login(user_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='disputes_against_user_fkey' AND conrelid='public.disputes'::regclass) THEN ALTER TABLE public.disputes ADD CONSTRAINT disputes_against_user_fkey FOREIGN KEY (against_user) REFERENCES public.user_login(user_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='dispute_resolution_dispute_id_fkey' AND conrelid='public.dispute_resolution'::regclass) THEN ALTER TABLE public.dispute_resolution ADD CONSTRAINT dispute_resolution_dispute_id_fkey FOREIGN KEY (dispute_id) REFERENCES public.disputes(dispute_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='dispute_resolution_resolved_by_fkey' AND conrelid='public.dispute_resolution'::regclass) THEN ALTER TABLE public.dispute_resolution ADD CONSTRAINT dispute_resolution_resolved_by_fkey FOREIGN KEY (resolved_by) REFERENCES public.admin_login(admin_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='dispute_resolution_winner_user_fkey' AND conrelid='public.dispute_resolution'::regclass) THEN ALTER TABLE public.dispute_resolution ADD CONSTRAINT dispute_resolution_winner_user_fkey FOREIGN KEY (winner_user) REFERENCES public.user_login(user_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='faq_questions_user_id_fkey' AND conrelid='public.faq_questions'::regclass) THEN ALTER TABLE public.faq_questions ADD CONSTRAINT faq_questions_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='faq_questions_answered_by_fkey' AND conrelid='public.faq_questions'::regclass) THEN ALTER TABLE public.faq_questions ADD CONSTRAINT faq_questions_answered_by_fkey FOREIGN KEY (answered_by) REFERENCES public.admin_login(admin_id); END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_reminders_room' AND conrelid='public.room_reminders'::regclass) THEN ALTER TABLE public.room_reminders ADD CONSTRAINT fk_room_reminders_room FOREIGN KEY (room_id) REFERENCES public.room(room_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_reminders_sender' AND conrelid='public.room_reminders'::regclass) THEN ALTER TABLE public.room_reminders ADD CONSTRAINT fk_room_reminders_sender FOREIGN KEY (sender_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE; END IF; END $$;
+DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_reminders_receiver' AND conrelid='public.room_reminders'::regclass) THEN ALTER TABLE public.room_reminders ADD CONSTRAINT fk_room_reminders_receiver FOREIGN KEY (receiver_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE; END IF; END $$;
+
+-- Indexes
+CREATE UNIQUE INDEX IF NOT EXISTS idx_user_details_username ON public.user_details USING btree (username);
+CREATE INDEX IF NOT EXISTS idx_room_reminders_cooldown ON public.room_reminders USING btree (room_id, sender_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS idx_room_reminders_unread ON public.room_reminders USING btree (receiver_id, is_read, created_at DESC);
+
+-- Move sequences beyond current IDs so future inserts do not collide.
+SELECT setval('public.user_login_user_id_seq', GREATEST(COALESCE((SELECT MAX(user_id) FROM public.user_login), 0), 1), EXISTS (SELECT 1 FROM public.user_login));
+SELECT setval('public.admin_login_admin_id_seq', GREATEST(COALESCE((SELECT MAX(admin_id) FROM public.admin_login), 0), 1), EXISTS (SELECT 1 FROM public.admin_login));
+SELECT setval('public.user_wallet_wallet_id_seq', GREATEST(COALESCE((SELECT MAX(wallet_id) FROM public.user_wallet), 0), 1), EXISTS (SELECT 1 FROM public.user_wallet));
+SELECT setval('public.room_room_id_seq', GREATEST(COALESCE((SELECT MAX(room_id) FROM public.room), 0), 1), EXISTS (SELECT 1 FROM public.room));
+SELECT setval('public.room_messages_message_id_seq', GREATEST(COALESCE((SELECT MAX(message_id) FROM public.room_messages), 0), 1), EXISTS (SELECT 1 FROM public.room_messages));
+SELECT setval('public.transactions_history_transaction_id_seq', GREATEST(COALESCE((SELECT MAX(transaction_id) FROM public.transactions_history), 0), 1), EXISTS (SELECT 1 FROM public.transactions_history));
+SELECT setval('public.deal_proofs_proof_id_seq', GREATEST(COALESCE((SELECT MAX(proof_id) FROM public.deal_proofs), 0), 1), EXISTS (SELECT 1 FROM public.deal_proofs));
+SELECT setval('public.disputes_dispute_id_seq', GREATEST(COALESCE((SELECT MAX(dispute_id) FROM public.disputes), 0), 1), EXISTS (SELECT 1 FROM public.disputes));
+SELECT setval('public.dispute_resolution_resolution_id_seq', GREATEST(COALESCE((SELECT MAX(resolution_id) FROM public.dispute_resolution), 0), 1), EXISTS (SELECT 1 FROM public.dispute_resolution));
+SELECT setval('public.faq_questions_question_id_seq', GREATEST(COALESCE((SELECT MAX(question_id) FROM public.faq_questions), 0), 1), EXISTS (SELECT 1 FROM public.faq_questions));
+SELECT setval('public.room_reminders_reminder_id_seq', GREATEST(COALESCE((SELECT MAX(reminder_id) FROM public.room_reminders), 0), 1), EXISTS (SELECT 1 FROM public.room_reminders));
+
+COMMIT;

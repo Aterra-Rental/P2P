@@ -9,7 +9,6 @@ import Dashboard from '../Menu/User/Dashboard.jsx'
 import Register from '../pages/Register.jsx'
 import Login from '../pages/Login.jsx'
 import CompleteProfile from '../pages/CompleteProfile.jsx'
-import DealRoom from '../Menu/Home/DealRoom.jsx'
 import CameraPage from '../components/Camera/CameraPage.jsx'
 import PreviewPage from '../components/Camera/PreviewPage.jsx'
 import AdminLogin from '../Admin/Components/Login/AdminLogin.jsx'
@@ -44,21 +43,27 @@ const Layout = () => {
         <Route path='/Register' element={<Register/>}/>
         <Route path='/Login' element={<Login/>}/>
         <Route path="/CompleteProfile" element={ <ProtectedRoute> <CompleteProfile /> </ProtectedRoute>} />
-        <Route path="/create-deal" element={ <ProtectedRoute requireVerified={true}> <DealRoom /></ProtectedRoute>}/>
-        <Route path="/camera/:type" element={ <ProtectedRoute> <CameraPage /> </ProtectedRoute> } />
+<Route
+    path="/create-deal"
+    element={
+        <ProtectedRoute>
+            <DealHub />
+        </ProtectedRoute>
+    }
+/>        <Route path="/camera/:type" element={ <ProtectedRoute> <CameraPage /> </ProtectedRoute> } />
         <Route path="/camera/:type/preview" element={ <ProtectedRoute> <PreviewPage /> </ProtectedRoute> }/>
         <Route path="/admin/login" element={<AdminLogin />}/>
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
         <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>}/>
         <Route path="/transaction/:transactionId" element={<TransactionDetails />}/>
         <Route
-          path="/deal/:roomCode"
-          element={
-            <ProtectedRoute requireVerified={true}>
-              <DealWorkspace />
-            </ProtectedRoute>
-          }
-        />
+    path="/deal/:roomCode"
+    element={
+        <ProtectedRoute>
+            <DealWorkspace />
+        </ProtectedRoute>
+    }
+/>
 
         <Route path="/deals" element={<DealHub />} />
 
@@ -70,16 +75,6 @@ const Layout = () => {
           element={<BakongTest />}
         />
 
-        {/* Future invitation page */}
-        {/* <Route path="/invitations" element={<InvitationPage />} /> */}
-
-        {/* Old testing route (kept for reference) */}
-        {/*
-        <Route
-          path="/transaction/:transactionId"
-          element={<h1 style={{ padding: 40 }}>Transaction Route Works!</h1>}
-        />
-        */}
         <Route path="*" element={<Home />} />
       </Routes>
       {!hideLayout && <Footer/>}

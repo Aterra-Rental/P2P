@@ -1,12 +1,13 @@
 import { useState, useEffect } from "react";
 import { checkUser, createRoom } from "../../lib/room";
 import "./CreateDealForm.css";
+import { useAuth } from "../../../../components/AuthContext";
 const CreateDealForm = ({ onCreated }) => {
     const [partnerUserId, setPartnerUserId] = useState("");
     const [itemName, setItemName] = useState("");
     const [itemDescription, setItemDescription] = useState("");
     const [amount, setAmount] = useState("");
-
+    const { user } = useAuth();
     const [partner, setPartner] = useState(null);
 
     const [loading, setLoading] = useState(false);
@@ -43,6 +44,8 @@ const CreateDealForm = ({ onCreated }) => {
             setCheckingUser(false);
         }
     };
+    const isFormValid = partnerUserId.trim() !== "" && itemName.trim() !== "" && Number(amount) > 0 && partner?.verify_status === "Verified" && !checkingUser;
+
 
     const handleCreate = async (e) => {
         e.preventDefault();
@@ -59,9 +62,16 @@ const CreateDealForm = ({ onCreated }) => {
             return;
         }
 
-        const currentUserId = localStorage.getItem("user_id");
+        const currentUserId = user?.user_id || localStorage.getItem("user_id");
+        if (!currentUserId) {
+        setError("Your login session is missing. Please log in again.");
+        return;}
+        if (user.verify_status !== "Verified") {
+            setError("Please complete verification before creating a deal.");
+            return;
+        }
 
-        if (partnerUserId === currentUserId) {
+        if (String(partnerUserId) === String(currentUserId)) {
             setError("You cannot create a deal with yourself.");
             return;
         }
@@ -85,7 +95,13 @@ const CreateDealForm = ({ onCreated }) => {
                 return;
             }
 
-
+            console.log("CREATE ROOM PAYLOAD:", {
+    created_by: currentUserId,
+    invited_user_id: partnerUserId,
+    item_name: itemName,
+    item_description: itemDescription,
+    agreed_price: amount,
+});
             const response = await createRoom({
                 created_by: currentUserId,
                 invited_user_id: partnerUserId,
@@ -237,18 +253,13 @@ const CreateDealForm = ({ onCreated }) => {
                     </div>
                 )}
 
-                <button
-                    type="submit"
-                    className="deal-btn"
-                    disabled={loading}
-                >
+                <button type="submit" className={`deal-btn ${isFormValid ? "deal-btn-ready" : "deal-btn-disabled"}`} disabled={!isFormValid || loading} >
                     {loading
                         ? "Creating..."
                         : "Create Deal"}
                 </button>
 
             </form>
-
         </div>
     );
 };

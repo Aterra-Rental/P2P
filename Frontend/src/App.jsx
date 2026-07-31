@@ -1,11 +1,12 @@
 import React from 'react'
 import MenuRouth from './Router/MenuRouth'
+import { AuthProvider } from './components/AuthContext'
 
 const App = () => {
   return (
-    <div>
-      <MenuRouth/>
-    </div>
+    <AuthProvider>
+      <MenuRouth />
+    </AuthProvider>
   )
 }
 
