@@ -62,10 +62,10 @@ const Login = () => {
             })
         );
         await refreshUser();
-        alert("Login Successful!");
 
-        navigate("/Home");
-
+        navigate("/Home", {
+          replace: true,
+        });
     } catch (err) {
         console.error(err);
         setError("Unable to connect to the server.");

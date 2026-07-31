@@ -1,5 +1,11 @@
 from flask_socketio import SocketIO, join_room
-from flask_socketio import join_room
+
+socketio = SocketIO(
+    cors_allowed_origins="*",
+    async_mode="threading",
+    ping_timeout=30,
+    ping_interval=25,
+)
 socketio = SocketIO(cors_allowed_origins="*")
 
 

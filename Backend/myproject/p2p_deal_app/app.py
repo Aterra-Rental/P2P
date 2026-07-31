@@ -43,11 +43,13 @@ app.register_blueprint(room_bp, url_prefix="/api")
 app.register_blueprint(faq_bp)
 app.register_blueprint(deal_bp, url_prefix="/api")
 
-
+print("Socket.IO async mode:", socketio.async_mode)
 if __name__ == "__main__":
     socketio.run(
         app,
         host="0.0.0.0",
         port=8000,
-        debug=True
+        debug=False,
+        use_reloader=False,
+        allow_unsafe_werkzeug=True,
     )

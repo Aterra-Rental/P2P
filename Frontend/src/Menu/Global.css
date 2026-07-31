@@ -227,3 +227,135 @@ outline:none;
 border-color:var(--primary);
 box-shadow:0 0 15px rgba(177,77,255,.25);
 }
+/* ==========================================
+   GLOBAL TOP NOTIFICATION
+========================================== */
+
+.global-top-notification{
+
+    position:fixed;
+
+    top:25px;
+
+    left:50%;
+
+    transform:translateX(-50%);
+
+    display:flex;
+
+    align-items:center;
+
+    gap:14px;
+
+    min-width:380px;
+
+    max-width:550px;
+
+    padding:18px 22px;
+
+    border-radius:16px;
+
+    backdrop-filter:blur(20px);
+
+    background:rgba(18,10,30,.96);
+
+    color:white;
+
+    z-index:9999;
+
+    animation:slideDown .35s ease;
+
+    box-shadow:
+    0 18px 45px rgba(0,0,0,.35);
+
+    border:1px solid rgba(255,255,255,.08);
+
+}
+
+.global-top-notification-icon{
+
+    width:34px;
+
+    height:34px;
+
+    border-radius:50%;
+
+    display:flex;
+
+    align-items:center;
+
+    justify-content:center;
+
+    font-weight:bold;
+
+    color:white;
+
+}
+
+.notification-success .global-top-notification-icon{
+
+    background:#22c55e;
+
+}
+
+.notification-warning .global-top-notification-icon{
+
+    background:#f59e0b;
+
+}
+
+.notification-error .global-top-notification-icon{
+
+    background:#ef4444;
+
+}
+
+.notification-info .global-top-notification-icon{
+
+    background:#3b82f6;
+
+}
+
+.global-top-notification span{
+
+    flex:1;
+
+    font-size:15px;
+
+}
+
+.global-top-notification-close{
+
+    background:none;
+
+    border:none;
+
+    color:white;
+
+    font-size:22px;
+
+    cursor:pointer;
+
+}
+
+@keyframes slideDown{
+
+    from{
+
+        opacity:0;
+
+        transform:
+        translate(-50%,-45px);
+
+    }
+
+    to{
+
+        opacity:1;
+
+        transform:
+        translate(-50%,0);
+
+    }
+
+}

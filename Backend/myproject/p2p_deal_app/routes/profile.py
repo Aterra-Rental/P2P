@@ -300,8 +300,6 @@ def create_profile():
 
         conn.commit()
 
-        conn.commit()
-
     # Notify all connected admin dashboards
         socketio.emit(
             "verification_updated",

@@ -1,5 +1,11 @@
 
-import { BrowserRouter as Router, Route, Routes, useLocation } from 'react-router-dom'
+import { useEffect, useState } from "react";
+import {
+  BrowserRouter as Router,
+  Route,
+  Routes,
+  useLocation,
+} from "react-router-dom";
 import Home from '../Menu/Home/Home.jsx'
 import Feature from '../Menu/Feature/Feature.jsx'
 import Navbar from './Navbar.jsx'
@@ -20,21 +26,113 @@ import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.j
 import DealHub from "../Menu/Home/pages/Dealhub.jsx";
 import DealWorkspace from "../Menu/Home/pages/DealWorkspace";
 import Settings from "../pages/Setting/Settings.jsx";
-// import InvitationPage from "../Menu/Home/pages/InvitationPage.jsx";
+import VerifiedRoute from "../components/VerifiedRoute.jsx" 
 
-// Temporary import
-import BakongTest from "../testComponents/BakongTest.jsx";
+
+
+
+
+
+
+
+export const showTopNotification = (
+  message,
+  type = "info",
+  duration = 4000
+) => {
+  window.dispatchEvent(
+    new CustomEvent("show-top-notification", {
+      detail: {
+        message,
+        type,
+        duration,
+      },
+    })
+  );
+};
 const Layout = () => {
-  const location = useLocation()
+  const location = useLocation();
+
+  const [notification, setNotification] = useState({
+    visible: false,
+    message: "",
+    type: "info",
+  });
+
+  useEffect(() => {
+    const handleNotification = (event) => {
+      const {
+        message = "Something happened.",
+        type = "info",
+        duration = 4000,
+      } = event.detail || {};
+
+      setNotification({
+        visible: true,
+        message,
+        type,
+      });
+
+      const timer = window.setTimeout(() => {
+        setNotification((current) => ({
+          ...current,
+          visible: false,
+        }));
+      }, duration);
+
+      return () => window.clearTimeout(timer);
+    };
+
+    window.addEventListener("show-top-notification", handleNotification);
+
+    return () => {
+      window.removeEventListener(
+        "show-top-notification",
+        handleNotification
+      );
+    };
+  }, []);
+
   const hideLayout =
   ['/Register', '/Login', '/admin/login'].includes(location.pathname) ||
   location.pathname.startsWith('/camera') ||
   location.pathname.startsWith('/admin');
 
-  return (
-    <>
-      {!hideLayout && <Navbar/>}
-      <Routes>
+ return (
+  <>
+    {!hideLayout && <Navbar />}
+
+    {notification.visible && (
+      <div
+        className={`global-top-notification notification-${notification.type}`}
+        role="status"
+      >
+        <span className="global-top-notification-icon">
+          {notification.type === "success" && "✓"}
+          {notification.type === "warning" && "!"}
+          {notification.type === "error" && "×"}
+          {notification.type === "info" && "i"}
+        </span>
+
+        <span>{notification.message}</span>
+
+        <button
+          type="button"
+          className="global-top-notification-close"
+          onClick={() =>
+            setNotification((current) => ({
+              ...current,
+              visible: false,
+            }))
+          }
+          aria-label="Close notification"
+        >
+          ×
+        </button>
+      </div>
+    )}
+
+    <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/Home' element={<Home/>}/>
         <Route path='/Feature' element={<Feature/>}/>
@@ -43,37 +141,24 @@ const Layout = () => {
         <Route path='/Register' element={<Register/>}/>
         <Route path='/Login' element={<Login/>}/>
         <Route path="/CompleteProfile" element={ <ProtectedRoute> <CompleteProfile /> </ProtectedRoute>} />
-<Route
-    path="/create-deal"
-    element={
-        <ProtectedRoute>
-            <DealHub />
-        </ProtectedRoute>
-    }
-/>        <Route path="/camera/:type" element={ <ProtectedRoute> <CameraPage /> </ProtectedRoute> } />
+        <Route path="/create-deal"element={<VerifiedRoute><DealHub /></VerifiedRoute> } />      
+        <Route path="/camera/:type" element={ <ProtectedRoute> <CameraPage /> </ProtectedRoute> } />
         <Route path="/camera/:type/preview" element={ <ProtectedRoute> <PreviewPage /> </ProtectedRoute> }/>
         <Route path="/admin/login" element={<AdminLogin />}/>
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
-        <Route path="/transactions" element={<ProtectedRoute><TransactionHistory /></ProtectedRoute>}/>
-        <Route path="/transaction/:transactionId" element={<TransactionDetails />}/>
-        <Route
-    path="/deal/:roomCode"
-    element={
-        <ProtectedRoute>
-            <DealWorkspace />
-        </ProtectedRoute>
-    }
-/>
+        <Route path="/transactions" element={ <VerifiedRoute> <TransactionHistory /> </VerifiedRoute> }/>
+        <Route path="/transaction/:transactionId" element={<VerifiedRoute> <TransactionDetails /> </VerifiedRoute> }/>
+        <Route path="/deal/:roomCode" element={ <VerifiedRoute> <DealWorkspace /> </VerifiedRoute> }/>
 
-        <Route path="/deals" element={<DealHub />} />
+        <Route path="/deals" element={ <VerifiedRoute> <DealHub />  </VerifiedRoute> } />
 
-        <Route path="/settings" element={<Settings />} />
+        <Route path="/settings" element={ <ProtectedRoute> <Settings /> </ProtectedRoute> } />
 
         {/* Temporary Bakong testing page */}
-        <Route
+       {/* <Route
           path="/bakong-test"
           element={<BakongTest />}
-        />
+        /> */}
 
         <Route path="*" element={<Home />} />
       </Routes>

@@ -5,11 +5,15 @@ import "./CompleteProfile.css";
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import CameraModal from "../components/Camera/CameraModal";
-
+import { useAuth } from "../components/AuthContext";
+import { showTopNotification } from "../lib/notification";
 
 
 const CompleteProfile = () => {
+
   const navigate = useNavigate();
+
+  const { refreshUser } = useAuth();
   const [username, setUsername] = useState("");
 
   const [firstname, setFirstname] = useState("");
@@ -103,8 +107,18 @@ const CompleteProfile = () => {
       const data = await response.json();
 
       if (response.ok) {
-        alert("Profile completed successfully!");
-        navigate("/Dashboard");
+
+          await refreshUser();
+
+          showTopNotification(
+              "Profile submitted successfully. Please wait while an administrator reviews your account.",
+              "success"
+          );
+
+          navigate("/Dashboard", {
+              replace: true,
+          });
+
       } else {
         alert(data.message || "Failed to create profile.");
       }

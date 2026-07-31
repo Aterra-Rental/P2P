@@ -1,18 +1,30 @@
+import { useEffect } from "react";
 import { Navigate } from "react-router-dom";
+
 import { useAuth } from "./AuthContext";
+import { showTopNotification } from "../lib/notification";
 
 const ProtectedRoute = ({ children }) => {
-    const { user, loading } = useAuth();
+  const { user, loading } = useAuth();
 
-    if (loading) {
-        return <div>Loading...</div>;
+  useEffect(() => {
+    if (!loading && !user) {
+      showTopNotification(
+        "Please sign in to continue.",
+        "warning"
+      );
     }
+  }, [loading, user]);
 
-    if (!user) {
-        return <Navigate to="/Login" replace />;
-    }
+  if (loading) {
+    return <div>Loading...</div>;
+  }
 
-    return children;
+  if (!user) {
+    return <Navigate to="/Login" replace />;
+  }
+
+  return children;
 };
 
 export default ProtectedRoute;

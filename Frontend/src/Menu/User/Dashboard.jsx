@@ -1,75 +1,39 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import "./Dashboard.css";
 import "../Global.css";
 import defaultAvatar from "../../assets/default-avatar.png";
-import { getUserProfile } from "../../lib/profile";
-import { socket } from "../../lib/socket";
+import { showTopNotification } from "../../lib/notification";
 import { useAuth } from "../../components/AuthContext"
 const Dashboard = () => {
   const navigate = useNavigate();
-  const { user, loading, refreshUser } = useAuth();
+  const { user, loading, logout, refreshUser } = useAuth();
   const [showUploadOptions, setShowUploadOptions] = useState(false);
-  useEffect(() => {
-    const userId = localStorage.getItem("user_id");
-
-    if (!userId) {
-      navigate("/Login");
-      return;
-    }
-    socket.emit("join_user", {
-    user_id: userId,
-  });
-
-    
-
-    
-    const handleVerificationUpdate = async () => {
-    try {
-        await refreshUser();
-    } catch (err) {
-        console.error(err);
-    }
-      };
-
-      socket.on("verification_updated", handleVerificationUpdate);
-
-      return () => {
-          socket.off("verification_updated", handleVerificationUpdate);
-      };
-  }, [navigate]);
 
   const handleLogout = () => {
-    localStorage.clear();
-    navigate("/Login");
-  };
-  const handleRestrictedAction = (path) => {
-    if (user.verify_status === "Pending") {
-        alert(
-            "Your account verification is still pending.\n\nPlease wait for an administrator to review and approve your account before trading."
-        );
-        return;
-    }
+  logout();
 
-    if (user.verify_status === "Rejected") {
-        alert(
-            "Your verification was rejected.\n\nPlease update your profile and submit it again."
-        );
-        return;
-    }
-
-    navigate(path);
+  navigate("/Login", {
+    replace: true,
+  });
 };
+  
   const handleCapturedImage = async (event) => {
     const file = event.target.files[0];
     if (!file) {
-      alert("No image selected.");
+      showTopNotification(
+  "No image was selected.",
+  "warning"
+);
       return;
     }
     const userId = localStorage.getItem("user_id");
     console.log("User ID:", userId);
     if (!userId) {
-      alert("User not logged in.");
+      showTopNotification(
+  "Please sign in before updating the profile picture.",
+  "warning"
+);
       return;
     }
 
@@ -88,16 +52,25 @@ const Dashboard = () => {
       const result = await response.json();
 
       if (!response.ok) {
-        alert(result.message || "Upload failed.");
+        showTopNotification(
+  result.message || "The profile picture could not be uploaded.",
+  "error"
+);
         return;
       }
 
-       await getUserProfile();
+       await refreshUser();
 
-      alert("Profile picture updated successfully!");
+      showTopNotification(
+  "Profile picture updated successfully.",
+  "success"
+);
     } catch (err) {
       console.error(err);
-      alert("Upload failed.");
+      showTopNotification(
+  "The profile picture could not be uploaded.",
+  "error"
+);
     }
   };
   if (loading) {
@@ -107,7 +80,7 @@ const Dashboard = () => {
       </div>
     );
   }
-  if (!user) {
+  if (!user?.profile_completed) {
   return (
     <div className="no-profile-container">
       <div className="no-profile-card">
@@ -281,26 +254,29 @@ const Dashboard = () => {
     type="button"
     className={`status ${(user.verify_status || "").toLowerCase()}`}
     onClick={() => {
+  if (user.verify_status === "Pending") {
+    showTopNotification(
+      "The account is currently being reviewed. Please wait for administrator approval.",
+      "warning",
+      5000
+    );
+  }
 
-        if (user.verify_status === "Pending") {
-            alert(
-                "Your verification request has been submitted successfully.\n\nPlease wait for an administrator to review your account."
-            );
-        }
+  if (user.verify_status === "Rejected") {
+    showTopNotification(
+      "The profile was rejected. Please correct the submitted information and resubmit it.",
+      "error",
+      5000
+    );
+  }
 
-        if (user.verify_status === "Rejected") {
-            alert(
-                "Your verification was rejected.\n\nPlease update your profile and submit it again."
-            );
-        }
-
-        if (user.verify_status === "Verified") {
-            alert(
-                "Your account is verified and ready to trade."
-            );
-        }
-
-    }}
+  if (user.verify_status === "Verified") {
+    showTopNotification(
+      "The account is verified and ready to trade.",
+      "success"
+    );
+  }
+}}
 >
     {user.verify_status}
 </button>
@@ -315,79 +291,7 @@ const Dashboard = () => {
 
       </div>
 
-      <div className="dashboard-card">
-
-        <h2>Quick Actions</h2>
-
-        <button
-            className="action-btn primary"
-            onClick={() => handleRestrictedAction("/create-deal")}
-        >
-            + Create Room
-        </button>
-
-        <div className="action-grid">
-
-            <button
-                className="action-btn"
-                onClick={() => handleRestrictedAction("/transactions")}
-            >
-                📜 Transaction History
-            </button>
-
-            <button
-                className="action-btn"
-                onClick={() => alert("Notifications page is coming soon.")}
-            >
-                🔔 Notifications
-            </button>
-
-            <button
-                className="action-btn"
-                onClick={() => alert("Wallet page is coming soon.")}
-            >
-                💳 Wallet
-            </button>
-
-        </div>
-
-        <div className="verification-message">
-
-            {user.verify_status === "Pending" && (
-                <p className="pending-text">
-                    🟡 Your profile has been submitted successfully.
-                    <br />
-                    Please wait for an administrator to review and approve your account.
-                </p>
-            )}
-
-            {user.verify_status === "Rejected" && (
-                <>
-                    <p className="rejected-text">
-                        🔴 Your verification was rejected.
-                        <br />
-                        Please update your profile and submit it again.
-                    </p>
-
-                    <button
-                        className="action-btn warning"
-                        onClick={() => navigate("/CompleteProfile")}
-                    >
-                        Update Profile
-                    </button>
-                </>
-            )}
-
-            {user.verify_status === "Verified" && (
-                <p className="verified-text">
-                    🟢 Your account has been verified.
-                    All trading features are available.
-                </p>
-            )}
-
-        </div>
-
-      </div>
+      
 
 
           
