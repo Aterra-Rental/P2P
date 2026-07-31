@@ -1,114 +1,78 @@
-import { useCallback, useEffect, useState } from "react";
+import { useEffect } from "react";
 
-import {
-    FaUsers,
-    FaUserCheck,
-    FaMoneyCheckAlt,
-    FaCheckCircle
-} from "react-icons/fa";
+import Sidebar from "../Sidebar/Sidebar";
+import AdminNavbar from "../Navbar/AdminNavbar";
+import { socket } from "../../../lib/socket";
 
-import VerificationTable from "./Components/VerificationTable/VerificationTable";
-import AdminLayout from "../Components/Layout/AdminLayout";
-import StatCard from "./Components/StatCard/StatCard";
-import SubmittedQuestions from "./Components/SubmittedQuestions/SubmittedQuestions";
+import "./AdminLayout.css";
 
-import API_URL from "../../lib/api";
-
-import "./Dashboard.css";
-
-const Dashboard = () => {
-    const [pendingCount, setPendingCount] = useState(0);
-
-    const fetchPendingCount = useCallback(async () => {
-        try {
-            const response = await fetch(
-                `${API_URL}/api/admin/verifications`
-            );
-
-            const data = await response.json();
-
-            if (!response.ok) {
-                throw new Error(
-                    data.message ||
-                    "Failed to load pending verifications."
-                );
-            }
-
-            setPendingCount(
-                Array.isArray(data) ? data.length : 0
-            );
-
-        } catch (error) {
-            console.error(
-                "Failed to fetch pending verification count:",
-                error
-            );
-        }
-    }, []);
+const AdminLayout = ({ children }) => {
 
     useEffect(() => {
-        const handleVerificationUpdate = () => {
-            fetchPendingCount();
+
+        const joinAdminRoom = () => {
+            socket.emit("join_admin");
+
+            console.log(
+                "Admin joined the global admin Socket.IO room"
+            );
         };
 
-        // Load count when dashboard opens
-        fetchPendingCount();
+        const handleVerificationUpdated = (data) => {
+            console.log(
+                "Global admin verification update:",
+                data
+            );
 
-        // Receive global event from AdminLayout
-        window.addEventListener(
-            "admin-verification-updated",
-            handleVerificationUpdate
+            window.dispatchEvent(
+                new CustomEvent(
+                    "admin-verification-updated",
+                    {
+                        detail: data
+                    }
+                )
+            );
+        };
+
+        if (socket.connected) {
+            joinAdminRoom();
+        }
+
+        socket.on("connect", joinAdminRoom);
+
+        socket.on(
+            "verification_updated",
+            handleVerificationUpdated
         );
 
         return () => {
-            window.removeEventListener(
-                "admin-verification-updated",
-                handleVerificationUpdate
+            socket.off("connect", joinAdminRoom);
+
+            socket.off(
+                "verification_updated",
+                handleVerificationUpdated
             );
         };
-    }, [fetchPendingCount]);
+
+    }, []);
 
     return (
-        <AdminLayout>
+        <div className="admin-layout">
 
-            <div className="stats-grid">
+            <Sidebar />
 
-                <StatCard
-                    title="Total Users"
-                    value="245"
-                    icon={<FaUsers />}
-                    color="linear-gradient(135deg,#7C3AED,#A855F7)"
-                />
+            <div className="admin-content">
 
-                <StatCard
-                    title="Pending Verification"
-                    value={pendingCount}
-                    icon={<FaUserCheck />}
-                    color="linear-gradient(135deg,#F59E0B,#FBBF24)"
-                />
+                <AdminNavbar />
 
-                <StatCard
-                    title="Transactions"
-                    value="524"
-                    icon={<FaMoneyCheckAlt />}
-                    color="linear-gradient(135deg,#3B82F6,#60A5FA)"
-                />
-
-                <StatCard
-                    title="Completed Deals"
-                    value="492"
-                    icon={<FaCheckCircle />}
-                    color="linear-gradient(135deg,#10B981,#34D399)"
-                />
+                <main className="admin-page">
+                    {children}
+                </main>
 
             </div>
 
-            <VerificationTable />
-
-            <SubmittedQuestions />
-
-        </AdminLayout>
+        </div>
     );
 };
 
-export default Dashboard;
+export default AdminLayout;

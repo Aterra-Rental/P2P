@@ -7,42 +7,36 @@ import {
     FaCheckCircle
 } from "react-icons/fa";
 
-import { socket } from "../../lib/socket";
-
 import VerificationTable from "./Components/VerificationTable/VerificationTable";
 import AdminLayout from "../Components/Layout/AdminLayout";
 import StatCard from "./Components/StatCard/StatCard";
 import SubmittedQuestions from "./Components/SubmittedQuestions/SubmittedQuestions";
 
+import API_URL from "../../lib/api";
+
 import "./Dashboard.css";
 
 const Dashboard = () => {
-    const [verificationRefreshKey, setVerificationRefreshKey] = useState(0);
     const [pendingCount, setPendingCount] = useState(0);
-
-    const refreshVerificationTable = useCallback(() => {
-        setVerificationRefreshKey((previousKey) => previousKey + 1);
-    }, []);
 
     const fetchPendingCount = useCallback(async () => {
         try {
             const response = await fetch(
-                "http://127.0.0.1:8000/api/admin/verifications"
+                `${API_URL}/api/admin/verifications`
             );
 
             const data = await response.json();
 
             if (!response.ok) {
                 throw new Error(
-                    data.message || "Failed to load pending verifications."
+                    data.message ||
+                    "Failed to load pending verifications."
                 );
             }
 
-            /*
-             * Your backend returns the array directly:
-             * return jsonify(users), 200
-             */
-            setPendingCount(Array.isArray(data) ? data.length : 0);
+            setPendingCount(
+                Array.isArray(data) ? data.length : 0
+            );
 
         } catch (error) {
             console.error(
@@ -52,57 +46,27 @@ const Dashboard = () => {
         }
     }, []);
 
-    const refreshAdminDashboard = useCallback(() => {
-        refreshVerificationTable();
-        fetchPendingCount();
-    }, [refreshVerificationTable, fetchPendingCount]);
-
     useEffect(() => {
-        const joinAdminRoom = () => {
-            socket.emit("join_admin");
-            console.log("Admin joined Socket.IO room");
+        const handleVerificationUpdate = () => {
+            fetchPendingCount();
         };
 
-        const handleVerificationUpdated = (data) => {
-            console.log("Verification updated:", data);
+        // Load count when dashboard opens
+        fetchPendingCount();
 
-            refreshAdminDashboard();
-        };
-
-        /*
-         * Join immediately if the socket is already connected.
-         */
-        if (socket.connected) {
-            joinAdminRoom();
-        }
-
-        /*
-         * Join again after every reconnect.
-         */
-        socket.on("connect", joinAdminRoom);
-
-        /*
-         * Refresh when:
-         * - a user submits KYC
-         * - an admin approves a user
-         * - an admin rejects a user
-         */
-        socket.on(
-            "verification_updated",
-            handleVerificationUpdated
+        // Receive global event from AdminLayout
+        window.addEventListener(
+            "admin-verification-updated",
+            handleVerificationUpdate
         );
 
-        fetchPendingCount();
-
         return () => {
-            socket.off("connect", joinAdminRoom);
-
-            socket.off(
-                "verification_updated",
-                handleVerificationUpdated
+            window.removeEventListener(
+                "admin-verification-updated",
+                handleVerificationUpdate
             );
         };
-    }, [fetchPendingCount, refreshAdminDashboard]);
+    }, [fetchPendingCount]);
 
     return (
         <AdminLayout>
@@ -139,9 +103,7 @@ const Dashboard = () => {
 
             </div>
 
-            <VerificationTable
-                key={verificationRefreshKey}
-            />
+            <VerificationTable />
 
             <SubmittedQuestions />
 
