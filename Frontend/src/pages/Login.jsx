@@ -1,9 +1,9 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../components/AuthContext";
 import { Flame } from "lucide-react";
 import "./Auth.css";
-
+import { API_URL } from "../lib/api";
 const Login = () => {
 
   const navigate = useNavigate();
@@ -35,7 +35,7 @@ const Login = () => {
     setError("");
 
     try {
-        const response = await fetch("http://127.0.0.1:8000/api/login", {
+        const response = await fetch(`${API_URL}/login`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
@@ -49,11 +49,17 @@ const Login = () => {
             setError(data.message || "Login failed.");
             return;
         }
+        if (!data.token) {
+            setError(
+                "The server did not return an authentication token."
+            );
+            return;
+        }
 
         // Store login information
         localStorage.setItem("user_id", data.user_id);
         localStorage.setItem("email", data.email);
-
+        localStorage.setItem("token", data.token);
         localStorage.setItem(
             "user",
             JSON.stringify({

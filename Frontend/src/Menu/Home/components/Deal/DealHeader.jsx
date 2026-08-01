@@ -2,6 +2,7 @@ import "./DealHeader.css";
 
 const DealHeader = ({
   room,
+  currentUserId,
   bothUsersPresent,
   onLeave,
   onRemind,
@@ -14,18 +15,42 @@ const DealHeader = ({
   const cooldownSeconds = remindCooldown % 60;
   const reminderDisabled = remindLoading || remindCooldown > 0;
 
-  const participantCards = [
-    { label: "Creator", value: `User #${room.created_by}` },
-    { label: "Invited User", value: `User #${room.invited_user_id}` },
-    {
-      label: "Buyer",
-      value: room.buyer_id ? `User #${room.buyer_id}` : "Waiting...",
-    },
-    {
-      label: "Seller",
-      value: room.seller_id ? `User #${room.seller_id}` : "Waiting...",
-    },
-  ];
+  const describeParticipant = (userId) => {
+    const relationship =
+      Number(userId) === Number(currentUserId) ? "You" : "Partner";
+
+    return `User #${userId} (${relationship})`;
+  };
+
+  const rolesAssigned = Boolean(room.buyer_id && room.seller_id);
+
+  const participantCards = rolesAssigned
+    ? [
+        {
+          label: "Buyer",
+          value: describeParticipant(room.buyer_id),
+        },
+        {
+          label: "Seller",
+          value: describeParticipant(room.seller_id),
+        },
+      ]
+    : [
+        {
+          label: "Creator",
+          value: describeParticipant(room.created_by),
+        },
+        {
+          label: "Invited User",
+          value: describeParticipant(room.invited_user_id),
+        },
+      ];
+
+  const formattedCreatedDate = new Intl.DateTimeFormat("en-GB", {
+    day: "2-digit",
+    month: "2-digit",
+    year: "numeric",
+  }).format(new Date(room.created_at));
 
   return (
     <div className="deal-header">
@@ -37,11 +62,7 @@ const DealHeader = ({
         </div>
 
         <div className="deal-header-actions">
-          <button
-            type="button"
-            className="leave-room-btn"
-            onClick={onLeave}
-          >
+          <button type="button" className="leave-room-btn" onClick={onLeave}>
             ← Back to Deals
           </button>
 
@@ -66,9 +87,7 @@ const DealHeader = ({
                 <p className="remind-success">{remindSuccess}</p>
               )}
 
-              {remindError && (
-                <p className="remind-error">{remindError}</p>
-              )}
+              {remindError && <p className="remind-error">{remindError}</p>}
             </>
           )}
         </div>
@@ -81,36 +100,37 @@ const DealHeader = ({
         </div>
 
         <div className="deal-info-card">
-          <span>Status</span>
-          <div className={`deal-status ${room.status.toLowerCase()}`}>
-            {room.status}
-          </div>
-        </div>
-
-        <div className="deal-info-card">
           <span>Deal Amount</span>
           <h5>
-            ${Number(room.agreed_price).toLocaleString(undefined, {
+            $
+            {Number(room.agreed_price).toLocaleString(undefined, {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </h5>
         </div>
+        <div className="deal-info-card">
+          <span>Product Type</span>
+          <h5>{room.product_type === "Digital" ? "Digital" : "Physical"}</h5>
+        </div>
 
         <div className="deal-info-card">
           <span>Created</span>
-          <h5>{new Date(room.created_at).toLocaleDateString()}</h5>
+          <h5>{formattedCreatedDate}</h5>
         </div>
       </div>
 
       <div className="deal-participants-heading">
         <span>Participants</span>
-        <p>Assigned roles and room members</p>
+        <p> {rolesAssigned ? "Your assigned deal roles" : "Room members before role selection"}</p>
       </div>
 
       <div className="deal-participants-grid">
         {participantCards.map((participant) => (
-          <div className="deal-info-card deal-participant-card" key={participant.label}>
+          <div
+            className="deal-info-card deal-participant-card"
+            key={participant.label}
+          >
             <span>{participant.label}</span>
             <h5>{participant.value}</h5>
           </div>

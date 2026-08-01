@@ -1,7 +1,7 @@
 from flask import Blueprint, request, jsonify
 from database import get_db
 import bcrypt
-
+from services.auth_token import create_access_token
 auth_bp = Blueprint("auth", __name__)
 @auth_bp.route("/register", methods=["POST"])
 def register():
@@ -104,10 +104,16 @@ def login():
         ):
             return jsonify({"message": "Invalid email or password"}), 401
 
+        access_token = create_access_token(
+            user_id=user_id,
+            email=user_email,
+        )
+
         return jsonify({
             "message": "Login successful",
             "user_id": user_id,
-            "email": user_email
+            "email": user_email,
+            "token": access_token,
         }), 200
 
     except Exception as e:

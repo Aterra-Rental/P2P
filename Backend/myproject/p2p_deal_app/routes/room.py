@@ -126,13 +126,23 @@ def check_user(user_id):
 @room_bp.route("/rooms/", methods=["POST"])
 def create_room():
 
-    data = request.json
+    data = request.get_json(silent=True) or {}
     required_fields = [
     "created_by",
     "invited_user_id",
     "item_name",
     "agreed_price",
     ]
+    product_type = str(
+    data.get("product_type", "Physical")
+    ).strip().title()
+    if product_type not in ["Physical", "Digital"]:
+        return jsonify({
+            "success": False,
+            "message": (
+                "Product type must be Physical or Digital."
+            ),
+        }), 400
     data["item_name"] = data["item_name"].strip()
 
     if not data["item_name"]:
@@ -241,27 +251,29 @@ def create_room():
         room_code = generate_room_code()
 
         cur.execute("""
-            INSERT INTO room
-            (
+                INSERT INTO room
+                (
+                    room_code,
+                    created_by,
+                    invited_user_id,
+                    item_name,
+                    item_description,
+                    agreed_price,
+                    product_type,
+                    status
+                )
+                VALUES
+                (%s, %s, %s, %s, %s, %s, %s, 'Waiting')
+                RETURNING room_id
+            """, (
                 room_code,
-                created_by,
-                invited_user_id,
-                item_name,
-                item_description,
-                agreed_price,
-                status
-            )
-            VALUES
-            (%s,%s,%s,%s,%s,%s,'Waiting')
-            RETURNING room_id
-        """,(
-            room_code,
-            data["created_by"],
-            data["invited_user_id"],
-            data["item_name"],
-            data["item_description"],
-            data["agreed_price"]
-        ))
+                data["created_by"],
+                data["invited_user_id"],
+                data["item_name"],
+                data.get("item_description", ""),
+                data["agreed_price"],
+                product_type,
+            ))
 
         room_id = cur.fetchone()[0]
 
@@ -276,6 +288,7 @@ def create_room():
             "success":True,
             "room_id":room_id,
             "room_code":room_code,
+            "product_type": product_type,
             "message":"Invitation sent successfully."
         }),201
     except Exception as e:
@@ -493,6 +506,7 @@ def get_room(room_code):
     r.item_name,
     r.item_description,
     r.agreed_price,
+    r.product_type,
     r.status,
     r.current_step,
     r.created_at,
@@ -529,7 +543,7 @@ WHERE r.room_code = %s
             }), 404
 
         columns = [desc[0] for desc in cur.description]
-
+        dict(zip(columns, room))
         return jsonify({
             "success": True,
             "room": dict(zip(columns, room))

@@ -6,6 +6,7 @@ const CreateDealForm = ({ onCreated }) => {
     const [partnerUserId, setPartnerUserId] = useState("");
     const [itemName, setItemName] = useState("");
     const [itemDescription, setItemDescription] = useState("");
+    const [productType, setProductType] = useState("Physical");
     const [amount, setAmount] = useState("");
     const { user } = useAuth();
     const [partner, setPartner] = useState(null);
@@ -107,6 +108,15 @@ const CreateDealForm = ({ onCreated }) => {
                 invited_user_id: partnerUserId,
                 item_name: itemName,
                 item_description: itemDescription,
+                product_type: productType,
+                agreed_price: amount,
+            });
+            console.log("CREATE ROOM PAYLOAD:", {
+                created_by: currentUserId,
+                invited_user_id: partnerUserId,
+                item_name: itemName,
+                item_description: itemDescription,
+                product_type: productType,
                 agreed_price: amount,
             });
 
@@ -116,6 +126,7 @@ const CreateDealForm = ({ onCreated }) => {
                 setPartnerUserId("");
                 setItemName("");
                 setItemDescription("");
+                setProductType("Physical");
                 setAmount("");
                 setPartner(null);
 
@@ -186,7 +197,32 @@ const CreateDealForm = ({ onCreated }) => {
                         placeholder="Optional"
                     />
                 </div>
+                        <div className="mb-3">
+                            <label className="deal-label">
+                                Product Type
+                            </label>
 
+                            <select
+                                className="deal-input"
+                                value={productType}
+                                onChange={(event) =>
+                                setProductType(event.target.value)
+                                }
+                            >
+                                <option value="Physical">
+                                Physical product
+                                </option>
+
+                                <option value="Digital">
+                                Digital product or service
+                                </option>
+                            </select>
+
+                            <small className="text-muted">
+                                Physical deals use shipping and tracking. Digital
+                                deals use online delivery or fulfillment evidence.
+                            </small>
+                        </div>
                 <div className="mb-3">
                     <label className="deal-label">
                         Agreed Price ($)

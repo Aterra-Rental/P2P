@@ -9,7 +9,7 @@ import ChatBox from "../components/Deal/ChatBox";
 import PaymentPanel from "../components/Deal/PaymentPanel";
 import { getDealRoles } from "../lib/deal";
 import AmountConfirmation from "../components/Deal/AmountConfirmation";
-
+import FeeConfirmation from "../components/Deal/FeeConfirmation";
 const DealWorkspace = () => {
   const { roomCode } = useParams();
   const navigate = useNavigate();
@@ -163,11 +163,30 @@ const DealWorkspace = () => {
     }
 
     if (room.current_step === "DealConfirmation") {
-      return <AmountConfirmation room={room} userId={currentUserId} />;
+      return (
+        <AmountConfirmation
+          room={room}
+          userId={currentUserId}
+        />
+      );
     }
 
-    if (room.current_step === "Payment") {
-      return <PaymentPanel room={room} />;
+    if (room.current_step === "FeeConfirmation") {
+      return (
+        <FeeConfirmation
+          room={room}
+          userId={currentUserId}
+        />
+      );
+    }
+
+if (room.current_step === "Payment") {
+      return (
+  <PaymentPanel
+    room={room}
+    userId={currentUserId}
+  />
+);
     }
 
     return (
@@ -185,6 +204,7 @@ const DealWorkspace = () => {
       <div className="deal-container">
         <DealHeader
           room={room}
+          currentUserId={currentUserId}
           bothUsersPresent={bothUsersPresent}
           onLeave={handleLeaveRoom}
           onRemind={handleRemindPartner}
