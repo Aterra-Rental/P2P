@@ -172,3 +172,24 @@
 .remind-btn:not(:disabled):hover {
     transform: translateY(-1px);
 }
+.leave-room-btn {
+  padding: 8px 16px;
+  border: 1px solid rgba(196, 181, 253, 0.4);
+  border-radius: 10px;
+  background: rgba(124, 58, 237, 0.12);
+  color: #ddd6fe;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.leave-room-btn:hover {
+  border-color: #a78bfa;
+  background: rgba(124, 58, 237, 0.25);
+  transform: translateY(-1px);
+}
+
+.deal-header-actions {
+  gap: 10px;
+}

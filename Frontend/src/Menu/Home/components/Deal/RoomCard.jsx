@@ -1,10 +1,8 @@
-import React from "react";
 import "./RoomCard.css";
 import { useState } from "react";
 import { reinviteRoom, deleteRoom } from "../../lib/room";
 
 const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
-  const partnerId = room.partner_user_id;
   const isCreator = String(room.created_by) === String(currentUserId);
 
   const [actionLoading, setActionLoading] = useState(false);
@@ -77,6 +75,10 @@ const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
     room.max_reinvites,
   );
 
+  const canReturnToRoom = [
+  "Accepted",
+  "RolesAssigned",
+].includes(room.status);
   return (
     <div className="room-card">
       <div className="room-body">
@@ -126,11 +128,15 @@ const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
             {actionSuccess && (
               <p className="room-action-success">{actionSuccess}</p>
             )}
-            {room.status === "Accepted" && (
-              <button className="open-room-btn" onClick={() => onOpen(room)}>
-                Open Deal
-              </button>
-            )}
+            {canReturnToRoom && (
+  <button
+    type="button"
+    className="open-room-btn"
+    onClick={() => onOpen(room)}
+  >
+    Return to Room
+  </button>
+)}
 
             {room.status === "Waiting" &&
               room.created_by === Number(currentUserId) && (

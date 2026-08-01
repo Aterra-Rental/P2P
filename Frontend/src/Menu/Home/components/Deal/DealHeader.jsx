@@ -1,13 +1,14 @@
-import React from "react";
 import "./DealHeader.css";
 
 const DealHeader = ({
-    room,
-    onRemind,
-    remindLoading,
-    remindSuccess,
-    remindError,
-    remindCooldown
+  room,
+  bothUsersPresent,
+  onLeave,
+  onRemind,
+  remindLoading,
+  remindSuccess,
+  remindError,
+  remindCooldown,
 }) => {
 
 
@@ -27,31 +28,44 @@ const reminderDisabled =
 
         <div className="deal-header-actions">
 
+            
             <button
-    className="remind-btn"
-    onClick={onRemind}
-    disabled={reminderDisabled}
->
-    {remindLoading
+        type="button"
+        className="leave-room-btn"
+        onClick={onLeave}
+        >
+        ← Leave Room
+        </button> 
+    {!bothUsersPresent && (
+  <>
+    <button
+      type="button"
+      className="remind-btn"
+      onClick={onRemind}
+      disabled={reminderDisabled}
+    >
+      {remindLoading
         ? "Sending..."
         : remindCooldown > 0
-            ? `Wait ${cooldownMinutes}:${String(
-                cooldownSeconds
+          ? `Wait ${cooldownMinutes}:${String(
+              cooldownSeconds,
             ).padStart(2, "0")}`
-            : "🔔 Remind Partner"}
-</button>
+          : "🔔 Remind Partner"}
+    </button>
 
-            {remindSuccess && (
-                <p className="remind-success">
-                    {remindSuccess}
-                </p>
-            )}
+    {remindSuccess && (
+      <p className="remind-success">
+        {remindSuccess}
+      </p>
+    )}
 
-            {remindError && (
-                <p className="remind-error">
-                    {remindError}
-                </p>
-            )}
+    {remindError && (
+      <p className="remind-error">
+        {remindError}
+      </p>
+    )}
+  </>
+)}
 
         </div>
 

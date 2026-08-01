@@ -701,3 +701,25 @@
         font-size: 23px;
     }
 }
+.role-modal {
+  position: relative;
+}
+
+.role-modal-leave-button {
+  display: block;
+  margin: 0 0 18px auto;
+  padding: 8px 14px;
+  border: 1px solid rgba(196, 181, 253, 0.35);
+  border-radius: 9px;
+  background: rgba(124, 58, 237, 0.12);
+  color: #ddd6fe;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: 0.2s ease;
+}
+
+.role-modal-leave-button:hover {
+  border-color: #a78bfa;
+  background: rgba(124, 58, 237, 0.25);
+}

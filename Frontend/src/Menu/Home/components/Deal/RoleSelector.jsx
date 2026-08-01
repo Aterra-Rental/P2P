@@ -6,7 +6,7 @@ import {
 } from "../../lib/deal";
 import "./RoleSelector.css";
 
-const RoleSelector = ({ room, roleState }) => {
+const RoleSelector = ({ room, roleState, onLeave }) => {
   const [loadingAction, setLoadingAction] =
     useState("");
   const [error, setError] = useState("");
@@ -86,6 +86,13 @@ const RoleSelector = ({ room, roleState }) => {
     return (
       <div className="role-modal-overlay">
         <div className="role-modal">
+          <button
+  type="button"
+  className="role-modal-leave-button"
+  onClick={onLeave}
+>
+  ← Leave Room
+</button>
           <div className="role-loading-line">
             Loading role selection...
           </div>
@@ -102,6 +109,13 @@ const RoleSelector = ({ room, roleState }) => {
         aria-modal="true"
         aria-labelledby="role-modal-title"
       >
+        <button
+  type="button"
+  className="role-modal-leave-button"
+  onClick={onLeave}
+>
+  ← Leave Room
+</button>
         {!rolesSelected ? (
           <>
             <div className="role-modal-header">

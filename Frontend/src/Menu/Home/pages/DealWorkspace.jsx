@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useNavigate, useParams } from "react-router-dom";
 import "./DealWorkspace.css";
 import { getRoom, remindPartner } from "../lib/room";
 import { socket } from "../../../lib/socket";
@@ -8,11 +8,27 @@ import ParticipantsPanel from "../components/Deal/ParticipantsPanel";
 import RoleSelector from "../components/Deal/RoleSelector";
 import ChatBox from "../components/Deal/ChatBox";
 import PaymentPanel from "../components/Deal/PaymentPanel";
+import { getDealRoles } from "../lib/deal";
+
 
 const DealWorkspace = () => {
   const { roomCode } = useParams();
+  const navigate = useNavigate();
+  const currentUserId = localStorage.getItem("user_id");
 
   const [room, setRoom] = useState(null);
+  const [roleState, setRoleState] = useState(null);
+  const [bothUsersPresent, setBothUsersPresent] =
+    useState(false);
+
+  const handleLeaveRoom = () => {
+    socket.emit("leave_deal", {
+      room_code: roomCode,
+      user_id: currentUserId,
+    });
+
+    navigate("/deals");
+  };
   const [loading, setLoading] = useState(true);
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindSuccess, setRemindSuccess] = useState("");
@@ -33,40 +49,72 @@ const DealWorkspace = () => {
 
 
     useEffect(() => {
-    const fetchRoom = async () => {
-      try {
-        const response = await getRoom(roomCode);
+  
 
-        if (response.success) {
-          setRoom(response.room);
-        }
-      } catch (err) {
-        console.error(err);
-      } finally {
-        setLoading(false);
+  const fetchWorkspaceData = async () => {
+    try {
+      const [roomResponse, roleResponse] = await Promise.all([
+        getRoom(roomCode),
+        getDealRoles(roomCode, currentUserId),
+      ]);
+
+      if (roomResponse.success) {
+        setRoom(roomResponse.room);
       }
-    };
 
-    fetchRoom();
-
-    socket.emit("join_deal", {
-      room_code: roomCode,
-    });
-
-    const handleRoomUpdated = (data) => {
-      if (data.room_code === roomCode) {
-        fetchRoom();
+      if (roleResponse.success) {
+        setRoleState(roleResponse);
       }
-    };
+    } catch (error) {
+      console.error("Failed to load deal workspace:", error);
+    } finally {
+      setLoading(false);
+    }
+  };
 
-    socket.on("room_updated", handleRoomUpdated);
-    socket.on("roles_selected", handleRoomUpdated);
+  const joinDealRoom = () => {
+  socket.emit("join_deal", {
+    room_code: roomCode,
+    user_id: currentUserId,
+  });
+};
 
-    return () => {
-      socket.off("room_updated", handleRoomUpdated);
-      socket.off("roles_selected", handleRoomUpdated);
-    };
-  }, [roomCode]);
+  const handleDealUpdated = (data) => {
+    if (data.room_code === roomCode) {
+      fetchWorkspaceData();
+    }
+  };
+  const handlePresenceUpdated = (data) => {
+  if (data.room_code === roomCode) {
+    setBothUsersPresent(Boolean(data.both_present));
+  }
+};
+
+  fetchWorkspaceData();
+
+  if (socket.connected) {
+    joinDealRoom();
+  }
+
+  socket.on("connect", joinDealRoom);
+  socket.on("room_updated", handleDealUpdated);
+  socket.on("roles_selected", handleDealUpdated);
+  socket.on("role_confirmation_updated", handleDealUpdated);
+  socket.on("role_selection_reset", handleDealUpdated);
+  socket.on("roles_confirmed", handleDealUpdated);
+  socket.on("deal_presence_updated", handlePresenceUpdated, );
+
+  return () => {
+    socket.off("connect", joinDealRoom);
+    socket.off("room_updated", handleDealUpdated);
+    socket.off("roles_selected", handleDealUpdated);
+    socket.off("role_confirmation_updated", handleDealUpdated);
+    socket.off("role_selection_reset", handleDealUpdated);
+    socket.off("roles_confirmed", handleDealUpdated);
+    socket.emit("leave_deal", { room_code: roomCode, user_id: currentUserId, });
+    socket.off( "deal_presence_updated", handlePresenceUpdated,);
+  };
+}, [roomCode, currentUserId]);
 
   if (loading) {
     return <div>Loading deal...</div>;
@@ -106,14 +154,7 @@ const DealWorkspace = () => {
   return (
     <div className="deal-workspace">
       <div className="deal-container">
-<DealHeader
-    room={room}
-    onRemind={handleRemindPartner}
-    remindLoading={remindLoading}
-    remindSuccess={remindSuccess}
-    remindError={remindError}
-    remindCooldown={remindCooldown}
-/>
+    <DealHeader room={room} bothUsersPresent={bothUsersPresent} onLeave={handleLeaveRoom} onRemind={handleRemindPartner} remindLoading={remindLoading} remindSuccess={remindSuccess} remindError={remindError} remindCooldown={remindCooldown} />
         {/* <ParticipantsPanel room={room} /> */}
 
         <ParticipantsPanel room={room} />
@@ -121,7 +162,11 @@ const DealWorkspace = () => {
 {room.status === "Accepted" &&
   (!room.current_step ||
     room.current_step === "RoleSelection") && (
-    <RoleSelector room={room} />
+    <RoleSelector
+  room={room}
+  roleState={roleState}
+  onLeave={handleLeaveRoom}
+/>
 )}
 
 {room.current_step === "DealConfirmation" && (
