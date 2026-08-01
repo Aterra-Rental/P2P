@@ -4,7 +4,6 @@ import "./DealWorkspace.css";
 import { getRoom, remindPartner } from "../lib/room";
 import { socket } from "../../../lib/socket";
 import DealHeader from "../components/Deal/DealHeader";
-import ParticipantsPanel from "../components/Deal/ParticipantsPanel";
 import RoleSelector from "../components/Deal/RoleSelector";
 import ChatBox from "../components/Deal/ChatBox";
 import PaymentPanel from "../components/Deal/PaymentPanel";
@@ -147,46 +146,82 @@ const DealWorkspace = () => {
       }, 4000);
     }
   };
+
   if (!room) {
     return <div>Room not found.</div>;
   }
 
+  const renderCurrentDealStage = () => {
+    if (
+      room.status === "Accepted" &&
+      (!room.current_step || room.current_step === "RoleSelection")
+    ) {
+      return (
+        <RoleSelector
+          room={room}
+          roleState={roleState}
+          onLeave={handleLeaveRoom}
+        />
+      );
+    }
+
+    if (room.current_step === "DealConfirmation") {
+      return (
+        <div className="deal-stage-placeholder">
+          <span className="deal-stage-label">Current step</span>
+          <h2>Confirm Deal Amount</h2>
+          <p>
+            Roles are assigned. Amount negotiation is the next stage.
+          </p>
+        </div>
+      );
+    }
+
+    if (room.current_step === "Payment") {
+      return <PaymentPanel room={room} />;
+    }
+
+    return (
+      <div className="deal-stage-placeholder">
+        <span className="deal-stage-label">Current step</span>
+        <h2>Deal Status</h2>
+        <p>{room.current_step || room.status}</p>
+      </div>
+    );
+  };
+
   return (
     <div className="deal-workspace">
       <div className="deal-container">
-    <DealHeader room={room} bothUsersPresent={bothUsersPresent} onLeave={handleLeaveRoom} onRemind={handleRemindPartner} remindLoading={remindLoading} remindSuccess={remindSuccess} remindError={remindError} remindCooldown={remindCooldown} />
-        {/* <ParticipantsPanel room={room} /> */}
+        <DealHeader
+          room={room}
+          bothUsersPresent={bothUsersPresent}
+          onLeave={handleLeaveRoom}
+          onRemind={handleRemindPartner}
+          remindLoading={remindLoading}
+          remindSuccess={remindSuccess}
+          remindError={remindError}
+          remindCooldown={remindCooldown}
+        />
 
-        <ParticipantsPanel room={room} />
+        <div className="deal-workspace-grid">
+          <section className="deal-action-panel">
+            {renderCurrentDealStage()}
+          </section>
 
-{room.status === "Accepted" &&
-  (!room.current_step ||
-    room.current_step === "RoleSelection") && (
-    <RoleSelector
-  room={room}
-  roleState={roleState}
-  onLeave={handleLeaveRoom}
-/>
-)}
+          <aside className="deal-chat-panel">
+            <div className="deal-panel-heading">
+              <span>Deal conversation</span>
+              <h2>Chat</h2>
+            </div>
 
-{room.current_step === "DealConfirmation" && (
-  <div className="deal-stage-placeholder">
-    <h2>Deal Confirmation</h2>
-    <p>
-      Roles are assigned. Amount negotiation is the next
-      stage.
-    </p>
-  </div>
-)}
-
-{room.current_step === "Payment" && (
-  <PaymentPanel room={room} />
-)}
-
-<ChatBox room={room} />
-
-        
-
+            <ChatBox
+              room={room}
+              roomId={room.room_id}
+              userId={currentUserId}
+            />
+          </aside>
+        </div>
       </div>
     </div>
   );

@@ -2,7 +2,7 @@
     background: var(--bg-card);
     border: 1px solid var(--border);
     border-radius: 18px;
-    padding: 24px;
+    padding: 28px;
     margin-bottom: 24px;
     backdrop-filter: blur(20px);
     transition: .3s ease;
@@ -13,21 +13,39 @@
     box-shadow: var(--shadow);
 }
 
-.deal-header-title{
-    margin-bottom: 22px;
-}
-
-.deal-header-title h2{
+.deal-header-title h1{
     margin: 0;
     font-size: 2rem;
     color: var(--text-primary);
     font-weight: 700;
 }
 
+.deal-header-title > span {
+    display: block;
+    margin-bottom: 7px;
+    color: #a78bfa;
+    font-size: 0.76rem;
+    font-weight: 800;
+    letter-spacing: 0.13em;
+    text-transform: uppercase;
+}
+
+.deal-header-title p {
+    margin: 9px 0 0;
+    color: var(--text-muted);
+    line-height: 1.5;
+}
+
 .deal-header-grid{
     display:grid;
     grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
     gap:18px;
+}
+
+.deal-participants-grid {
+    display: grid;
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+    gap: 14px;
 }
 
 .deal-info-card{
@@ -58,6 +76,33 @@
     font-size:1.15rem;
     font-weight:700;
 }
+
+.deal-participants-heading {
+    display: flex;
+    align-items: baseline;
+    gap: 12px;
+    margin: 24px 0 12px;
+}
+
+.deal-participants-heading span {
+    color: var(--text-primary);
+    font-size: 1rem;
+    font-weight: 750;
+}
+
+.deal-participants-heading p {
+    margin: 0;
+    color: var(--text-muted);
+    font-size: 0.82rem;
+}
+
+.deal-participant-card {
+    padding: 15px 17px;
+}
+
+.deal-participant-card h5 {
+    font-size: 1rem;
+}
 .deal-status{
     display:inline-block;
     padding:6px 14px;
@@ -84,6 +129,11 @@
 .deal-status.rejected{
     background:rgba(239,68,68,.15);
     color:#f87171;
+}
+
+.deal-status.rolesassigned {
+    background: rgba(139, 92, 246, 0.16);
+    color: #c4b5fd;
 }
 
 
@@ -192,4 +242,37 @@
 
 .deal-header-actions {
   gap: 10px;
+}
+
+@media (max-width: 900px) {
+    .deal-participants-grid {
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
+}
+
+@media (max-width: 620px) {
+    .deal-header {
+        padding: 20px;
+    }
+
+    .deal-header-top {
+        flex-direction: column;
+    }
+
+    .deal-header-actions {
+        width: 100%;
+        align-items: stretch;
+    }
+
+    .deal-participants-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .deal-participants-heading {
+        display: block;
+    }
+
+    .deal-participants-heading p {
+        margin-top: 4px;
+    }
 }
