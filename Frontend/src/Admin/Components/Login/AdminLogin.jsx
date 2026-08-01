@@ -29,7 +29,7 @@ const AdminLogin = () => {
         try {
 
             const response = await fetch(
-                `${API_URL}/api/admin/login`,
+                `${API_URL}/admin/login`,
                 {
                     method: "POST",
 

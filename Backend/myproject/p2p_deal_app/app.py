@@ -5,6 +5,7 @@ from routes.faq import faq_bp
 from socketio_instance import socketio
 from admin import admin_bp
 from admin.verification import verification_bp
+from admin.users import users_bp
 from config import Config
 from routes.auth import auth_bp
 from routes.profile import profile_bp
@@ -39,6 +40,7 @@ app.register_blueprint(auth_bp, url_prefix="/api")
 app.register_blueprint(profile_bp, url_prefix="/api")
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(verification_bp, url_prefix="/api/admin")
+app.register_blueprint(users_bp, url_prefix="/api/admin")
 app.register_blueprint(room_bp, url_prefix="/api")
 app.register_blueprint(faq_bp)
 app.register_blueprint(deal_bp, url_prefix="/api")

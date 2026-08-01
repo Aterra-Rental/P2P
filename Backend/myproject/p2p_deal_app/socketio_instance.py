@@ -321,3 +321,96 @@ def handle_disconnect():
         emit_deal_presence(room_code)
 
     print("Client disconnected")
+
+
+# === Site-wide online/offline presence tracking (Users page) ===
+#
+# NOTE: this file's contents are duplicated above (flagged separately,
+# left untouched per instruction). Because Flask-SocketIO registers
+# @socketio.on(...) handlers by event name and the LAST registration for
+# a given event wins, this block intentionally re-declares "join_user"
+# and "disconnect" one more time here at the end. That makes THESE
+# versions the ones that actually run, and they fully reproduce the
+# existing behavior (joining the user_<id> room; cleaning up
+# deal_presence / sid_memberships on disconnect) plus the new
+# online/offline tracking on top. Nothing above this point was deleted
+# or edited.
+
+# user_id (str) -> set of Socket.IO session IDs currently connected as that user
+online_users = {}
+
+# Socket.IO session ID -> user_id (str), for fast lookup on disconnect
+sid_to_user = {}
+
+
+def get_online_user_ids():
+    return [uid for uid, sids in online_users.items() if sids]
+
+
+def is_user_online(user_id):
+    sids = online_users.get(str(user_id))
+    return bool(sids)
+
+
+@socketio.on("join_user")
+def handle_join_user(data):
+    user_id = data.get("user_id")
+
+    if not user_id:
+        return
+
+    join_room(f"user_{user_id}")
+    print(f"User {user_id} joined room user_{user_id}")
+
+    user_id = str(user_id)
+    sid = request.sid
+
+    is_first_connection = not online_users.get(user_id)
+
+    online_users.setdefault(user_id, set()).add(sid)
+    sid_to_user[sid] = user_id
+
+    if is_first_connection:
+        socketio.emit(
+            "user_status_changed",
+            {
+                "user_id": user_id,
+                "status": "online",
+            },
+            room="admins",
+        )
+
+
+@socketio.on("disconnect")
+def handle_disconnect():
+    sid = request.sid
+
+    # Preserve the existing deal-room presence cleanup.
+    memberships = sid_memberships.pop(sid, set())
+
+    for room_code, user_id in memberships:
+        remove_deal_presence(sid, room_code, user_id)
+        emit_deal_presence(room_code)
+
+    print("Client disconnected")
+
+    # New: site-wide online/offline tracking.
+    user_id = sid_to_user.pop(sid, None)
+
+    if user_id:
+        user_connections = online_users.get(user_id)
+
+        if user_connections:
+            user_connections.discard(sid)
+
+            if not user_connections:
+                online_users.pop(user_id, None)
+
+                socketio.emit(
+                    "user_status_changed",
+                    {
+                        "user_id": user_id,
+                        "status": "offline",
+                    },
+                    room="admins",
+                )

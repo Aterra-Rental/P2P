@@ -1,4 +1,3 @@
-
 import { useEffect, useState } from "react";
 import {
   BrowserRouter as Router,
@@ -20,6 +19,7 @@ import PreviewPage from '../components/Camera/PreviewPage.jsx'
 import AdminLogin from '../Admin/Components/Login/AdminLogin.jsx'
 import ProtectedAdminRoute from '../Admin/Components/ProtectedRoute/ProtectedAdminRoute.jsx'
 import AdminDashboard from '../Admin/Dashboard/Dashboard.jsx'
+import UsersPage from '../Admin/Users/UsersPage.jsx'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
 import TransactionHistory from "../pages/TransactionHistory/TransactionHistory.jsx";
 import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.jsx";
@@ -146,6 +146,7 @@ const Layout = () => {
         <Route path="/camera/:type/preview" element={ <ProtectedRoute> <PreviewPage /> </ProtectedRoute> }/>
         <Route path="/admin/login" element={<AdminLogin />}/>
         <Route path="/admin/dashboard" element={<ProtectedAdminRoute><AdminDashboard /></ProtectedAdminRoute>}/>
+        <Route path="/admin/users" element={<ProtectedAdminRoute><UsersPage /></ProtectedAdminRoute>}/>
         <Route path="/transactions" element={ <VerifiedRoute> <TransactionHistory /> </VerifiedRoute> }/>
         <Route path="/transaction/:transactionId" element={<VerifiedRoute> <TransactionDetails /> </VerifiedRoute> }/>
         <Route path="/deal/:roomCode" element={ <VerifiedRoute> <DealWorkspace /> </VerifiedRoute> }/>
