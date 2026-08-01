@@ -12,6 +12,7 @@ from routes.profile import profile_bp
 from routes.room import room_bp
 from routes.transaction import transaction_bp
 from routes.deal import deal_bp
+from routes.fee import fee_bp
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -44,14 +45,14 @@ app.register_blueprint(users_bp, url_prefix="/api/admin")
 app.register_blueprint(room_bp, url_prefix="/api")
 app.register_blueprint(faq_bp)
 app.register_blueprint(deal_bp, url_prefix="/api")
-
+app.register_blueprint(fee_bp, url_prefix="/api")
 print("Socket.IO async mode:", socketio.async_mode)
 if __name__ == "__main__":
     socketio.run(
         app,
         host="0.0.0.0",
         port=8000,
-        debug=False,
-        use_reloader=False,
+        debug=True,
+        use_reloader=True,
         allow_unsafe_werkzeug=True,
     )

@@ -103,8 +103,21 @@ CREATE TABLE IF NOT EXISTS public.room (
     max_reinvites integer DEFAULT 3 NOT NULL,
     product_type character varying(20) DEFAULT 'Physical'::character varying,
     current_step character varying(30) DEFAULT 'RoleSelection'::character varying,
-    CONSTRAINT room_current_step_check CHECK (current_step::text = ANY (ARRAY['RoleSelection','DealConfirmation','Payment','Delivery','Completed','Cancelled']::text[])),
-    CONSTRAINT room_payment_status_check CHECK (payment_status::text = ANY (ARRAY['Waiting','Paid','Released','Refunded']::text[])),
+CONSTRAINT room_current_step_check CHECK (
+    current_step::text = ANY (
+        ARRAY[
+            'RoleSelection',
+            'DealConfirmation',
+            'FeeConfirmation',
+            'Payment',
+            'Delivery',
+            'Completed',
+            'Cancelled'
+        ]::text[]
+    )
+),
+CONSTRAINT room_payment_status_check CHECK (
+    payment_status::text = ANY (ARRAY['Waiting','Paid','Released','Refunded']::text[])),
     CONSTRAINT room_product_type_check CHECK (product_type::text = ANY (ARRAY['Physical','Digital']::text[])),
     CONSTRAINT room_status_check CHECK (status::text = ANY (ARRAY['Waiting','Accepted','Rejected','RolesAssigned','Completed','Cancelled']::text[]))
 );
@@ -125,6 +138,27 @@ CREATE TABLE IF NOT EXISTS public.seller (
     ready boolean DEFAULT false NOT NULL,
     joined_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP,
     amount_confirmed boolean DEFAULT false NOT NULL
+);
+CREATE TABLE IF NOT EXISTS public.deal_fee_agreement (
+    room_id integer NOT NULL,
+    fee_payer character varying(6),
+    proposed_by integer,
+    fee_amount numeric(12,2) NOT NULL,
+    buyer_deposit numeric(12,2),
+    seller_receive numeric(12,2),
+    buyer_confirmed boolean DEFAULT false NOT NULL,
+    seller_confirmed boolean DEFAULT false NOT NULL,
+    updated_at timestamp without time zone
+        DEFAULT CURRENT_TIMESTAMP NOT NULL,
+    CONSTRAINT deal_fee_agreement_pkey
+        PRIMARY KEY (room_id),
+    CONSTRAINT deal_fee_payer_check
+        CHECK (
+            fee_payer IS NULL
+            OR fee_payer::text = ANY (
+                ARRAY['buyer', 'seller']::text[]
+            )
+        )
 );
 
 CREATE TABLE IF NOT EXISTS public.room_messages (
@@ -172,7 +206,13 @@ CREATE TABLE IF NOT EXISTS public.transactions_history (
     completed_at timestamp without time zone,
     bakong_transaction_id character varying(100),
     payment_provider character varying(30) DEFAULT 'Bakong'::character varying,
-    CONSTRAINT transactions_history_status_check CHECK (transaction_status::text = 'Completed'::text)
+    fee_payer character varying(6),
+    CONSTRAINT transactions_history_status_check
+CHECK (
+    transaction_status::text = ANY (
+        ARRAY['Completed']::text[]
+    )
+)
 );
 
 -- Dispute and support tables
@@ -312,6 +352,36 @@ ALTER TABLE public.seller ADD COLUMN IF NOT EXISTS agreed_amount numeric(12,2);
 ALTER TABLE public.seller ADD COLUMN IF NOT EXISTS ready boolean DEFAULT false NOT NULL;
 ALTER TABLE public.seller ADD COLUMN IF NOT EXISTS joined_at timestamp without time zone DEFAULT CURRENT_TIMESTAMP;
 ALTER TABLE public.seller ADD COLUMN IF NOT EXISTS amount_confirmed boolean DEFAULT false NOT NULL;
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS room_id integer;
+
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS fee_payer character varying(6);
+
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS proposed_by integer;
+
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS fee_amount numeric(12,2);
+
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS buyer_deposit numeric(12,2);
+
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS seller_receive numeric(12,2);
+
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS buyer_confirmed boolean
+        DEFAULT false NOT NULL;
+
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS seller_confirmed boolean
+        DEFAULT false NOT NULL;
+
+ALTER TABLE public.deal_fee_agreement
+    ADD COLUMN IF NOT EXISTS updated_at
+        timestamp without time zone
+        DEFAULT CURRENT_TIMESTAMP NOT NULL;
 ALTER TABLE public.room_messages ADD COLUMN IF NOT EXISTS message_id integer NOT NULL DEFAULT nextval('public.room_messages_message_id_seq'::regclass);
 ALTER TABLE public.room_messages ADD COLUMN IF NOT EXISTS room_id integer NOT NULL;
 ALTER TABLE public.room_messages ADD COLUMN IF NOT EXISTS sender_id integer NOT NULL;
@@ -349,6 +419,9 @@ ALTER TABLE public.transactions_history ADD COLUMN IF NOT EXISTS created_at time
 ALTER TABLE public.transactions_history ADD COLUMN IF NOT EXISTS completed_at timestamp without time zone;
 ALTER TABLE public.transactions_history ADD COLUMN IF NOT EXISTS bakong_transaction_id character varying(100);
 ALTER TABLE public.transactions_history ADD COLUMN IF NOT EXISTS payment_provider character varying(30) DEFAULT 'Bakong'::character varying;
+ALTER TABLE public.transactions_history
+    ADD COLUMN IF NOT EXISTS fee_payer
+        character varying(6);
 ALTER TABLE public.disputes ADD COLUMN IF NOT EXISTS dispute_id integer NOT NULL DEFAULT nextval('public.disputes_dispute_id_seq'::regclass);
 ALTER TABLE public.disputes ADD COLUMN IF NOT EXISTS room_id integer NOT NULL;
 ALTER TABLE public.disputes ADD COLUMN IF NOT EXISTS opened_by integer NOT NULL;
@@ -404,7 +477,21 @@ DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='disputes_p
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='dispute_resolution_pkey' AND conrelid='public.dispute_resolution'::regclass) THEN ALTER TABLE public.dispute_resolution ADD CONSTRAINT dispute_resolution_pkey PRIMARY KEY (resolution_id); END IF; END $$;
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='faq_questions_pkey' AND conrelid='public.faq_questions'::regclass) THEN ALTER TABLE public.faq_questions ADD CONSTRAINT faq_questions_pkey PRIMARY KEY (question_id); END IF; END $$;
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='room_reminders_pkey' AND conrelid='public.room_reminders'::regclass) THEN ALTER TABLE public.room_reminders ADD CONSTRAINT room_reminders_pkey PRIMARY KEY (reminder_id); END IF; END $$;
-
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'deal_fee_agreement_pkey'
+          AND conrelid =
+              'public.deal_fee_agreement'::regclass
+    ) THEN
+        ALTER TABLE public.deal_fee_agreement
+            ADD CONSTRAINT deal_fee_agreement_pkey
+            PRIMARY KEY (room_id);
+    END IF;
+END
+$$;
 -- Foreign keys
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_userdetails_login' AND conrelid='public.user_details'::regclass) THEN ALTER TABLE public.user_details ADD CONSTRAINT fk_userdetails_login FOREIGN KEY (user_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE; END IF; END $$;
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_user_details_reviewed_by' AND conrelid='public.user_details'::regclass) THEN ALTER TABLE public.user_details ADD CONSTRAINT fk_user_details_reviewed_by FOREIGN KEY (reviewed_by) REFERENCES public.admin_login(admin_id) ON DELETE SET NULL; END IF; END $$;
@@ -433,18 +520,95 @@ DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='faq_questi
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_reminders_room' AND conrelid='public.room_reminders'::regclass) THEN ALTER TABLE public.room_reminders ADD CONSTRAINT fk_room_reminders_room FOREIGN KEY (room_id) REFERENCES public.room(room_id) ON DELETE CASCADE; END IF; END $$;
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_reminders_sender' AND conrelid='public.room_reminders'::regclass) THEN ALTER TABLE public.room_reminders ADD CONSTRAINT fk_room_reminders_sender FOREIGN KEY (sender_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE; END IF; END $$;
 DO $$ BEGIN IF NOT EXISTS (SELECT 1 FROM pg_constraint WHERE conname='fk_room_reminders_receiver' AND conrelid='public.room_reminders'::regclass) THEN ALTER TABLE public.room_reminders ADD CONSTRAINT fk_room_reminders_receiver FOREIGN KEY (receiver_id) REFERENCES public.user_login(user_id) ON DELETE CASCADE; END IF; END $$;
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'deal_fee_room_fkey'
+          AND conrelid =
+              'public.deal_fee_agreement'::regclass
+    ) THEN
+        ALTER TABLE public.deal_fee_agreement
+            ADD CONSTRAINT deal_fee_room_fkey
+            FOREIGN KEY (room_id)
+            REFERENCES public.room(room_id)
+            ON DELETE CASCADE;
+    END IF;
+END
+$$;
 
--- Final policy: transaction history stores completed deals only.
--- Remove any older cancelled/non-completed history rows before enforcing the rule.
-DELETE FROM public.transactions_history
-WHERE transaction_status IS DISTINCT FROM 'Completed';
+DO $$
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1
+        FROM pg_constraint
+        WHERE conname = 'deal_fee_proposer_fkey'
+          AND conrelid =
+              'public.deal_fee_agreement'::regclass
+    ) THEN
+        ALTER TABLE public.deal_fee_agreement
+            ADD CONSTRAINT deal_fee_proposer_fkey
+            FOREIGN KEY (proposed_by)
+            REFERENCES public.user_details(user_id)
+            ON DELETE SET NULL;
+    END IF;
+END
+$$;
+-- Synchronize workflow and fee constraints without deleting data.
+ALTER TABLE public.room
+    DROP CONSTRAINT IF EXISTS room_current_step_check;
+
+ALTER TABLE public.room
+    ADD CONSTRAINT room_current_step_check
+    CHECK (
+        current_step::text = ANY (
+            ARRAY[
+                'RoleSelection',
+                'DealConfirmation',
+                'FeeConfirmation',
+                'Payment',
+                'Delivery',
+                'Completed',
+                'Cancelled'
+            ]::text[]
+        )
+    );
+
+ALTER TABLE public.deal_fee_agreement
+    DROP CONSTRAINT IF EXISTS deal_fee_payer_check;
+
+ALTER TABLE public.deal_fee_agreement
+    ADD CONSTRAINT deal_fee_payer_check
+    CHECK (
+        fee_payer IS NULL
+        OR fee_payer::text = ANY (
+            ARRAY['buyer', 'seller']::text[]
+        )
+    );
 
 ALTER TABLE public.transactions_history
-DROP CONSTRAINT IF EXISTS transactions_history_status_check;
+    DROP CONSTRAINT IF EXISTS
+        transactions_history_fee_payer_check;
 
 ALTER TABLE public.transactions_history
-ADD CONSTRAINT transactions_history_status_check
-CHECK (transaction_status::text = 'Completed'::text);
+    ADD CONSTRAINT transactions_history_fee_payer_check
+    CHECK (
+        fee_payer IS NULL
+        OR fee_payer::text = ANY (
+            ARRAY['buyer', 'seller']::text[]
+        )
+    );
+
+ALTER TABLE public.transactions_history
+    DROP CONSTRAINT IF EXISTS
+        transactions_history_status_check;
+
+ALTER TABLE public.transactions_history
+    ADD CONSTRAINT transactions_history_status_check
+    CHECK (
+        transaction_status::text = 'Completed'::text
+    );
 
 -- Indexes
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_details_username ON public.user_details USING btree (username);
@@ -463,5 +627,4 @@ SELECT setval('public.disputes_dispute_id_seq', GREATEST(COALESCE((SELECT MAX(di
 SELECT setval('public.dispute_resolution_resolution_id_seq', GREATEST(COALESCE((SELECT MAX(resolution_id) FROM public.dispute_resolution), 0), 1), EXISTS (SELECT 1 FROM public.dispute_resolution));
 SELECT setval('public.faq_questions_question_id_seq', GREATEST(COALESCE((SELECT MAX(question_id) FROM public.faq_questions), 0), 1), EXISTS (SELECT 1 FROM public.faq_questions));
 SELECT setval('public.room_reminders_reminder_id_seq', GREATEST(COALESCE((SELECT MAX(reminder_id) FROM public.room_reminders), 0), 1), EXISTS (SELECT 1 FROM public.room_reminders));
-
 COMMIT;

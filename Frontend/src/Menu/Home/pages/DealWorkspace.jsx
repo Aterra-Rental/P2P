@@ -8,7 +8,7 @@ import RoleSelector from "../components/Deal/RoleSelector";
 import ChatBox from "../components/Deal/ChatBox";
 import PaymentPanel from "../components/Deal/PaymentPanel";
 import { getDealRoles } from "../lib/deal";
-
+import AmountConfirmation from "../components/Deal/AmountConfirmation";
 
 const DealWorkspace = () => {
   const { roomCode } = useParams();
@@ -17,8 +17,7 @@ const DealWorkspace = () => {
 
   const [room, setRoom] = useState(null);
   const [roleState, setRoleState] = useState(null);
-  const [bothUsersPresent, setBothUsersPresent] =
-    useState(false);
+  const [bothUsersPresent, setBothUsersPresent] = useState(false);
 
   const handleLeaveRoom = () => {
     socket.emit("leave_deal", {
@@ -33,87 +32,85 @@ const DealWorkspace = () => {
   const [remindSuccess, setRemindSuccess] = useState("");
   const [remindError, setRemindError] = useState("");
   const [remindCooldown, setRemindCooldown] = useState(0);
- 
-    useEffect(() => {
+
+  useEffect(() => {
     if (remindCooldown <= 0) return;
 
     const timer = setInterval(() => {
-        setRemindCooldown((previous) =>
-            previous > 0 ? previous - 1 : 0
-        );
+      setRemindCooldown((previous) => (previous > 0 ? previous - 1 : 0));
     }, 1000);
 
-            return () => clearInterval(timer);
-        }, [remindCooldown]);
+    return () => clearInterval(timer);
+  }, [remindCooldown]);
 
+  useEffect(() => {
+    const fetchWorkspaceData = async () => {
+      try {
+        const [roomResponse, roleResponse] = await Promise.all([
+          getRoom(roomCode),
+          getDealRoles(roomCode, currentUserId),
+        ]);
 
-    useEffect(() => {
-  
+        if (roomResponse.success) {
+          setRoom(roomResponse.room);
+        }
 
-  const fetchWorkspaceData = async () => {
-    try {
-      const [roomResponse, roleResponse] = await Promise.all([
-        getRoom(roomCode),
-        getDealRoles(roomCode, currentUserId),
-      ]);
-
-      if (roomResponse.success) {
-        setRoom(roomResponse.room);
+        if (roleResponse.success) {
+          setRoleState(roleResponse);
+        }
+      } catch (error) {
+        console.error("Failed to load deal workspace:", error);
+      } finally {
+        setLoading(false);
       }
+    };
 
-      if (roleResponse.success) {
-        setRoleState(roleResponse);
+    const joinDealRoom = () => {
+      socket.emit("join_deal", {
+        room_code: roomCode,
+        user_id: currentUserId,
+      });
+    };
+
+    const handleDealUpdated = (data) => {
+      if (data.room_code === roomCode) {
+        fetchWorkspaceData();
       }
-    } catch (error) {
-      console.error("Failed to load deal workspace:", error);
-    } finally {
-      setLoading(false);
+    };
+    const handlePresenceUpdated = (data) => {
+      if (data.room_code === roomCode) {
+        setBothUsersPresent(Boolean(data.both_present));
+      }
+    };
+
+    fetchWorkspaceData();
+
+    if (socket.connected) {
+      joinDealRoom();
     }
-  };
 
-  const joinDealRoom = () => {
-  socket.emit("join_deal", {
-    room_code: roomCode,
-    user_id: currentUserId,
-  });
-};
+    socket.on("connect", joinDealRoom);
+    socket.on("room_updated", handleDealUpdated);
+    socket.on("roles_selected", handleDealUpdated);
+    socket.on("role_confirmation_updated", handleDealUpdated);
+    socket.on("role_selection_reset", handleDealUpdated);
+    socket.on("roles_confirmed", handleDealUpdated);
+    socket.on("deal_presence_updated", handlePresenceUpdated);
 
-  const handleDealUpdated = (data) => {
-    if (data.room_code === roomCode) {
-      fetchWorkspaceData();
-    }
-  };
-  const handlePresenceUpdated = (data) => {
-  if (data.room_code === roomCode) {
-    setBothUsersPresent(Boolean(data.both_present));
-  }
-};
-
-  fetchWorkspaceData();
-
-  if (socket.connected) {
-    joinDealRoom();
-  }
-
-  socket.on("connect", joinDealRoom);
-  socket.on("room_updated", handleDealUpdated);
-  socket.on("roles_selected", handleDealUpdated);
-  socket.on("role_confirmation_updated", handleDealUpdated);
-  socket.on("role_selection_reset", handleDealUpdated);
-  socket.on("roles_confirmed", handleDealUpdated);
-  socket.on("deal_presence_updated", handlePresenceUpdated, );
-
-  return () => {
-    socket.off("connect", joinDealRoom);
-    socket.off("room_updated", handleDealUpdated);
-    socket.off("roles_selected", handleDealUpdated);
-    socket.off("role_confirmation_updated", handleDealUpdated);
-    socket.off("role_selection_reset", handleDealUpdated);
-    socket.off("roles_confirmed", handleDealUpdated);
-    socket.emit("leave_deal", { room_code: roomCode, user_id: currentUserId, });
-    socket.off( "deal_presence_updated", handlePresenceUpdated,);
-  };
-}, [roomCode, currentUserId]);
+    return () => {
+      socket.off("connect", joinDealRoom);
+      socket.off("room_updated", handleDealUpdated);
+      socket.off("roles_selected", handleDealUpdated);
+      socket.off("role_confirmation_updated", handleDealUpdated);
+      socket.off("role_selection_reset", handleDealUpdated);
+      socket.off("roles_confirmed", handleDealUpdated);
+      socket.emit("leave_deal", {
+        room_code: roomCode,
+        user_id: currentUserId,
+      });
+      socket.off("deal_presence_updated", handlePresenceUpdated);
+    };
+  }, [roomCode, currentUserId]);
 
   if (loading) {
     return <div>Loading deal...</div>;
@@ -134,9 +131,9 @@ const DealWorkspace = () => {
     } catch (err) {
       setRemindError(err.message);
 
-        if (err.remainingSeconds) {
-            setRemindCooldown(err.remainingSeconds);
-        }
+      if (err.remainingSeconds) {
+        setRemindCooldown(err.remainingSeconds);
+      }
     } finally {
       setRemindLoading(false);
 
@@ -166,15 +163,7 @@ const DealWorkspace = () => {
     }
 
     if (room.current_step === "DealConfirmation") {
-      return (
-        <div className="deal-stage-placeholder">
-          <span className="deal-stage-label">Current step</span>
-          <h2>Confirm Deal Amount</h2>
-          <p>
-            Roles are assigned. Amount negotiation is the next stage.
-          </p>
-        </div>
-      );
+      return <AmountConfirmation room={room} userId={currentUserId} />;
     }
 
     if (room.current_step === "Payment") {
@@ -184,6 +173,7 @@ const DealWorkspace = () => {
     return (
       <div className="deal-stage-placeholder">
         <span className="deal-stage-label">Current step</span>
+
         <h2>Deal Status</h2>
         <p>{room.current_step || room.status}</p>
       </div>
@@ -215,11 +205,7 @@ const DealWorkspace = () => {
               <h2>Chat</h2>
             </div>
 
-            <ChatBox
-              room={room}
-              roomId={room.room_id}
-              userId={currentUserId}
-            />
+            <ChatBox room={room} roomId={room.room_id} userId={currentUserId} />
           </aside>
         </div>
       </div>

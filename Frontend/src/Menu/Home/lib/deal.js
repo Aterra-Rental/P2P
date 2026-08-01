@@ -96,3 +96,108 @@ export const resetDealRoles = async (
 
   return readResponse(response);
 };
+export const getDealAmount = async (
+  roomCode,
+  userId
+) => {
+  const response = await fetch(
+    `${API_URL}/deals/${roomCode}/amount?user_id=${encodeURIComponent(userId)}`
+  );
+
+  return readResponse(response);
+};
+
+export const proposeDealAmount = async (
+  roomCode,
+  userId,
+  amount
+) => {
+  const response = await fetch(
+    `${API_URL}/deals/${roomCode}/propose-amount`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: Number(userId),
+        amount,
+      }),
+    }
+  );
+
+  return readResponse(response);
+};
+
+export const confirmDealAmount = async (
+  roomCode,
+  userId
+) => {
+  const response = await fetch(
+    `${API_URL}/deals/${roomCode}/confirm-amount`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: Number(userId),
+      }),
+    }
+  );
+
+  return readResponse(response);
+};
+
+export const getFeeAgreement = async (
+  roomCode,
+  userId
+) => {
+  const response = await fetch(
+    `${API_URL}/deals/${roomCode}/fee?user_id=${encodeURIComponent(userId)}`
+  );
+
+  return readResponse(response);
+};
+
+export const proposeFeePayer = async (
+  roomCode,
+  userId,
+  feePayer
+) => {
+  const response = await fetch(
+    `${API_URL}/deals/${roomCode}/propose-fee-payer`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: Number(userId),
+        fee_payer: feePayer,
+      }),
+    }
+  );
+
+  return readResponse(response);
+};
+
+export const confirmFeeAgreement = async (
+  roomCode,
+  userId
+) => {
+  const response = await fetch(
+    `${API_URL}/deals/${roomCode}/confirm-fee`,
+    {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        user_id: Number(userId),
+      }),
+    }
+  );
+
+  return readResponse(response);
+};
