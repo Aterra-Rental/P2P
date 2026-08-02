@@ -39,9 +39,12 @@ const readResponse = async (response) => {
   return data;
 };
 
-export const getWallet = async () => {
+
+export const getCancellationStatus = async (
+  roomCode
+) => {
   const response = await fetch(
-    `${API_URL}/wallet`,
+    `${API_URL}/deals/${roomCode}/cancellation`,
     {
       headers: getAuthenticatedHeaders(),
     }
@@ -51,9 +54,28 @@ export const getWallet = async () => {
 };
 
 
-export const payWithWallet = async (roomCode) => {
+export const requestDealCancellation = async (
+  roomCode,
+  reason
+) => {
   const response = await fetch(
-    `${API_URL}/deals/${roomCode}/pay-with-wallet`,
+    `${API_URL}/deals/${roomCode}/request-cancellation`,
+    {
+      method: "POST",
+      headers: getAuthenticatedHeaders(),
+      body: JSON.stringify({ reason }),
+    }
+  );
+
+  return readResponse(response);
+};
+
+
+export const confirmDealCancellation = async (
+  roomCode
+) => {
+  const response = await fetch(
+    `${API_URL}/deals/${roomCode}/confirm-cancellation`,
     {
       method: "POST",
       headers: getAuthenticatedHeaders(),
@@ -63,35 +85,12 @@ export const payWithWallet = async (roomCode) => {
   return readResponse(response);
 };
 
-export const generateQR = async (roomCode) => {
+
+export const rejectDealCancellation = async (
+  roomCode
+) => {
   const response = await fetch(
-    `${API_URL}/payment/${roomCode}/qr`,
-    {
-      method: "POST",
-      headers: getAuthenticatedHeaders(),
-    }
-  );
-
-  return readResponse(response);
-};
-
-
-export const verifyPayment = async (roomCode) => {
-  const response = await fetch(
-    `${API_URL}/payment/${roomCode}/verify`,
-    {
-      method: "POST",
-      headers: getAuthenticatedHeaders(),
-    }
-  );
-
-  return readResponse(response);
-};
-
-
-export const releaseFunds = async (roomCode) => {
-  const response = await fetch(
-    `${API_URL}/payment/${roomCode}/release`,
+    `${API_URL}/deals/${roomCode}/reject-cancellation`,
     {
       method: "POST",
       headers: getAuthenticatedHeaders(),
