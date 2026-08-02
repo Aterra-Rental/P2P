@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { generateQR } from "../../lib/payment";
+import {
+  generateQR,
+  getWallet,
+  payWithWallet,
+} from "../../lib/payment";
+import { getFeeAgreement } from "../../lib/deal";
 import "./PaymentPanel.css";
 
 
@@ -18,8 +23,12 @@ const formatRemainingTime = (milliseconds) => {
 
 
 const PaymentPanel = ({ room, userId }) => {
+  const [paymentMethod, setPaymentMethod] = useState("");
   const [paymentQR, setPaymentQR] = useState(null);
+  const [wallet, setWallet] = useState(null);
+  const [feeState, setFeeState] = useState(null);
   const [loading, setLoading] = useState(false);
+  const [walletLoading, setWalletLoading] = useState(false);
   const [error, setError] = useState("");
   const [currentTime, setCurrentTime] = useState(0);
 
@@ -50,6 +59,71 @@ const PaymentPanel = ({ room, userId }) => {
     paymentQR && remainingTime <= 0
   );
 
+  const requiredDeposit = feeState?.buyer_deposit;
+  const availableBalance = wallet?.available_balance;
+
+  const canAfford =
+    requiredDeposit !== undefined &&
+    availableBalance !== undefined &&
+    Number(availableBalance) >= Number(requiredDeposit);
+
+  const handleSelectWallet = async () => {
+    if (loading || walletLoading) return;
+
+    try {
+      setPaymentMethod("wallet");
+      setWalletLoading(true);
+      setError("");
+
+      const [walletResponse, feeResponse] =
+        await Promise.all([
+          getWallet(),
+          getFeeAgreement(room.room_code, userId),
+        ]);
+
+      setWallet(walletResponse.wallet);
+      setFeeState(feeResponse);
+    } catch (err) {
+      setError(
+        err.message || "Unable to load wallet information."
+      );
+    } finally {
+      setWalletLoading(false);
+    }
+  };
+
+  const handleSelectKhqr = () => {
+    if (loading || walletLoading) return;
+
+    setPaymentMethod("khqr");
+    setError("");
+  };
+
+  const handleWalletPayment = async () => {
+    if (loading || !canAfford) return;
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await payWithWallet(
+        room.room_code
+      );
+
+      setWallet((currentWallet) => ({
+        ...currentWallet,
+        available_balance: result.available_balance,
+        held_balance: result.held_balance,
+      }));
+    } catch (err) {
+      setError(
+        err.message || "Unable to pay using the wallet."
+      );
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleGenerateQR = async () => {
     if (loading) return;
 
@@ -77,17 +151,16 @@ const PaymentPanel = ({ room, userId }) => {
           <span>Payment stage</span>
           <h2>Waiting for Buyer Payment</h2>
           <p>
-            The buyer must generate the KHQR and complete
-            the required deposit. Keep this workspace open
-            for real-time updates.
+            The buyer must choose Wallet or KHQR and
+            complete the required deposit.
           </p>
         </div>
 
         <div className="payment-waiting-card">
           <strong>Payment has not been verified yet</strong>
           <p>
-            You do not need to generate or scan the buyer’s
-            payment QR.
+            This page will update automatically when the
+            buyer’s payment is held in escrow.
           </p>
         </div>
       </div>
@@ -98,18 +171,122 @@ const PaymentPanel = ({ room, userId }) => {
     <div className="payment-panel">
       <div className="payment-heading">
         <span>Payment stage</span>
-        <h2>Buyer Payment</h2>
+        <h2>Choose Payment Method</h2>
         <p>
-          Generate a KHQR for the exact confirmed deposit.
-          Do not edit or manually replace the payment amount.
+          Pay from your available wallet balance or scan
+          KHQR using a supported banking application.
         </p>
       </div>
 
-      {!paymentQR ? (
+      <div className="payment-method-list">
+        <button
+          type="button"
+          className={`payment-method-card ${
+            paymentMethod === "wallet"
+              ? "payment-method-selected"
+              : ""
+          }`}
+          disabled={loading || walletLoading}
+          onClick={handleSelectWallet}
+        >
+          <span className="payment-method-icon">W</span>
+
+          <span className="payment-method-copy">
+            <strong>Wallet</strong>
+            <small>
+              {wallet
+                ? `Available $${Number(
+                    wallet.available_balance
+                  ).toFixed(2)}`
+                : "Use your available wallet balance"}
+            </small>
+          </span>
+
+          <span className="payment-method-radio">
+            {paymentMethod === "wallet" ? "✓" : ""}
+          </span>
+        </button>
+
+        <button
+          type="button"
+          className={`payment-method-card ${
+            paymentMethod === "khqr"
+              ? "payment-method-selected"
+              : ""
+          }`}
+          disabled={loading || walletLoading}
+          onClick={handleSelectKhqr}
+        >
+          <span className="payment-method-icon">QR</span>
+
+          <span className="payment-method-copy">
+            <strong>KHQR</strong>
+            <small>
+              Scan using a participating banking app
+            </small>
+          </span>
+
+          <span className="payment-method-radio">
+            {paymentMethod === "khqr" ? "✓" : ""}
+          </span>
+        </button>
+      </div>
+
+      {paymentMethod === "wallet" && (
         <div className="payment-generate-card">
-          <h3>Payment QR is ready to generate</h3>
+          {walletLoading ? (
+            <p>Loading wallet balance...</p>
+          ) : (
+            <>
+              <h3>Pay from Wallet</h3>
+
+              <div className="payment-wallet-summary">
+                <div>
+                  <span>Available balance</span>
+                  <strong>
+                    ${Number(
+                      wallet?.available_balance || 0
+                    ).toFixed(2)}
+                  </strong>
+                </div>
+
+                <div>
+                  <span>Required deposit</span>
+                  <strong>
+                    ${Number(
+                      requiredDeposit || 0
+                    ).toFixed(2)}
+                  </strong>
+                </div>
+              </div>
+
+              <button
+                type="button"
+                className="payment-primary-button"
+                disabled={loading || !canAfford}
+                onClick={handleWalletPayment}
+              >
+                {loading
+                  ? "Holding Funds..."
+                  : "Pay with Wallet"}
+              </button>
+
+              {!canAfford && wallet && (
+                <p className="payment-balance-warning">
+                  Your available wallet balance is
+                  insufficient for this deposit.
+                </p>
+              )}
+            </>
+          )}
+        </div>
+      )}
+
+      {paymentMethod === "khqr" && !paymentQR && (
+        <div className="payment-generate-card">
+          <h3>Generate Payment QR</h3>
           <p>
-            The backend will use the confirmed buyer deposit
+            The backend uses the confirmed buyer deposit
             stored in PostgreSQL.
           </p>
 
@@ -124,7 +301,9 @@ const PaymentPanel = ({ room, userId }) => {
               : "Generate Payment QR"}
           </button>
         </div>
-      ) : (
+      )}
+
+      {paymentMethod === "khqr" && paymentQR && (
         <div className="payment-qr-section">
           <div
             className={`payment-qr-box ${

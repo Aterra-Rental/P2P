@@ -53,3 +53,19 @@ class Config:
     BAKONG_API_TOKEN = os.getenv(
         "BAKONG_API_TOKEN"
     )
+    # Payment verification mode:
+    # mock = university demonstration
+    # bakong = real Bakong API verification
+    PAYMENT_VERIFICATION_MODE = os.getenv(
+        "PAYMENT_VERIFICATION_MODE",
+        "mock",
+    ).strip().lower()
+
+    if PAYMENT_VERIFICATION_MODE not in {
+        "mock",
+        "bakong",
+    }:
+        raise RuntimeError(
+            "PAYMENT_VERIFICATION_MODE must be "
+            "'mock' or 'bakong'."
+        )
