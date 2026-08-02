@@ -12,3 +12,10 @@ __pycache__/
 
 # macOS
 .DS_Store
+
+
+# Runtime user uploads
+Backend/myproject/p2p_deal_app/uploads/
+
+# Local database inspection exports
+current_schema.sql
