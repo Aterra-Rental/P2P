@@ -9,6 +9,14 @@ import "./UsersPage.css";
 const API_BASE = "http://127.0.0.1:8000";
 const PER_PAGE = 10;
 
+const STATUS_OPTIONS = [
+  { value: "", label: "All statuses" },
+  { value: "not_started", label: "Not Started" },
+  { value: "Pending", label: "Pending" },
+  { value: "Verified", label: "Verified" },
+  { value: "Rejected", label: "Rejected" },
+];
+
 const initials = (fullname, email) => {
   if (fullname && fullname.trim()) {
     return fullname
@@ -31,6 +39,7 @@ const UsersPage = () => {
   const [errorMessage, setErrorMessage] = useState("");
 
   const [search, setSearch] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
   const [page, setPage] = useState(1);
   const [pages, setPages] = useState(1);
   const [total, setTotal] = useState(0);
@@ -64,7 +73,7 @@ const UsersPage = () => {
     }
   }, []);
 
-  const fetchUsers = useCallback(async (searchTerm, pageNum) => {
+  const fetchUsers = useCallback(async (searchTerm, status, pageNum) => {
     setUsersLoading(true);
     setErrorMessage("");
 
@@ -76,6 +85,10 @@ const UsersPage = () => {
 
       if (searchTerm) {
         params.set("search", searchTerm);
+      }
+
+      if (status) {
+        params.set("status", status);
       }
 
       const res = await fetch(
@@ -104,7 +117,7 @@ const UsersPage = () => {
   // Initial load
   useEffect(() => {
     fetchStats();
-    fetchUsers("", 1);
+    fetchUsers("", "", 1);
   }, [fetchStats, fetchUsers]);
 
   // Debounced search — resets to page 1
@@ -114,19 +127,25 @@ const UsersPage = () => {
     }
 
     searchDebounceRef.current = setTimeout(() => {
-      fetchUsers(search, 1);
+      fetchUsers(search, statusFilter, 1);
     }, 350);
 
     return () => clearTimeout(searchDebounceRef.current);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [search]);
 
+  // Status filter change — applies immediately, resets to page 1
+  useEffect(() => {
+    fetchUsers(search, statusFilter, 1);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [statusFilter]);
+
   const goToPage = (nextPage) => {
     if (nextPage < 1 || nextPage > pages || nextPage === page) {
       return;
     }
 
-    fetchUsers(search, nextPage);
+    fetchUsers(search, statusFilter, nextPage);
   };
 
   // Live online/offline updates — patch in place, no refetch
@@ -177,6 +196,48 @@ const UsersPage = () => {
       socket.off("user_status_changed", handleStatusChanged);
     };
   }, []);
+
+  // Live "new user" updates — bump Total/Offline, prepend if on an
+  // unfiltered page 1
+  useEffect(() => {
+    const handleNewUser = (data) => {
+      if (!data?.user_id) {
+        return;
+      }
+
+      setStats((prev) => ({
+        ...prev,
+        total: prev.total + 1,
+        offline: prev.offline + 1,
+      }));
+
+      setTotal((prev) => prev + 1);
+
+      if (!search && !statusFilter && page === 1) {
+        setUsers((prev) => [
+          {
+            user_id: data.user_id,
+            email: data.email,
+            fullname: null,
+            username: null,
+            phonenumber: null,
+            verify_status: null,
+            joined_at: null,
+            profile_picture: null,
+            online: false,
+          },
+          ...prev.slice(0, PER_PAGE - 1),
+        ]);
+      }
+    };
+
+    socket.on("new_user_registered", handleNewUser);
+
+    return () => {
+      socket.off("new_user_registered", handleNewUser);
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [search, statusFilter, page]);
 
   const openUserDetail = async (userId) => {
     setDetailLoading(true);
@@ -241,6 +302,19 @@ const UsersPage = () => {
               value={search}
               onChange={(e) => setSearch(e.target.value)}
             />
+
+            <select
+              value={statusFilter}
+              onChange={(e) => setStatusFilter(e.target.value)}
+              className="users-status-filter"
+            >
+              {STATUS_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+
             <span className="users-total-count">
               {total} user{total === 1 ? "" : "s"}
             </span>

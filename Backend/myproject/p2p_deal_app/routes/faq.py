@@ -1,5 +1,6 @@
 from flask import Blueprint, request, jsonify
 from database import get_db
+from socketio_instance import socketio
 
 faq_bp = Blueprint("faq", __name__)
 
@@ -39,6 +40,12 @@ def submit_question():
         question_id = cursor.fetchone()[0]
 
         conn.commit()
+
+        socketio.emit(
+            "faq_question_submitted",
+            {"question_id": question_id},
+            room="admins",
+        )
 
         return jsonify(
             {

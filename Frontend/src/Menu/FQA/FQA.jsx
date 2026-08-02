@@ -64,7 +64,7 @@ const FQA = () => {
     }
     setAskStatus("sending");
     try {
-      const res = await fetch(`${API_URL}/api/faq/submit-question`, {
+      const res = await fetch(`${API_URL}/faq/submit-question`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({

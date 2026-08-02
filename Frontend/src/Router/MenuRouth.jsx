@@ -27,7 +27,8 @@ import DealHub from "../Menu/Home/pages/Dealhub.jsx";
 import DealWorkspace from "../Menu/Home/pages/DealWorkspace";
 import Settings from "../pages/Setting/Settings.jsx";
 import VerifiedRoute from "../components/VerifiedRoute.jsx" 
-
+import Verification from '../Admin/Verification/Verification.jsx'
+import FaqPage from '../Admin/Faq/FaqPage.jsx'
 
 
 
@@ -150,13 +151,14 @@ const Layout = () => {
         <Route path="/transactions" element={ <VerifiedRoute> <TransactionHistory /> </VerifiedRoute> }/>
         <Route path="/transaction/:transactionId" element={<VerifiedRoute> <TransactionDetails /> </VerifiedRoute> }/>
         <Route path="/deal/:roomCode" element={ <VerifiedRoute> <DealWorkspace /> </VerifiedRoute> }/>
-
+        <Route path="/admin/verification" element={<ProtectedAdminRoute><Verification /></ProtectedAdminRoute>}/>
+        <Route path="/admin/faq" element={<ProtectedAdminRoute><FaqPage /></ProtectedAdminRoute>}/>
         <Route path="/deals" element={ <VerifiedRoute> <DealHub />  </VerifiedRoute> } />
 
         <Route path="/settings" element={ <ProtectedRoute> <Settings /> </ProtectedRoute> } />
 
         {/* Temporary Bakong testing page */}
-       {/* <Route
+      {/* <Route
           path="/bakong-test"
           element={<BakongTest />}
         /> */}

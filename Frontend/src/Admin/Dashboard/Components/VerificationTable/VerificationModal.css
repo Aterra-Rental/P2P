@@ -18,7 +18,9 @@
 
 .verification-modal{
 
-    width:850px;
+    width:85vh;
+
+    overflow-y: auto;
 
     max-width:95%;
 

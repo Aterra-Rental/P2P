@@ -372,3 +372,20 @@
     grid-column: span 1;
   }
 }
+/* --- Status filter dropdown --- */
+
+.users-status-filter {
+  background: #120C20;
+  border: 1px solid #362C5C;
+  border-radius: 10px;
+  padding: 10px 14px;
+  color: #EDE9FE;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.users-status-filter:focus {
+  border-color: #7C5CFF;
+}

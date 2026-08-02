@@ -1,6 +1,10 @@
 import "./VerificationModal.css";
 import { useEffect, useState } from "react";
-import {API_URL} from "../../../../lib/api";
+import { API_URL } from "../../../../lib/api";
+
+// Uploaded files (ID images) are served from the backend root,
+// not under /api — strip it off for building image URLs.
+const API_ROOT = API_URL.replace(/\/api$/, "");
 
 const VerificationModal = ({ user, onClose, onVerified }) => {
 
@@ -13,7 +17,7 @@ const VerificationModal = ({ user, onClose, onVerified }) => {
             return;
         }
 
-        fetch(`${API_URL}/api/admin/verifications/${user.user_id}`)
+        fetch(`${API_URL}/admin/verifications/${user.user_id}`)
             .then(res => res.json())
             .then(data => setDetails(data))
             .catch(err => console.error(err));
@@ -24,7 +28,7 @@ const VerificationModal = ({ user, onClose, onVerified }) => {
     try {
 
         const res = await fetch(
-            `${API_URL}/api/admin/verifications/${user.user_id}/approve`,
+            `${API_URL}/admin/verifications/${user.user_id}/approve`,
             {
                 method: "PUT"
             }
@@ -49,7 +53,7 @@ const handleReject = async () => {
     try {
 
         const res = await fetch(
-            `${API_URL}/api/admin/verifications/${user.user_id}/reject`,
+            `${API_URL}/admin/verifications/${user.user_id}/reject`,
             {
                 method: "PUT"
             }
@@ -117,7 +121,7 @@ const handleReject = async () => {
                             <h4>Front ID</h4>
 
                             <img
-                                src={`${API_URL}/${details.national_id_front}`}
+                                src={`${API_ROOT}/${details.national_id_front}`}
                                 alt="Front ID"
                             />
 
@@ -128,7 +132,7 @@ const handleReject = async () => {
                             <h4>Back ID</h4>
 
                             <img
-                                src={`${API_URL}/${details.national_id_back}`}
+                                src={`${API_ROOT}/${details.national_id_back}`}
                                 alt="Back ID"
                             />
 

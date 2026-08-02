@@ -2,8 +2,20 @@
 
     display:grid;
 
-    grid-template-columns:repeat(auto-fit, minmax(250px,1fr));
+    grid-template-columns:repeat(auto-fit, minmax(200px,1fr));
 
     gap:25px;
+
+}
+
+.chart-section{
+
+    margin-top:30px;
+
+    background:rgba(255,255,255,0.03);
+
+    border-radius:16px;
+
+    padding:20px;
 
 }

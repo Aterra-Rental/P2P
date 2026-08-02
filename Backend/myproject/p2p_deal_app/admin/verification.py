@@ -18,12 +18,13 @@ def get_pending_verifications():
                 CONCAT(ud.firstname, ' ', ud.lastname) AS fullname,
                 ul.email,
                 ud.phonenumber,
-                ud.verify_status
+                ud.verify_status,
+                ud.joined_at
             FROM user_details ud
             JOIN user_login ul
                 ON ud.user_id = ul.user_id
             WHERE ud.verify_status = 'Pending'
-            ORDER BY ud.user_id DESC;
+            ORDER BY ud.joined_at ASC;
         """)
 
         rows = cur.fetchall()
@@ -36,7 +37,8 @@ def get_pending_verifications():
                 "fullname": row[1],
                 "email": row[2],
                 "phone": row[3],
-                "verify_status": row[4]
+                "verify_status": row[4],
+                "joined_at": row[5].isoformat() if row[5] else None
             })
 
         return jsonify(users), 200

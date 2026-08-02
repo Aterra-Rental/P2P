@@ -34,6 +34,22 @@ const AdminLayout = ({ children }) => {
             );
         };
 
+        const handleFaqQuestionSubmitted = (data) => {
+            console.log(
+                "Global admin FAQ question submitted:",
+                data
+            );
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "admin-faq-updated",
+                    {
+                        detail: data
+                    }
+                )
+            );
+        };
+
         if (socket.connected) {
             joinAdminRoom();
         }
@@ -45,12 +61,22 @@ const AdminLayout = ({ children }) => {
             handleVerificationUpdated
         );
 
+        socket.on(
+            "faq_question_submitted",
+            handleFaqQuestionSubmitted
+        );
+
         return () => {
             socket.off("connect", joinAdminRoom);
 
             socket.off(
                 "verification_updated",
                 handleVerificationUpdated
+            );
+
+            socket.off(
+                "faq_question_submitted",
+                handleFaqQuestionSubmitted
             );
         };
 

@@ -7,7 +7,7 @@ const SubmittedQuestions = () => {
   const [replyText, setReplyText] = useState({});
 
   const loadQuestions = () => {
-    fetch(`${API_URL}/api/faq/questions`)
+    fetch(`${API_URL}/faq/questions`)
       .then((res) => res.json())
       .then((data) => setQuestions(data))
       .catch((err) => console.error(err));
@@ -16,6 +16,19 @@ const SubmittedQuestions = () => {
   useEffect(() => {
     loadQuestions();
   }, []);
+
+  useEffect(() => {
+    const handleFaqUpdate = () => {
+      loadQuestions();
+    };
+
+    window.addEventListener("admin-faq-updated", handleFaqUpdate);
+
+    return () => {
+      window.removeEventListener("admin-faq-updated", handleFaqUpdate);
+    };
+  }, []);
+
   async function submitReply(questionId) {
     const reply = (replyText[questionId] || "").trim();
 
@@ -27,7 +40,7 @@ const SubmittedQuestions = () => {
     try {
       const admin = JSON.parse(localStorage.getItem("admin") || "{}");
 
-      const res = await fetch(`${API_URL}/api/faq/reply`, {
+      const res = await fetch(`${API_URL}/faq/reply`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -55,10 +68,19 @@ const SubmittedQuestions = () => {
     }
   }
 
+  // Only show questions that haven't been answered yet,
+  // ordered oldest-first so admins reply in submission order.
+  const pendingQuestions = questions
+    .filter((q) => q.status !== "Answered")
+    .sort((a, b) => new Date(a.created_at) - new Date(b.created_at));
+
   return (
     <div className="verification-table">
       <div className="table-header">
         <h2>Submitted Questions</h2>
+        <span className="faq-total-count">
+          {pendingQuestions.length} pending
+        </span>
       </div>
 
       <table>
@@ -73,28 +95,24 @@ const SubmittedQuestions = () => {
           </tr>
         </thead>
         <tbody>
-          {questions.map((q) => (
+          {pendingQuestions.map((q) => (
             <tr key={q.question_id}>
               <td>{q.firstname ? `${q.firstname} ${q.lastname}` : q.email}</td>
 
               <td>{q.question}</td>
 
               <td>
-                {q.admin_reply ? (
-                  <div>{q.admin_reply}</div>
-                ) : (
-                  <textarea
-                    rows={2}
-                    value={replyText[q.question_id] || ""}
-                    onChange={(e) =>
-                      setReplyText((prev) => ({
-                        ...prev,
-                        [q.question_id]: e.target.value,
-                      }))
-                    }
-                    placeholder="Write reply..."
-                  />
-                )}
+                <textarea
+                  rows={2}
+                  value={replyText[q.question_id] || ""}
+                  onChange={(e) =>
+                    setReplyText((prev) => ({
+                      ...prev,
+                      [q.question_id]: e.target.value,
+                    }))
+                  }
+                  placeholder="Write reply..."
+                />
               </td>
 
               <td>
@@ -106,14 +124,20 @@ const SubmittedQuestions = () => {
               <td>{new Date(q.created_at).toLocaleDateString()}</td>
 
               <td>
-                {!q.admin_reply && (
-                  <button onClick={() => submitReply(q.question_id)}>
-                    Reply
-                  </button>
-                )}
+                <button onClick={() => submitReply(q.question_id)}>
+                  Reply
+                </button>
               </td>
             </tr>
           ))}
+
+          {pendingQuestions.length === 0 && (
+            <tr>
+              <td colSpan={6} className="faq-empty-row">
+                No pending questions.
+              </td>
+            </tr>
+          )}
         </tbody>
       </table>
     </div>

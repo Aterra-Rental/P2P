@@ -17,7 +17,13 @@ from routes.bakong import bakong_bp
 app = Flask(__name__)
 app.config.from_object(Config)
 
-CORS(app)
+CORS(
+    app,
+    supports_credentials=True,
+    origins=["http://localhost:5173"],
+    methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+    allow_headers=["Content-Type", "Authorization"],
+)
 
 socketio.init_app(
     app,

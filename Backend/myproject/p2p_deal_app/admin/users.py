@@ -44,6 +44,7 @@ def get_users():
     try:
 
         search = request.args.get("search", "", type=str).strip()
+        status = request.args.get("status", "", type=str).strip()
 
         try:
             page = int(request.args.get("page", 1))
@@ -64,21 +65,35 @@ def get_users():
         if per_page > 100:
             per_page = 100
 
-        where_clause = ""
+        conditions = []
         params = []
 
         if search:
-            where_clause = """
-                WHERE ul.email ILIKE %s
-                   OR ud.firstname ILIKE %s
-                   OR ud.lastname ILIKE %s
-                   OR ud.username ILIKE %s
-                   OR ud.phonenumber ILIKE %s
-            """
+            conditions.append("""
+                (
+                    ul.email ILIKE %s
+                    OR ud.firstname ILIKE %s
+                    OR ud.lastname ILIKE %s
+                    OR ud.username ILIKE %s
+                    OR ud.phonenumber ILIKE %s
+                )
+            """)
             like_term = f"%{search}%"
-            params = [like_term, like_term, like_term, like_term, like_term]
+            params += [like_term, like_term, like_term, like_term, like_term]
 
-        # Total count for pagination (same search filter, same join)
+        if status:
+            if status.lower() == "not_started":
+                conditions.append("ud.verify_status IS NULL")
+            else:
+                conditions.append("ud.verify_status = %s")
+                params.append(status)
+
+        where_clause = ""
+
+        if conditions:
+            where_clause = "WHERE " + " AND ".join(conditions)
+
+        # Total count for pagination (same filters, same join)
         cur.execute(
             f"""
             SELECT COUNT(*)

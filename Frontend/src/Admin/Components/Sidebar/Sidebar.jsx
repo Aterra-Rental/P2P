@@ -5,7 +5,8 @@ import {
     FaUserCheck,
     FaMoneyCheckAlt,
     FaSignOutAlt,
-    FaShieldAlt
+    FaShieldAlt,
+    FaQuestionCircle
 } from "react-icons/fa";
 
 import "./Sidebar.css";
@@ -57,6 +58,11 @@ const Sidebar = () => {
                 <NavLink to="/admin/transactions">
                     <FaMoneyCheckAlt />
                     <span>Transactions</span>
+                </NavLink>
+
+                <NavLink to="/admin/faq">
+                    <FaQuestionCircle />
+                    <span>FAQ</span>
                 </NavLink>
 
             </nav>

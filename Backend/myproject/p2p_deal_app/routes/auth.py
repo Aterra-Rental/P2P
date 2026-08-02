@@ -2,6 +2,7 @@ from flask import Blueprint, request, jsonify
 from database import get_db
 import bcrypt
 from services.auth_token import create_access_token
+from socketio_instance import socketio
 auth_bp = Blueprint("auth", __name__)
 @auth_bp.route("/register", methods=["POST"])
 def register():
@@ -41,9 +42,12 @@ def register():
             """
             INSERT INTO user_login (email, passwordhash)
             VALUES (%s, %s)
+            RETURNING user_id
             """,
             (email, password_hash)
         )
+
+        new_user_id = cursor.fetchone()[0]
 
         conn.commit()
 
@@ -57,7 +61,15 @@ def register():
             LIMIT 5
         """)
         print(cursor.fetchall())
-                
+
+        socketio.emit(
+            "new_user_registered",
+            {
+                "user_id": new_user_id,
+                "email": email,
+            },
+            room="admins",
+        )
 
         return jsonify({"message": "Registration successful"}), 201
 

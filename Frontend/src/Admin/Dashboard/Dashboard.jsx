@@ -4,13 +4,13 @@ import {
     FaUsers,
     FaUserCheck,
     FaMoneyCheckAlt,
-    FaCheckCircle
+    FaCheckCircle,
+    FaQuestionCircle
 } from "react-icons/fa";
 
-import VerificationTable from "./Components/VerificationTable/VerificationTable";
 import AdminLayout from "../Components/Layout/AdminLayout";
 import StatCard from "./Components/StatCard/StatCard";
-import SubmittedQuestions from "./Components/SubmittedQuestions/SubmittedQuestions";
+import SignupsChart from "./Components/SignupsChart/SignupsChart";
 
 import {API_URL} from "../../lib/api";
 
@@ -18,11 +18,12 @@ import "./Dashboard.css";
 
 const Dashboard = () => {
     const [pendingCount, setPendingCount] = useState(0);
+    const [pendingFaqCount, setPendingFaqCount] = useState(0);
 
     const fetchPendingCount = useCallback(async () => {
         try {
             const response = await fetch(
-                `${API_URL}/api/admin/verifications`
+                `${API_URL}/admin/verifications`
             );
 
             const data = await response.json();
@@ -46,18 +47,55 @@ const Dashboard = () => {
         }
     }, []);
 
+    const fetchPendingFaqCount = useCallback(async () => {
+        try {
+            const response = await fetch(
+                `${API_URL}/faq/questions`
+            );
+
+            const data = await response.json();
+
+            if (!response.ok) {
+                throw new Error(
+                    data.message ||
+                    "Failed to load FAQ questions."
+                );
+            }
+
+            const pending = Array.isArray(data)
+                ? data.filter((q) => q.status !== "Answered")
+                : [];
+
+            setPendingFaqCount(pending.length);
+
+        } catch (error) {
+            console.error(
+                "Failed to fetch pending FAQ count:",
+                error
+            );
+        }
+    }, []);
+
     useEffect(() => {
         const handleVerificationUpdate = () => {
             fetchPendingCount();
         };
 
-        // Load count when dashboard opens
-        fetchPendingCount();
+        const handleFaqUpdate = () => {
+            fetchPendingFaqCount();
+        };
 
-        // Receive global event from AdminLayout
+        fetchPendingCount();
+        fetchPendingFaqCount();
+
         window.addEventListener(
             "admin-verification-updated",
             handleVerificationUpdate
+        );
+
+        window.addEventListener(
+            "admin-faq-updated",
+            handleFaqUpdate
         );
 
         return () => {
@@ -65,8 +103,13 @@ const Dashboard = () => {
                 "admin-verification-updated",
                 handleVerificationUpdate
             );
+
+            window.removeEventListener(
+                "admin-faq-updated",
+                handleFaqUpdate
+            );
         };
-    }, [fetchPendingCount]);
+    }, [fetchPendingCount, fetchPendingFaqCount]);
 
     return (
         <AdminLayout>
@@ -78,13 +121,6 @@ const Dashboard = () => {
                     value="245"
                     icon={<FaUsers />}
                     color="linear-gradient(135deg,#7C3AED,#A855F7)"
-                />
-
-                <StatCard
-                    title="Pending Verification"
-                    value={pendingCount}
-                    icon={<FaUserCheck />}
-                    color="linear-gradient(135deg,#F59E0B,#FBBF24)"
                 />
 
                 <StatCard
@@ -101,11 +137,25 @@ const Dashboard = () => {
                     color="linear-gradient(135deg,#10B981,#34D399)"
                 />
 
+                <StatCard
+                    title="Pending Verification"
+                    value={pendingCount}
+                    icon={<FaUserCheck />}
+                    color="linear-gradient(135deg,#F59E0B,#FBBF24)"
+                />
+
+                <StatCard
+                    title="Pending FAQ"
+                    value={pendingFaqCount}
+                    icon={<FaQuestionCircle />}
+                    color="linear-gradient(135deg,#EC4899,#F472B6)"
+                />
+
             </div>
 
-            <VerificationTable />
-
-            <SubmittedQuestions />
+            <div className="chart-section">
+                <SignupsChart />
+            </div>
 
         </AdminLayout>
     );
