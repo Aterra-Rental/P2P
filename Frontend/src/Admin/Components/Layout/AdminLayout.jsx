@@ -50,6 +50,22 @@ const AdminLayout = ({ children }) => {
             );
         };
 
+        const handleTransactionCompleted = (data) => {
+            console.log(
+                "Global admin transaction completed:",
+                data
+            );
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "admin-transaction-updated",
+                    {
+                        detail: data
+                    }
+                )
+            );
+        };
+
         if (socket.connected) {
             joinAdminRoom();
         }
@@ -66,6 +82,11 @@ const AdminLayout = ({ children }) => {
             handleFaqQuestionSubmitted
         );
 
+        socket.on(
+            "transaction_completed",
+            handleTransactionCompleted
+        );
+
         return () => {
             socket.off("connect", joinAdminRoom);
 
@@ -77,6 +98,11 @@ const AdminLayout = ({ children }) => {
             socket.off(
                 "faq_question_submitted",
                 handleFaqQuestionSubmitted
+            );
+
+            socket.off(
+                "transaction_completed",
+                handleTransactionCompleted
             );
         };
 
