@@ -30,7 +30,9 @@ import VerifiedRoute from "../components/VerifiedRoute.jsx"
 import Verification from '../Admin/Verification/Verification.jsx'
 import FaqPage from '../Admin/Faq/FaqPage.jsx'
 
-
+import PrivacyPolicy from '../pages/Legal/PrivacyPolicy';
+import TermsOfService from '../pages/Legal/TermsOfService';
+import Status from '../pages/Legal/Status';
 
 
 
@@ -154,6 +156,10 @@ const Layout = () => {
         <Route path="/admin/verification" element={<ProtectedAdminRoute><Verification /></ProtectedAdminRoute>}/>
         <Route path="/admin/faq" element={<ProtectedAdminRoute><FaqPage /></ProtectedAdminRoute>}/>
         <Route path="/deals" element={ <VerifiedRoute> <DealHub />  </VerifiedRoute> } />
+
+<Route path="/privacy-policy" element={<PrivacyPolicy />} />
+<Route path="/terms-of-service" element={<TermsOfService />} />
+<Route path="/status" element={<Status />} />
 
         <Route path="/settings" element={ <ProtectedRoute> <Settings /> </ProtectedRoute> } />
 
