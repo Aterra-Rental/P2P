@@ -4,6 +4,35 @@
   gap: 20px;
 }
 
+
+.cancellation-entry {
+  display: flex;
+  justify-content: flex-end;
+}
+
+.cancellation-open-button {
+  min-height: 44px;
+  padding: 11px 18px;
+  border: 1px solid rgba(248, 113, 113, 0.42);
+  border-radius: 11px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #fca5a5;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+  transition:
+    background 160ms ease,
+    border-color 160ms ease,
+    transform 160ms ease;
+}
+
+.cancellation-open-button:hover {
+  border-color: rgba(248, 113, 113, 0.72);
+  background: rgba(239, 68, 68, 0.18);
+  transform: translateY(-1px);
+}
+
+
 .cancellation-heading > span {
   display: block;
   margin-bottom: 7px;
@@ -187,6 +216,34 @@
   color: #fca5a5;
 }
 
+.cancellation-form-actions {
+  display: flex;
+  gap: 10px;
+  justify-content: flex-end;
+}
+
+.cancellation-return-button {
+  min-height: 44px;
+  padding: 11px 14px;
+  border: 1px solid rgba(167, 139, 250, 0.32);
+  border-radius: 11px;
+  background: transparent;
+  color: #ddd6fe;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.cancellation-return-button:hover {
+  border-color: rgba(167, 139, 250, 0.6);
+  background: rgba(139, 92, 246, 0.1);
+}
+
+.cancellation-return-button:disabled {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
 @media (max-width: 620px) {
   .cancellation-refund-summary,
   .cancellation-actions {
@@ -196,5 +253,18 @@
   .cancellation-form-footer {
     align-items: stretch;
     flex-direction: column;
+  }
+    .cancellation-entry,
+  .cancellation-form-actions {
+    width: 100%;
+  }
+
+  .cancellation-form-actions {
+    flex-direction: column-reverse;
+  }
+
+  .cancellation-open-button,
+  .cancellation-form-actions button {
+    width: 100%;
   }
 }

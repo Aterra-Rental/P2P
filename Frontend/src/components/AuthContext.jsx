@@ -8,7 +8,10 @@ import {
 } from "react";
 
 import { getUserProfile } from "../lib/profile";
-import { socket } from "../lib/socket";
+import {
+  disconnectSocket,
+  socket,
+} from "../lib/socket";
 
 const AuthContext = createContext(null);
 
@@ -79,11 +82,19 @@ export const AuthProvider = ({ children }) => {
   }, []);
 
   // Load the account only once when the application starts.
+   // Load the account once after the initial render.
   useEffect(() => {
-    refreshUser();
+    const initialRefreshTimer = window.setTimeout(
+      refreshUser,
+      0
+    );
+
+    return () => {
+      window.clearTimeout(initialRefreshTimer);
+    };
   }, [refreshUser]);
 
-  // Listen globally for profile and verification changes.
+  // Join the authenticated personal Socket.IO room.
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
 
@@ -92,40 +103,23 @@ export const AuthProvider = ({ children }) => {
     }
 
     const joinUserRoom = () => {
-      socket.emit("join_user", {
-        user_id: userId,
-      });
+      socket.emit("join_user");
     };
-
-   const handleUserUpdate = async (data) => {
-      console.log("verification_updated received:", data);
-  if (!data?.user_id) {
-    return;
-  }
-
-  if (String(data.user_id) !== String(userId)) {
-    return;
-  }
-
-  await refreshUser();
-};
 
     if (socket.connected) {
       joinUserRoom();
     }
 
     socket.on("connect", joinUserRoom);
-    // socket.on("profile_updated", handleUserUpdate);
-    // socket.on("verification_updated", handleUserUpdate);
 
     return () => {
       socket.off("connect", joinUserRoom);
-    //   socket.off("profile_updated", handleUserUpdate);
-    //   socket.off("verification_updated", handleUserUpdate);
     };
-  }, [refreshUser]);
+  }, []);
 
   const logout = () => {
+    disconnectSocket();
+
     localStorage.removeItem("user_id");
     localStorage.removeItem("email");
     localStorage.removeItem("user");
@@ -147,7 +141,8 @@ export const AuthProvider = ({ children }) => {
     </AuthContext.Provider>
   );
 };
-
+// This file intentionally exports its provider and matching hook.
+// eslint-disable-next-line react-refresh/only-export-components
 export const useAuth = () => {
   const context = useContext(AuthContext);
 

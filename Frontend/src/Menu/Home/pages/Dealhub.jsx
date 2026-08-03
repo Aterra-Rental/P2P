@@ -58,20 +58,14 @@ const DealHub = () => {
           getInvitations(currentUserId),
         ]);
 
-        setRooms((previousRooms) => {
-          const newRooms = roomResponse.success ? roomResponse.rooms : [];
+        const newRooms = roomResponse.success ? roomResponse.rooms : [];
 
-          return newRooms.map((newRoom) => {
-            const previousRoom = previousRooms.find(
-              (room) => room.room_code === newRoom.room_code,
-            );
-
-            return {
-              ...newRoom,
-              reminded: previousRoom?.reminded || false,
-            };
-          });
-        });
+        setRooms(
+          newRooms.map((newRoom) => ({
+            ...newRoom,
+            reminded: Boolean(newRoom.has_unread_reminder),
+          })),
+        );
         setInvitations(
           invitationResponse.success ? invitationResponse.invitations : [],
         );
@@ -91,12 +85,12 @@ const DealHub = () => {
       return;
     }
 
-    refreshData(true);
+    const initialLoadTimer = window.setTimeout(() => {
+      refreshData(true);
+    }, 0);
 
-    const joinPersonalRoom = () => {
-      socket.emit("join_user", {
-        user_id: currentUserId,
-      });
+     const joinPersonalRoom = () => {
+      socket.emit("join_user");
     };
 
     // Join now if connected, and join again after every reconnection.
@@ -124,11 +118,14 @@ const DealHub = () => {
     };
 
     socket.on("room_updated", handleRoomUpdated);
+    socket.on("user_data_changed", handleRoomUpdated);
     socket.on("partner_reminded", handlePartnerReminded);
 
     return () => {
+      window.clearTimeout(initialLoadTimer);
       socket.off("connect", joinPersonalRoom);
       socket.off("room_updated", handleRoomUpdated);
+      socket.off("user_data_changed", handleRoomUpdated);
       socket.off("partner_reminded", handlePartnerReminded);
     };
   }, [refreshData, currentUserId]);
@@ -162,6 +159,12 @@ const DealHub = () => {
 
   const visibleRooms = rooms.filter((room) => {
     const isCreator = String(room.created_by) === String(currentUserId);
+
+    const isTerminalRoom = ["Completed", "Cancelled"].includes(room.status);
+
+    if (isTerminalRoom) {
+      return false;
+    }
 
     const isRejectedInvitee = room.status === "Rejected" && !isCreator;
 
@@ -291,7 +294,7 @@ const DealHub = () => {
                       />
                     ))}
                 </div>
-                {rooms.length === 0 && invitations.length === 0 && (
+                {visibleRooms.length === 0 && invitations.length === 0 && (
                   <div
                     style={{
                       color: "#6f6785",

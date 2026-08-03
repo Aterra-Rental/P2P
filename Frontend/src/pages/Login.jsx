@@ -4,6 +4,10 @@ import { useAuth } from "../components/AuthContext";
 import { Flame } from "lucide-react";
 import "./Auth.css";
 import { API_URL } from "../lib/api";
+import {
+  reconnectAuthenticatedSocket,
+} from "../lib/socket";
+
 const Login = () => {
 
   const navigate = useNavigate();
@@ -67,6 +71,8 @@ const Login = () => {
                 email: data.email,
             })
         );
+
+        reconnectAuthenticatedSocket();
         await refreshUser();
 
         navigate("/Home", {

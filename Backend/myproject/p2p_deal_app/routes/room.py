@@ -1,4 +1,5 @@
-from flask import Blueprint, request, jsonify
+from flask import Blueprint, g, jsonify, request
+from services.auth_required import login_required
 from database import get_db
 import random
 import string
@@ -70,21 +71,28 @@ def generate_room_code(length=6):
 
 
 @room_bp.route("/check-user/<int:user_id>", methods=["GET"])
+@login_required
 def check_user(user_id):
 
     conn = get_db()
     cur = conn.cursor()
 
     try:
-        cur.execute("""
-            SELECT
-                user_id,
-                firstname,
-                lastname,
-                verify_status
-            FROM user_details
-            WHERE user_id = %s
-        """, (user_id,))
+        cur.execute(
+                """
+                SELECT
+                    details.user_id,
+                    details.firstname,
+                    details.lastname,
+                    details.verify_status,
+                    login.email
+                FROM user_details details
+                JOIN user_login login
+                    ON login.user_id = details.user_id
+                WHERE details.user_id = %s
+                """,
+                (user_id,),
+            )
 
         user = cur.fetchone()
 
@@ -100,7 +108,8 @@ def check_user(user_id):
                 "user_id": user[0],
                 "firstname": user[1],
                 "lastname": user[2],
-                "verify_status": user[3]
+                "verify_status": user[3],
+                "email": user[4],
             }
         }), 200
 
@@ -361,8 +370,14 @@ def get_rooms():
             JOIN user_details i
                 ON r.invited_user_id = i.user_id
 
-            WHERE r.created_by = %s
-            OR r.invited_user_id = %s
+            WHERE (
+                r.created_by = %s
+                OR r.invited_user_id = %s
+            )
+            AND r.status NOT IN (
+                'Completed',
+                'Cancelled'
+            )
 
             ORDER BY r.created_at DESC
         """, (user_id, user_id, user_id))
@@ -426,46 +441,69 @@ def get_rooms():
 # GET INVITATIONS
 # ======================================================
 @room_bp.route("/rooms/invitations/<int:user_id>", methods=["GET"])
+@login_required
 def get_invitations(user_id):
+    if int(g.current_user_id) != int(user_id):
+        return jsonify({
+            "success": False,
+            "message": (
+                "You cannot view another user's invitations."
+            ),
+    }), 403
 
     conn = get_db()
     cur = conn.cursor()
 
     try:
 
-        cur.execute("""
+        cur.execute(
+            """
             SELECT
                 r.room_id,
                 r.room_code,
                 r.created_by,
-                CONCAT(u.firstname, ' ', u.lastname) AS creator_name,
+                CONCAT(
+                    details.firstname,
+                    ' ',
+                    details.lastname
+                ) AS creator_name,
+                login.email,
                 r.item_name,
                 r.item_description,
+                r.product_type,
                 r.agreed_price,
                 r.status,
                 r.created_at
             FROM room r
-            JOIN user_details u
-                ON r.created_by = u.user_id
+            JOIN user_details details
+                ON details.user_id = r.created_by
+            JOIN user_login login
+                ON login.user_id = r.created_by
             WHERE r.invited_user_id = %s
             AND r.status = 'Waiting'
             ORDER BY r.created_at DESC
-        """, (user_id,))
+            """,
+            (user_id,),
+        )
 
         invitations = []
 
         for row in cur.fetchall():
 
-            invitations.append({
+           invitations.append({
                 "room_id": row[0],
                 "room_code": row[1],
                 "created_by": row[2],
                 "creator_name": row[3],
-                "item_name": row[4],
-                "item_description": row[5],
-                "agreed_price": float(row[6]) if row[6] else 0,
-                "status": row[7],
-                "created_at": row[8]
+                "creator_email": row[4],
+                "item_name": row[5],
+                "item_description": row[6],
+                "product_type": row[7],
+                "agreed_price": (
+                    float(row[8]) if row[8] else 0
+                ),
+                "status": row[9],
+                "created_at": row[10],
             })
 
         return jsonify({
@@ -773,55 +811,62 @@ def reject_room(room_code):
 
 
 @room_bp.route("/rooms/<room_code>/", methods=["DELETE"])
+@login_required
 def delete_room(room_code):
-    data = request.get_json(silent=True) or {}
-    user_id = data.get("user_id")
-
-    if not user_id:
-        return jsonify({
-            "success": False,
-            "message": "User ID is required."
-        }), 400
+    user_id = g.current_user_id
 
     conn = get_db()
     cur = conn.cursor()
 
     try:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT
                 created_by,
                 invited_user_id,
                 status
             FROM room
             WHERE room_code = %s
-        """, (room_code,))
+            FOR UPDATE
+            """,
+            (room_code,),
+        )
 
         room = cur.fetchone()
 
         if not room:
             return jsonify({
                 "success": False,
-                "message": "Room not found."
+                "message": "Room not found.",
             }), 404
 
         created_by, invited_user_id, status = room
 
-        if str(created_by) != str(user_id):
+        if int(created_by) != int(user_id):
             return jsonify({
                 "success": False,
-                "message": "Only the room creator can delete this room."
+                "message": (
+                    "Only the room creator can cancel "
+                    "this invitation."
+                ),
             }), 403
 
-        if status != "Rejected":
+        if status not in {"Waiting", "Rejected"}:
             return jsonify({
                 "success": False,
-                "message": "Only rejected rooms can be deleted."
-            }), 400
+                "message": (
+                    "Only waiting or rejected rooms "
+                    "can be deleted."
+                ),
+            }), 409
 
-        cur.execute("""
+        cur.execute(
+            """
             DELETE FROM room
             WHERE room_code = %s
-        """, (room_code,))
+            """,
+            (room_code,),
+        )
 
         conn.commit()
 
@@ -835,16 +880,21 @@ def delete_room(room_code):
 
         return jsonify({
             "success": True,
-            "message": "Room deleted successfully."
+            "message": (
+                "Invitation cancelled successfully."
+                if status == "Waiting"
+                else "Rejected room deleted successfully."
+            ),
         }), 200
 
-    except Exception as e:
+    except Exception as error:
         conn.rollback()
         traceback.print_exc()
+
         return jsonify({
             "success": False,
-            "error": str(e),
-            "message": str(e)
+            "message": "Unable to delete this room.",
+            "error": str(error),
         }), 500
 
     finally:
@@ -962,17 +1012,9 @@ from datetime import datetime, timedelta
 
 
 @room_bp.route("/rooms/<room_code>/remind", methods=["POST"])
+@login_required
 def remind_partner(room_code):
-
-    data = request.get_json(silent=True) or {}
-
-    sender_id = data.get("user_id")
-
-    if not sender_id:
-        return jsonify({
-            "success": False,
-            "message": "User ID is required."
-        }), 400
+    sender_id = g.current_user_id
 
     conn = get_db()
     cur = conn.cursor()
@@ -983,14 +1025,19 @@ def remind_partner(room_code):
         # Find room
         # ------------------------------------
 
-        cur.execute("""
-            SELECT
-                room_id,
-                created_by,
-                invited_user_id
-            FROM room
-            WHERE room_code=%s
-        """, (room_code,))
+        cur.execute(
+                """
+                SELECT
+                    room_id,
+                    created_by,
+                    invited_user_id,
+                    status,
+                    current_step
+                FROM room
+                WHERE room_code = %s
+                """,
+                (room_code,),
+            )
 
         room = cur.fetchone()
 
@@ -1003,6 +1050,20 @@ def remind_partner(room_code):
         room_id = room[0]
         creator = room[1]
         invited = room[2]
+        status = room[3]
+        current_step = room[4]
+
+        if (
+            status in {"Completed", "Cancelled"}
+            or current_step in {"Completed", "Cancelled"}
+        ):
+            return jsonify({
+                "success": False,
+                "message": (
+                    "Reminders are unavailable because "
+                    "this deal has ended."
+                ),
+            }), 409
 
         # ------------------------------------
         # Determine receiver
@@ -1024,14 +1085,18 @@ def remind_partner(room_code):
         # Cooldown check
         # ------------------------------------
 
-        cur.execute("""
-            SELECT created_at
-            FROM room_reminders
-            WHERE room_id=%s
-            AND sender_id=%s
-            ORDER BY created_at DESC
-            LIMIT 1
-        """, (room_id, sender_id))
+        cur.execute(
+                """
+                SELECT created_at
+                FROM room_reminders
+                WHERE room_id = %s
+                AND sender_id = %s
+                AND is_read = FALSE
+                ORDER BY created_at DESC
+                LIMIT 1
+                """,
+                (room_id, sender_id),
+            )
 
         last = cur.fetchone()
 

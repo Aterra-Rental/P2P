@@ -19,6 +19,7 @@ from database import get_db
 from services.auth_required import login_required
 from services.wallet_service import (
     WalletError,
+    charge_unfunded_cancellation_fee,
     refund_escrow_to_buyer,
     release_escrow_to_seller,
 )
@@ -1483,30 +1484,30 @@ def submit_fulfillment(room_code):
 
     try:
         cursor.execute(
-    """
-    SELECT
-        r.room_id,
-        r.product_type,
-        r.current_step,
-        r.payment_status,
-        b.buyer_id,
-        s.seller_id,
-        e.status,
-        c.status
-    FROM room r
-    JOIN buyer b
-        ON b.room_id = r.room_id
-    JOIN seller s
-        ON s.room_id = r.room_id
-    JOIN deal_escrow e
-        ON e.room_id = r.room_id
-    LEFT JOIN deal_cancellation_request c
-        ON c.room_id = r.room_id
-    WHERE r.room_code = %s
-    FOR UPDATE OF r, b, s, e
-    """,
-    (room_code,),
-    )
+            """
+            SELECT
+                r.room_id,
+                r.product_type,
+                r.current_step,
+                r.payment_status,
+                b.buyer_id,
+                s.seller_id,
+                e.status,
+                c.status
+            FROM room r
+            JOIN buyer b
+                ON b.room_id = r.room_id
+            JOIN seller s
+                ON s.room_id = r.room_id
+            JOIN deal_escrow e
+                ON e.room_id = r.room_id
+            LEFT JOIN deal_cancellation_request c
+                ON c.room_id = r.room_id
+            WHERE r.room_code = %s
+            FOR UPDATE OF r, b, s, e
+            """,
+            (room_code,),
+        )
 
         deal = cursor.fetchone()
 
@@ -2461,7 +2462,10 @@ def get_cancellation_status(room_code):
                 b.buyer_id,
                 s.seller_id,
                 e.held_amount,
-                e.fee_amount,
+                COALESCE(
+                    e.fee_amount,
+                    f.fee_amount
+                ) AS effective_fee_amount,
                 e.status,
                 f.fee_payer,
                 c.requested_by,
@@ -2480,8 +2484,8 @@ def get_cancellation_status(room_code):
                 ON b.room_id = r.room_id
             JOIN seller s
                 ON s.room_id = r.room_id
-            JOIN deal_escrow e
-                ON e.room_id = r.room_id
+            LEFT JOIN deal_escrow e
+            ON e.room_id = r.room_id
             JOIN deal_fee_agreement f
                 ON f.room_id = r.room_id
             LEFT JOIN deal_cancellation_request c
@@ -2497,7 +2501,7 @@ def get_cancellation_status(room_code):
             return jsonify({
                 "success": False,
                 "message": (
-                    "Funded deal was not found."
+                    "Deal cancellation information was not found."
                 ),
             }), 404
 
@@ -2537,10 +2541,14 @@ def get_cancellation_status(room_code):
                 ),
             }), 403
 
-        held_amount = Decimal(held_amount)
+        held_amount = (
+            Decimal(held_amount)
+            if held_amount is not None
+            else Decimal("0.00")
+        )
         fee_amount = Decimal(fee_amount)
-        refund_preview = held_amount - fee_amount
-        cancellation_allowed = (
+
+        funded_cancellation_allowed = (
             room_status not in {"Completed", "Cancelled"}
             and current_step == "Delivery"
             and payment_status == "Paid"
@@ -2549,6 +2557,39 @@ def get_cancellation_status(room_code):
                 not shipping_status
                 or shipping_status == "NotShipped"
             )
+        )
+
+        unfunded_cancellation_allowed = (
+            room_status not in {"Completed", "Cancelled"}
+            and current_step == "Payment"
+            and payment_status == "Waiting"
+            and escrow_status in {
+                None,
+                "AwaitingPayment",
+            }
+        )
+
+        cancellation_allowed = (
+            funded_cancellation_allowed
+            or unfunded_cancellation_allowed
+        )
+
+        cancellation_mode = (
+            "funded"
+            if funded_cancellation_allowed
+            or escrow_status in {
+                "Held",
+                "Disputed",
+                "Released",
+                "Refunded",
+            }
+            else "unfunded"
+        )
+
+        refund_preview = (
+            held_amount - fee_amount
+            if cancellation_mode == "funded"
+            else Decimal("0.00")
         )
         cancellation_message = None
         if requested_by is not None:
@@ -2565,31 +2606,57 @@ def get_cancellation_status(room_code):
                     else "buyer"
                 )
 
-                cancellation_message = (
-                    f"{requester_role} requested "
-                    f"cancellation. Refund if approved: "
-                    f"${refund_preview:.2f}. "
-                    f"Non-refundable service fee: "
-                    f"${fee_amount:.2f}. "
-                    f"Waiting for the {waiting_for}."
-                )
+                if cancellation_mode == "unfunded":
+                    cancellation_message = (
+                        f"{requester_role} requested "
+                        "cancellation. If both users approve, "
+                        f"${fee_amount:.2f} will be charged "
+                        "from the buyer's wallet. "
+                        f"Waiting for the {waiting_for}."
+                    )
+                else:
+                    cancellation_message = (
+                        f"{requester_role} requested "
+                        f"cancellation. Refund if approved: "
+                        f"${refund_preview:.2f}. "
+                        f"Non-refundable service fee: "
+                        f"${fee_amount:.2f}. "
+                        f"Waiting for the {waiting_for}."
+                    )
 
             elif cancellation_status == "Rejected":
-                cancellation_message = (
-                    "The cancellation request was "
-                    "rejected. The deal remains active "
-                    "and escrow funds remain protected."
-                )
+                if cancellation_mode == "unfunded":
+                    cancellation_message = (
+                        "The cancellation request was "
+                        "rejected. The deal remains active, "
+                        "and no cancellation fee was charged."
+                    )
+                else:
+                    cancellation_message = (
+                        "The cancellation request was "
+                        "rejected. The deal remains active "
+                        "and escrow funds remain protected."
+                    )
 
             elif cancellation_status == "Processed":
-                cancellation_message = (
-                    "Deal cancelled by mutual agreement. "
-                    f"Buyer wallet refund: "
-                    f"${Decimal(stored_refund_amount):.2f}. "
-                    f"Service fee retained: "
-                    f"${Decimal(stored_retained_fee):.2f}. "
-                    "Seller received: $0.00."
-                )
+                if cancellation_mode == "unfunded":
+                    cancellation_message = (
+                        "Deal cancelled by mutual agreement. "
+                        "Platform fee charged to the buyer's "
+                        f"wallet: "
+                        f"${Decimal(stored_retained_fee):.2f}. "
+                        "No escrow deposit was made, so there "
+                        "is no payment refund."
+                    )
+                else:
+                    cancellation_message = (
+                        "Deal cancelled by mutual agreement. "
+                        f"Buyer wallet refund: "
+                        f"${Decimal(stored_refund_amount):.2f}. "
+                        f"Service fee retained: "
+                        f"${Decimal(stored_retained_fee):.2f}. "
+                        "Seller received: $0.00."
+                    )
 
         return jsonify({
             "success": True,
@@ -2600,6 +2667,7 @@ def get_cancellation_status(room_code):
             "shipping_status": shipping_status,
             "payment_status": payment_status,
             "escrow_status": escrow_status,
+            "cancellation_mode": cancellation_mode,
             "cancellation_allowed": cancellation_allowed,
             "buyer_id": buyer_id,
             "seller_id": seller_id,
@@ -2713,16 +2781,20 @@ def request_cancellation(room_code):
                 r.shipping_status,
                 b.buyer_id,
                 s.seller_id,
-                e.status
+                e.status,
+                f.fee_amount,
+                f.fee_payer
             FROM room r
             JOIN buyer b
                 ON b.room_id = r.room_id
             JOIN seller s
                 ON s.room_id = r.room_id
-            JOIN deal_escrow e
+            LEFT JOIN deal_escrow e
                 ON e.room_id = r.room_id
+            JOIN deal_fee_agreement f
+                ON f.room_id = r.room_id
             WHERE r.room_code = %s
-            FOR UPDATE OF r, b, s, e
+            FOR UPDATE OF r, b, s, f
             """,
             (room_code,),
         )
@@ -2733,7 +2805,8 @@ def request_cancellation(room_code):
             return jsonify({
                 "success": False,
                 "message": (
-                    "Funded deal was not found."
+                    "Deal cancellation information "
+                    "was not found."
                 ),
             }), 404
 
@@ -2746,7 +2819,11 @@ def request_cancellation(room_code):
             buyer_id,
             seller_id,
             escrow_status,
+            fee_amount,
+            fee_payer,
         ) = deal
+
+        fee_amount = Decimal(fee_amount)
 
         if authenticated_user_id not in {
             buyer_id,
@@ -2771,23 +2848,33 @@ def request_cancellation(room_code):
                 ),
             }), 409
 
-        # verifies payment is held and the deal is active.
+        # Allow safe cancellation before funding or before fulfillment.
+        funded_cancellation_state = (
+            current_step == "Delivery"
+            and payment_status == "Paid"
+            and escrow_status == "Held"
+        )
+
+        funded_cancellation_allowed = (
+            funded_cancellation_state
+            and (
+                not shipping_status
+                or shipping_status == "NotShipped"
+            )
+        )
+
+        unfunded_cancellation_allowed = (
+            current_step == "Payment"
+            and payment_status == "Waiting"
+            and escrow_status in {
+                None,
+                "AwaitingPayment",
+            }
+        )
+
         if (
-            current_step != "Delivery"
-            or payment_status != "Paid"
-            or escrow_status != "Held"
-        ):
-            return jsonify({
-                "success": False,
-                "message": (
-                    "Only a funded active deal can "
-                    "request mutual cancellation."
-                ),
-            }), 409
-        # prevents cancellation after fulfillment evidence
-        if (
-            shipping_status
-            and shipping_status != "NotShipped"
+            funded_cancellation_state
+            and not funded_cancellation_allowed
         ):
             return jsonify({
                 "success": False,
@@ -2799,6 +2886,25 @@ def request_cancellation(room_code):
                     "dispute resolution."
                 ),
             }), 409
+
+        if not (
+            funded_cancellation_allowed
+            or unfunded_cancellation_allowed
+        ):
+            return jsonify({
+                "success": False,
+                "message": (
+                    "Cancellation is only available while "
+                    "payment is waiting or while escrow "
+                    "funds are held before fulfillment."
+                ),
+            }), 409
+
+        cancellation_mode = (
+            "funded"
+            if funded_cancellation_allowed
+            else "unfunded"
+        )
 
         cursor.execute(
             """
@@ -2910,14 +3016,26 @@ def request_cancellation(room_code):
             else "buyer"
         )
 
-        message = (
-            f"{requester_role} requested cancellation. "
-            f"Waiting for the {waiting_for} to respond."
-        )
+        if cancellation_mode == "unfunded":
+            message = (
+                f"{requester_role} requested cancellation. "
+                "If both users approve, "
+                f"${fee_amount:.2f} will be charged from "
+                "the buyer's wallet as the platform fee. "
+                f"Waiting for the {waiting_for} to respond."
+            )
+        else:
+            message = (
+                f"{requester_role} requested cancellation. "
+                f"Waiting for the {waiting_for} to respond."
+            )
         event_data = {
             "room_id": room_id,
             "room_code": room_code,
             "resource": "cancellation",
+            "cancellation_mode": cancellation_mode,
+            "non_refundable_fee": float(fee_amount),
+            "agreed_fee_payer": fee_payer,
             "requested_by": authenticated_user_id,
             "buyer_confirmed": buyer_confirmed,
             "seller_confirmed": seller_confirmed,
@@ -2973,6 +3091,7 @@ def request_cancellation(room_code):
     "/deals/<room_code>/confirm-cancellation",
     methods=["POST"],
 )
+
 @login_required
 def confirm_cancellation(room_code):
     authenticated_user_id = g.current_user_id
@@ -2992,6 +3111,8 @@ def confirm_cancellation(room_code):
                 b.buyer_id,
                 s.seller_id,
                 e.status,
+                f.fee_amount,
+                f.fee_payer,
                 c.requested_by,
                 c.reason,
                 c.buyer_confirmed,
@@ -3004,12 +3125,14 @@ def confirm_cancellation(room_code):
                 ON b.room_id = r.room_id
             JOIN seller s
                 ON s.room_id = r.room_id
-            JOIN deal_escrow e
+            LEFT JOIN deal_escrow e
                 ON e.room_id = r.room_id
+            JOIN deal_fee_agreement f
+                ON f.room_id = r.room_id
             JOIN deal_cancellation_request c
                 ON c.room_id = r.room_id
             WHERE r.room_code = %s
-            FOR UPDATE OF r, b, s, e, c
+            FOR UPDATE OF r, b, s, f, c
             """,
             (room_code,),
         )
@@ -3033,6 +3156,8 @@ def confirm_cancellation(room_code):
             buyer_id,
             seller_id,
             escrow_status,
+            fee_amount,
+            fee_payer,
             requested_by,
             cancellation_reason,
             buyer_confirmed,
@@ -3041,6 +3166,8 @@ def confirm_cancellation(room_code):
             stored_refund_amount,
             stored_retained_fee,
         ) = state
+
+        fee_amount = Decimal(fee_amount)
 
         if authenticated_user_id not in {
             buyer_id,
@@ -3068,7 +3195,7 @@ def confirm_cancellation(room_code):
                 ),
                 "status": "Cancelled",
                 "current_step": "Cancelled",
-                "payment_status": "Refunded",
+                "payment_status": payment_status,
             }), 200
 
         if cancellation_status == "Rejected":
@@ -3080,22 +3207,41 @@ def confirm_cancellation(room_code):
                 ),
             }), 409
 
-        if (
-            room_status in {"Completed", "Cancelled"}
-            or current_step != "Delivery"
-            or payment_status != "Paid"
-            or escrow_status != "Held"
-        ):
+        if room_status in {"Completed", "Cancelled"}:
             return jsonify({
                 "success": False,
                 "message": (
-                    "This funded deal cannot currently "
-                    "be cancelled."
+                    "A finished deal cannot process "
+                    "cancellation."
                 ),
             }), 409
+
+        funded_cancellation_state = (
+            current_step == "Delivery"
+            and payment_status == "Paid"
+            and escrow_status == "Held"
+        )
+
+        funded_cancellation_allowed = (
+            funded_cancellation_state
+            and (
+                not shipping_status
+                or shipping_status == "NotShipped"
+            )
+        )
+
+        unfunded_cancellation_allowed = (
+            current_step == "Payment"
+            and payment_status == "Waiting"
+            and escrow_status in {
+                None,
+                "AwaitingPayment",
+            }
+        )
+
         if (
-            shipping_status
-            and shipping_status != "NotShipped"
+            funded_cancellation_state
+            and not funded_cancellation_allowed
         ):
             return jsonify({
                 "success": False,
@@ -3104,6 +3250,24 @@ def confirm_cancellation(room_code):
                     "fulfillment evidence is submitted."
                 ),
             }), 409
+
+        if not (
+            funded_cancellation_allowed
+            or unfunded_cancellation_allowed
+        ):
+            return jsonify({
+                "success": False,
+                "message": (
+                    "This deal cannot currently process "
+                    "mutual cancellation."
+                ),
+            }), 409
+
+        cancellation_mode = (
+            "funded"
+            if funded_cancellation_allowed
+            else "unfunded"
+        )
         if authenticated_user_id == buyer_id:
             buyer_confirmed = True
 
@@ -3159,6 +3323,8 @@ def confirm_cancellation(room_code):
                 "room_id": room_id,
                 "room_code": room_code,
                 "resource": "cancellation",
+                "cancellation_mode": cancellation_mode,
+                "non_refundable_fee": float(fee_amount),
                 "buyer_confirmed": bool(
                     buyer_confirmed
                 ),
@@ -3192,10 +3358,44 @@ def confirm_cancellation(room_code):
                 **event_data,
             }), 200
 
-        refund_result = refund_escrow_to_buyer(
-            cursor,
-            room_id=room_id,
-            room_code=room_code,
+        if cancellation_mode == "funded":
+            cancellation_result = refund_escrow_to_buyer(
+                cursor,
+                room_id=room_id,
+                room_code=room_code,
+            )
+            terminal_payment_status = "Refunded"
+        else:
+            fee_result = charge_unfunded_cancellation_fee(
+                cursor,
+                room_id=room_id,
+                room_code=room_code,
+                buyer_id=buyer_id,
+                fee_amount=fee_amount,
+                agreed_fee_payer=fee_payer,
+            )
+
+            cancellation_result = {
+                "refund_amount": Decimal("0.00"),
+                "retained_fee": fee_result["fee_amount"],
+                "available_balance": (
+                    fee_result["available_balance"]
+                ),
+                "pending_balance": (
+                    fee_result["pending_balance"]
+                ),
+            }
+            terminal_payment_status = "Waiting"
+
+        # Prevent payment through an unused QR after cancellation.
+        cursor.execute(
+            """
+            UPDATE deal_payment_attempt
+            SET status = 'Expired'
+            WHERE room_id = %s
+              AND status = 'Generated'
+            """,
+            (room_id,),
         )
 
         cursor.execute(
@@ -3212,8 +3412,8 @@ def confirm_cancellation(room_code):
             WHERE room_id = %s
             """,
             (
-                refund_result["refund_amount"],
-                refund_result["retained_fee"],
+                cancellation_result["refund_amount"],
+                cancellation_result["retained_fee"],
                 room_id,
             ),
         )
@@ -3224,39 +3424,52 @@ def confirm_cancellation(room_code):
             SET
                 status = 'Cancelled',
                 current_step = 'Cancelled',
-                payment_status = 'Refunded',
+                payment_status = %s,
                 cancel_requested_by = %s,
                 cancel_reason = %s
             WHERE room_id = %s
             """,
             (
+                terminal_payment_status,
                 requested_by,
                 cancellation_reason,
                 room_id,
             ),
         )
-
         conn.commit()
-        message = (
-            "Deal cancelled by mutual agreement. "
-            f"Buyer wallet refund: "
-            f"${refund_result['refund_amount']:.2f}. "
-            f"Service fee retained: "
-            f"${refund_result['retained_fee']:.2f}. "
-            "Seller received: $0.00."
-        )
+
+        if cancellation_mode == "funded":
+            message = (
+                "Deal cancelled by mutual agreement. "
+                f"Buyer wallet refund: "
+                f"${cancellation_result['refund_amount']:.2f}. "
+                f"Service fee retained: "
+                f"${cancellation_result['retained_fee']:.2f}. "
+                "Seller received: $0.00."
+            )
+        else:
+            message = (
+                "Deal cancelled by mutual agreement. "
+                f"Platform fee charged to the buyer's "
+                f"wallet: "
+                f"${cancellation_result['retained_fee']:.2f}. "
+                "No escrow deposit was made, so there "
+                "is no payment refund."
+            )
+
         event_data = {
             "room_id": room_id,
             "room_code": room_code,
             "resource": "cancellation",
+            "cancellation_mode": cancellation_mode,
             "status": "Cancelled",
             "current_step": "Cancelled",
-            "payment_status": "Refunded",
+            "payment_status": terminal_payment_status,
             "refund_amount": float(
-                refund_result["refund_amount"]
+                cancellation_result["refund_amount"]
             ),
             "retained_fee": float(
-                refund_result["retained_fee"]
+                cancellation_result["retained_fee"]
             ),
             "message": message,
         }
@@ -3301,22 +3514,22 @@ def confirm_cancellation(room_code):
             "message": message,
             "buyer": {
                 "refund_amount": float(
-                    refund_result["refund_amount"]
+                    cancellation_result["refund_amount"]
                 ),
                 "available_balance": float(
-                    refund_result[
+                    cancellation_result[
                         "available_balance"
                     ]
                 ),
                 "held_balance": float(
-                    refund_result[
+                    cancellation_result[
                         "pending_balance"
                     ]
                 ),
             },
             "platform": {
                 "retained_fee": float(
-                    refund_result["retained_fee"]
+                    cancellation_result["retained_fee"]
                 ),
             },
             **event_data,

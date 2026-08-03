@@ -40,8 +40,13 @@ const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
     }
   };
   const handleDelete = async () => {
+    const isWaitingRoom = room.status === "Waiting";
+
     const confirmed = window.confirm(
-      "Are you sure you want to delete this rejected room?",
+      isWaitingRoom
+        ? "Cancel this invitation? The invited user " +
+            "will no longer see this room."
+        : "Delete this rejected room?",
     );
 
     if (!confirmed || actionLoading) {
@@ -53,7 +58,7 @@ const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
       setActionSuccess("");
       setActionLoading(true);
 
-      const result = await deleteRoom(room.room_code, currentUserId);
+      const result = await deleteRoom(room.room_code);
 
       if (!result.success) {
         throw new Error(result.message || "Failed to delete room.");
@@ -75,10 +80,7 @@ const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
     room.max_reinvites,
   );
 
-  const canReturnToRoom = [
-  "Accepted",
-  "RolesAssigned",
-].includes(room.status);
+  const canReturnToRoom = ["Accepted", "RolesAssigned"].includes(room.status);
   return (
     <div className="room-card">
       <div className="room-body">
@@ -86,11 +88,6 @@ const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
           <div>
             <div className="room-title-row">
               <h5 className="room-title">{room.item_name}</h5>
-
-              {(room.has_unread_reminder || room.reminded) && (
-                <div className="room-reminder">🔔 Partner reminded you</div>
-              )}
-
               {hasPartnerUpdate && (
                 <span
                   className="room-update-dot"
@@ -98,6 +95,27 @@ const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
                 />
               )}
             </div>
+            {(room.has_unread_reminder || room.reminded) && (
+                <div
+                  className="room-reminder"
+                  role="status"
+                  aria-live="polite"
+                >
+                  <span
+                    className="room-reminder-icon"
+                    aria-hidden="true"
+                  >
+                    🔔
+                  </span>
+
+                  <div className="room-reminder-copy">
+                    <strong>Partner sent a reminder</strong>
+                    <span>
+                      Open this room when you are ready to continue.
+                    </span>
+                  </div>
+                </div>
+              )}
 
             <p className="room-info">
               <strong>Room Code:</strong> {room.room_code}
@@ -129,24 +147,40 @@ const RoomCard = ({ room, currentUserId, onOpen, onUpdated }) => {
               <p className="room-action-success">{actionSuccess}</p>
             )}
             {canReturnToRoom && (
-  <button
-    type="button"
-    className="open-room-btn"
-    onClick={() => onOpen(room)}
-  >
-    Return to Room
-  </button>
-)}
+              <button
+                type="button"
+                className="open-room-btn"
+                onClick={() => onOpen(room)}
+              >
+                Return to Room
+              </button>
+            )}
 
-            {room.status === "Waiting" &&
-              room.created_by === Number(currentUserId) && (
-                <button className="open-room-btn" disabled>
+            {room.status === "Waiting" && isCreator && (
+              <>
+                <button
+                  type="button"
+                  className="open-room-btn"
+                  disabled
+                >
                   Waiting for response
                 </button>
-              )}
+
+                <button
+                  type="button"
+                  className="delete-room-btn"
+                  onClick={handleDelete}
+                  disabled={actionLoading}
+                >
+                  {actionLoading
+                    ? "Cancelling..."
+                    : "Cancel Invitation"}
+                </button>
+              </>
+            )}
 
             {room.status === "Rejected" &&
-              room.created_by === Number(currentUserId) && (
+              isCreator && (
                 <>
                   {room.reinvite_count < room.max_reinvites ? (
                     <button
