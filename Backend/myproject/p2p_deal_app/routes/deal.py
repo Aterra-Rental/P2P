@@ -2365,6 +2365,15 @@ def confirm_received(room_code):
                 room=f"user_{user_id}",
             )
 
+        # Live-sync the admin dashboard's Transactions and
+        # Completed Deals stat cards (see AdminLayout.jsx /
+        # Dashboard.jsx "admin-transaction-updated" listener).
+        socketio.emit(
+            "transaction_completed",
+            event_data,
+            room="admins",
+        )
+
         return jsonify({
             "success": True,
             "reused": False,

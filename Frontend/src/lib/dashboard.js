@@ -21,3 +21,13 @@ export const getSignupsByMonth = async () => {
 
     return await res.json();
 };
+
+export const getDashboardStats = async () => {
+    const res = await fetch(`${API_URL}/admin/dashboard/stats`);
+
+    if (!res.ok) {
+        throw new Error("Unable to load dashboard stats");
+    }
+
+    return await res.json();
+};

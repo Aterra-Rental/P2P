@@ -34,3 +34,38 @@ def signups_by_month():
         return jsonify({"message": str(e)}), 500
     finally:
         conn.close()
+
+
+@admin_bp.route('/dashboard/stats', methods=['GET'])
+def dashboard_stats():
+    """
+    Combined stats for the Total Users / Transactions / Completed Deals
+    cards on the admin dashboard. Pending Verification and Pending FAQ
+    are intentionally NOT included here — they already have their own
+    working live-sync fetches in Dashboard.jsx.
+    """
+    conn = get_db()
+    try:
+        cur = conn.cursor()
+
+        cur.execute("SELECT COUNT(*) FROM user_login")
+        total_users = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM transactions_history")
+        total_transactions = cur.fetchone()[0]
+
+        cur.execute("SELECT COUNT(*) FROM room WHERE status = 'Completed'")
+        completed_deals = cur.fetchone()[0]
+
+        cur.close()
+
+        return jsonify({
+            "totalUsers": total_users,
+            "transactions": total_transactions,
+            "completedDeals": completed_deals
+        }), 200
+
+    except Exception as e:
+        return jsonify({"message": str(e)}), 500
+    finally:
+        conn.close()

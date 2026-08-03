@@ -12,13 +12,20 @@ import AdminLayout from "../Components/Layout/AdminLayout";
 import StatCard from "./Components/StatCard/StatCard";
 import SignupsChart from "./Components/SignupsChart/SignupsChart";
 
-import {API_URL} from "../../lib/api";
+import { API_URL } from "../../lib/api";
+import { getDashboardStats } from "../../lib/dashboard";
 
 import "./Dashboard.css";
 
 const Dashboard = () => {
     const [pendingCount, setPendingCount] = useState(0);
     const [pendingFaqCount, setPendingFaqCount] = useState(0);
+
+    const [stats, setStats] = useState({
+        totalUsers: 0,
+        transactions: 0,
+        completedDeals: 0
+    });
 
     const fetchPendingCount = useCallback(async () => {
         try {
@@ -76,6 +83,24 @@ const Dashboard = () => {
         }
     }, []);
 
+    const fetchStats = useCallback(async () => {
+        try {
+            const data = await getDashboardStats();
+
+            setStats({
+                totalUsers: data.totalUsers ?? 0,
+                transactions: data.transactions ?? 0,
+                completedDeals: data.completedDeals ?? 0
+            });
+
+        } catch (error) {
+            console.error(
+                "Failed to fetch dashboard stats:",
+                error
+            );
+        }
+    }, []);
+
     useEffect(() => {
         const handleVerificationUpdate = () => {
             fetchPendingCount();
@@ -85,8 +110,13 @@ const Dashboard = () => {
             fetchPendingFaqCount();
         };
 
+        const handleTransactionUpdate = () => {
+            fetchStats();
+        };
+
         fetchPendingCount();
         fetchPendingFaqCount();
+        fetchStats();
 
         window.addEventListener(
             "admin-verification-updated",
@@ -96,6 +126,11 @@ const Dashboard = () => {
         window.addEventListener(
             "admin-faq-updated",
             handleFaqUpdate
+        );
+
+        window.addEventListener(
+            "admin-transaction-updated",
+            handleTransactionUpdate
         );
 
         return () => {
@@ -108,8 +143,13 @@ const Dashboard = () => {
                 "admin-faq-updated",
                 handleFaqUpdate
             );
+
+            window.removeEventListener(
+                "admin-transaction-updated",
+                handleTransactionUpdate
+            );
         };
-    }, [fetchPendingCount, fetchPendingFaqCount]);
+    }, [fetchPendingCount, fetchPendingFaqCount, fetchStats]);
 
     return (
         <AdminLayout>
@@ -118,21 +158,21 @@ const Dashboard = () => {
 
                 <StatCard
                     title="Total Users"
-                    value="245"
+                    value={stats.totalUsers}
                     icon={<FaUsers />}
                     color="linear-gradient(135deg,#7C3AED,#A855F7)"
                 />
 
                 <StatCard
                     title="Transactions"
-                    value="524"
+                    value={stats.transactions}
                     icon={<FaMoneyCheckAlt />}
                     color="linear-gradient(135deg,#3B82F6,#60A5FA)"
                 />
 
                 <StatCard
                     title="Completed Deals"
-                    value="492"
+                    value={stats.completedDeals}
                     icon={<FaCheckCircle />}
                     color="linear-gradient(135deg,#10B981,#34D399)"
                 />
