@@ -33,18 +33,26 @@ const Home = () => {
     return `${value} ៛`;
   };
 
-  useEffect(() => {
-  const loadProfile = async () => {
-    try {
-      const data = await getUserProfile();
-      setProfile(data);
-    } catch (error) {
-      console.error(error);
-    }
-  };
+useEffect(() => {
+    let isMounted = true;
+    
+    const loadProfile = async () => {
+      try {
+        const data = await getUserProfile();
+        if (isMounted) {
+          setProfile(data);
+        }
+      } catch (error) {
+        console.error(error);
+      }
+    };
 
-  loadProfile();
-}, []);
+    loadProfile();
+
+    return () => {
+      isMounted = false;
+    };
+  }, []);
 
   return (
     <div className='Global d-flex flex-column min-vh-100 overflow-hidden'>

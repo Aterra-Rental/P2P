@@ -33,6 +33,7 @@ import AdminAnnouncement from '../Admin/Dashboard/Components/announcement/admin_
 import PrivacyPolicy from '../pages/Legal/PrivacyPolicy';
 import TermsOfService from '../pages/Legal/TermsOfService';
 import Status from '../pages/Legal/Status';
+import WalletWidget from "../Wallet/WalletWidget";
 
 
 
@@ -85,6 +86,10 @@ const Layout = () => {
   location.pathname.startsWith('/camera') ||
   location.pathname.startsWith('/admin');
 
+  const hideWallet =
+    hideLayout ||
+    location.pathname.startsWith("/deal/");
+
  return (
   <>
     {!hideLayout && <Navbar />}
@@ -121,6 +126,7 @@ const Layout = () => {
       </div>
     )}
 
+    {!hideWallet && <WalletWidget key={location.pathname} />}
     <Routes>
         <Route path='/' element={<Home/>}/>
         <Route path='/Home' element={<Home/>}/>
@@ -158,6 +164,7 @@ const Layout = () => {
 
         <Route path="*" element={<Home />} />
       </Routes>
+      {!hideWallet && <WalletWidget />}
       {!hideLayout && <Footer/>}
     </>
   )
