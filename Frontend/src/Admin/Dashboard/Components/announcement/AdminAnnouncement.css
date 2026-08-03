@@ -1,0 +1,199 @@
+.announcement-page {
+    --bg-page: #0d0b1a;
+    --panel-bg: #1a1530;
+    --panel-border: #2b2447;
+    --accent: #8b5cf6;
+    --accent-hover: #7c3aed;
+    --text-main: #f1f0f7;
+    --text-muted: #a8a3c0;
+
+    padding: 8px 4px;
+}
+
+.announcement-page-header h1 {
+    color: var(--text-main);
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0 0 8px 0;
+}
+
+.announcement-page-header p {
+    color: var(--text-muted);
+    font-size: 14px;
+    margin: 0 0 24px 0;
+}
+
+.announcement-split {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 24px;
+    align-items: start;
+}
+
+@media (max-width: 900px) {
+    .announcement-split {
+        grid-template-columns: 1fr;
+    }
+}
+
+.announcement-compose-card,
+.announcement-history-card {
+    background: var(--panel-bg);
+    border: 1px solid var(--panel-border);
+    border-radius: 16px;
+    padding: 24px;
+}
+
+.announcement-compose-card h2,
+.announcement-history-card h2 {
+    color: var(--text-main);
+    font-size: 16px;
+    font-weight: 600;
+    margin: 0 0 16px 0;
+}
+
+.announcement-compose-card {
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+}
+
+.announcement-field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.announcement-field span {
+    color: var(--text-main);
+    font-size: 13px;
+    font-weight: 600;
+}
+
+.announcement-field input,
+.announcement-field textarea {
+    background: var(--bg-page);
+    border: 1px solid var(--panel-border);
+    border-radius: 10px;
+    padding: 12px 14px;
+    color: var(--text-main);
+    font-size: 14px;
+    font-family: inherit;
+    outline: none;
+    resize: vertical;
+}
+
+.announcement-field input::placeholder,
+.announcement-field textarea::placeholder {
+    color: var(--text-muted);
+}
+
+.announcement-field input:focus,
+.announcement-field textarea:focus {
+    border-color: var(--accent);
+}
+
+.announcement-error-banner {
+    color: #f87171;
+    font-size: 13px;
+    background: rgba(248, 113, 113, 0.1);
+    border: 1px solid rgba(248, 113, 113, 0.3);
+    border-radius: 8px;
+    padding: 10px 12px;
+}
+
+.announcement-send-btn {
+    background: var(--accent);
+    color: white;
+    border: none;
+    border-radius: 10px;
+    padding: 12px 20px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    align-self: flex-start;
+    transition: background 0.15s ease;
+}
+
+.announcement-send-btn:hover:not(:disabled) {
+    background: var(--accent-hover);
+}
+
+.announcement-send-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+}
+
+.announcement-history-card {
+    display: flex;
+    flex-direction: column;
+    max-height: 600px;
+    overflow: hidden;
+}
+
+.announcement-history-card > div,
+.announcement-history-card > .announcement-history-item {
+    overflow-y: auto;
+}
+
+.announcement-history-item {
+    background: var(--bg-page);
+    border: 1px solid var(--panel-border);
+    border-radius: 12px;
+    padding: 14px 16px;
+    margin-bottom: 12px;
+}
+
+.announcement-history-item:last-child {
+    margin-bottom: 0;
+}
+
+.announcement-history-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.announcement-history-title {
+    color: var(--text-main);
+    font-size: 15px;
+    font-weight: 600;
+}
+
+.announcement-history-date {
+    color: var(--text-muted);
+    font-size: 11px;
+    opacity: 0.7;
+    white-space: nowrap;
+}
+
+.announcement-history-message {
+    color: var(--text-muted);
+    font-size: 13px;
+    margin: 0 0 8px 0;
+    white-space: pre-wrap;
+}
+
+.announcement-history-toggle {
+    background: none;
+    border: none;
+    color: var(--accent);
+    font-size: 12px;
+    font-weight: 600;
+    padding: 0;
+    margin: 0;
+    cursor: pointer;
+    display: inline-block;
+}
+
+.announcement-history-toggle:hover {
+    color: var(--accent-hover);
+    text-decoration: underline;
+}
+
+.announcement-history-empty {
+    color: var(--text-muted);
+    font-size: 13px;
+}

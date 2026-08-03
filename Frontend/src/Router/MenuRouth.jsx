@@ -29,7 +29,7 @@ import Settings from "../pages/Setting/Settings.jsx";
 import VerifiedRoute from "../components/VerifiedRoute.jsx" 
 import Verification from '../Admin/Verification/Verification.jsx'
 import FaqPage from '../Admin/Faq/FaqPage.jsx'
-
+import AdminAnnouncement from '../Admin/Dashboard/Components/announcement/admin_announcement.jsx'
 import PrivacyPolicy from '../pages/Legal/PrivacyPolicy';
 import TermsOfService from '../pages/Legal/TermsOfService';
 import Status from '../pages/Legal/Status';
@@ -37,22 +37,6 @@ import Status from '../pages/Legal/Status';
 
 
 
-
-export const showTopNotification = (
-  message,
-  type = "info",
-  duration = 4000
-) => {
-  window.dispatchEvent(
-    new CustomEvent("show-top-notification", {
-      detail: {
-        message,
-        type,
-        duration,
-      },
-    })
-  );
-};
 const Layout = () => {
   const location = useLocation();
 
@@ -117,7 +101,9 @@ const Layout = () => {
           {notification.type === "info" && "i"}
         </span>
 
-        <span>{notification.message}</span>
+        <span className="global-top-notification-message">
+          {notification.message}
+        </span>
 
         <button
           type="button"
@@ -155,6 +141,7 @@ const Layout = () => {
         <Route path="/deal/:roomCode" element={ <VerifiedRoute> <DealWorkspace /> </VerifiedRoute> }/>
         <Route path="/admin/verification" element={<ProtectedAdminRoute><Verification /></ProtectedAdminRoute>}/>
         <Route path="/admin/faq" element={<ProtectedAdminRoute><FaqPage /></ProtectedAdminRoute>}/>
+        <Route path="/admin/announcements" element={<ProtectedAdminRoute><AdminAnnouncement /></ProtectedAdminRoute>}/>
         <Route path="/deals" element={ <VerifiedRoute> <DealHub />  </VerifiedRoute> } />
 
 <Route path="/privacy-policy" element={<PrivacyPolicy />} />

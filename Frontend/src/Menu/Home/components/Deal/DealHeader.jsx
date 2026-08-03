@@ -14,6 +14,17 @@ const DealHeader = ({
   const cooldownMinutes = Math.floor(remindCooldown / 60);
   const cooldownSeconds = remindCooldown % 60;
   const reminderDisabled = remindLoading || remindCooldown > 0;
+const dealHasEnded =
+  ["Completed", "Cancelled"].includes(room.status) ||
+  ["Completed", "Cancelled"].includes(
+    room.current_step,
+  );
+
+
+
+
+const canRemindPartner =
+  !bothUsersPresent && !dealHasEnded;
 
   const describeParticipant = (userId) => {
     const relationship =
@@ -66,7 +77,7 @@ const DealHeader = ({
             ← Back to Deals
           </button>
 
-          {!bothUsersPresent && (
+          {canRemindPartner && (
             <>
               <button
                 type="button"

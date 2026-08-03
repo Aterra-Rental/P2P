@@ -42,9 +42,21 @@ const Footer = () => {
           <div className="footer-col">
             <h4>Legal</h4>
             <ul>
-              <li><NavLink to="/privacy-policy">Privacy Policy</NavLink></li>
-              <li><NavLink to="/terms-of-service">Terms of Service</NavLink></li>
-              <li><NavLink to="/status">Status</NavLink></li>
+              <li>
+                <NavLink to="/privacy-policy">
+                  Privacy Policy
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/terms-of-service">
+                  Terms of Service
+                </NavLink>
+              </li>
+              <li>
+                <NavLink to="/status">
+                  Status
+                </NavLink>
+              </li>
             </ul>
           </div>
         </div>

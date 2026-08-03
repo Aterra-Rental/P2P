@@ -102,6 +102,20 @@
 }
 
 /* ==========================
+   Right side (nav links + bell)
+========================== */
+
+.nav-right{
+    display: flex;
+    align-items: center;
+    gap: 0;
+}
+
+.nav-right .bell-wrap{
+    margin-left: -6px;
+}
+
+/* ==========================
    Navigation
 ========================== */
 
@@ -196,6 +210,10 @@
 
     .toggle-label{
         display: flex;
+    }
+
+    .nav-right{
+        width: 100%;
     }
 
     .menu{

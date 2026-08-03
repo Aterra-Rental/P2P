@@ -6,7 +6,12 @@ from flask_socketio import (
 )
 
 from database import get_db
+from services.auth_token import (
+    AuthenticationError,
+    decode_access_token,
+)
 
+import traceback
 
 # The only Socket.IO instance used by the backend.
 socketio = SocketIO(
@@ -29,7 +34,9 @@ online_users = {}
 
 # Socket.IO session ID -> user_id
 sid_to_user = {}
-
+# Authenticated Socket.IO session ID -> user_id.
+# This identity comes from the signed access token.
+authenticated_socket_users = {}
 
 def emit_deal_presence(room_code):
     users = deal_presence.get(room_code, {})
@@ -87,6 +94,69 @@ def user_belongs_to_room(room_code, user_id):
         conn.close()
 
 
+def mark_deal_reminders_read(room_code):
+    conn = get_db()
+    cur = conn.cursor()
+
+    try:
+        cur.execute(
+            """
+            SELECT
+                room_id,
+                created_by,
+                invited_user_id
+            FROM room
+            WHERE room_code = %s
+            """,
+            (room_code,),
+        )
+
+        room = cur.fetchone()
+
+        if not room:
+            return
+
+        room_id, created_by, invited_user_id = room
+
+        cur.execute(
+            """
+            UPDATE room_reminders
+            SET is_read = TRUE
+            WHERE room_id = %s
+              AND is_read = FALSE
+            """,
+            (room_id,),
+        )
+
+        reminders_updated = cur.rowcount
+        conn.commit()
+
+        if reminders_updated:
+            event_data = {
+                "room_id": room_id,
+                "room_code": room_code,
+                "resource": "reminders",
+            }
+
+            for affected_user_id in {
+                created_by,
+                invited_user_id,
+            }:
+                socketio.emit(
+                    "room_updated",
+                    event_data,
+                    room=f"user_{affected_user_id}",
+                )
+
+    except Exception:
+        conn.rollback()
+        traceback.print_exc()
+
+    finally:
+        cur.close()
+        conn.close()
+
+
 def get_online_user_ids():
     return [
         user_id
@@ -101,25 +171,54 @@ def is_user_online(user_id):
 
 
 @socketio.on("connect")
-def handle_connect():
-    print("Client connected")
+def handle_connect(auth=None):
+    sid = request.sid
+    token = ""
 
+    if isinstance(auth, dict):
+        token = str(auth.get("token", "")).strip()
 
-@socketio.on("join_admin")
-def handle_join_admin():
-    join_room("admins")
-    print("Admin joined Socket.IO room: admins")
+    if not token:
+        print(
+            f"Socket.IO client {sid} connected "
+            "without user authentication."
+        )
+        return True
+
+    try:
+        authenticated_user = decode_access_token(token)
+    except AuthenticationError as error:
+        print(
+            f"Socket.IO authentication rejected for {sid}: "
+            f"{error}"
+        )
+        return True
+
+    user_id = str(authenticated_user["user_id"])
+    authenticated_socket_users[sid] = user_id
+
+    print(
+        f"Authenticated Socket.IO client connected: "
+        f"user {user_id}"
+    )
+
+    return True
 
 
 @socketio.on("join_user")
-def handle_join_user(data):
-    user_id = data.get("user_id")
+def handle_join_user(data=None):
+    sid = request.sid
+    user_id = authenticated_socket_users.get(sid)
 
     if not user_id:
-        return
-
-    user_id = str(user_id)
-    sid = request.sid
+        print(
+            f"Rejected personal-room join for "
+            f"unauthenticated socket {sid}"
+        )
+        return {
+            "success": False,
+            "message": "Socket authentication is required.",
+        }
 
     join_room(f"user_{user_id}")
     print(f"User {user_id} joined room user_{user_id}")
@@ -139,28 +238,52 @@ def handle_join_user(data):
             room="admins",
         )
 
+    return {
+        "success": True,
+        "user_id": int(user_id),
+    }
+
 
 @socketio.on("join_deal")
 def handle_join_deal(data):
-    room_code = str(data.get("room_code", "")).strip()
-    user_id = str(data.get("user_id", "")).strip()
+    data = data if isinstance(data, dict) else {}
+
+    room_code = str(
+        data.get("room_code", "")
+    ).strip()
+    sid = request.sid
+    user_id = authenticated_socket_users.get(sid)
 
     if not room_code or not user_id:
-        return
+        print(
+            f"Rejected deal-room join for socket {sid}: "
+            "room code or authentication is missing."
+        )
+        return {
+            "success": False,
+            "message": (
+                "An authenticated user and room code "
+                "are required."
+            ),
+        }
 
     if not user_belongs_to_room(room_code, user_id):
         print(
             f"Rejected deal-room join: "
             f"user {user_id}, room {room_code}"
         )
-        return
-
-    sid = request.sid
+        return {
+            "success": False,
+            "message": "You are not a participant in this deal.",
+        }
 
     join_room(f"deal_{room_code}")
 
     room_users = deal_presence.setdefault(room_code, {})
-    user_connections = room_users.setdefault(user_id, set())
+    user_connections = room_users.setdefault(
+        user_id,
+        set(),
+    )
     user_connections.add(sid)
 
     sid_memberships.setdefault(sid, set()).add(
@@ -172,20 +295,37 @@ def handle_join_deal(data):
         f"deal_{room_code}"
     )
 
+    if len(room_users) >= 2:
+        mark_deal_reminders_read(room_code)
+
     emit_deal_presence(room_code)
+
+    return {
+        "success": True,
+        "room_code": room_code,
+    }
 
 
 @socketio.on("leave_deal")
 def handle_leave_deal(data):
-    room_code = str(data.get("room_code", "")).strip()
-    user_id = str(data.get("user_id", "")).strip()
+    data = data if isinstance(data, dict) else {}
+
+    room_code = str(
+        data.get("room_code", "")
+    ).strip()
     sid = request.sid
+    user_id = authenticated_socket_users.get(sid)
 
     if not room_code or not user_id:
-        return
+        return {
+            "success": False,
+            "message": (
+                "An authenticated user and room code "
+                "are required."
+            ),
+        }
 
     leave_room(f"deal_{room_code}")
-
     remove_deal_presence(sid, room_code, user_id)
 
     memberships = sid_memberships.get(sid)
@@ -198,11 +338,16 @@ def handle_leave_deal(data):
 
     emit_deal_presence(room_code)
 
+    return {
+        "success": True,
+        "room_code": room_code,
+    }
+
 
 @socketio.on("disconnect")
 def handle_disconnect():
     sid = request.sid
-
+    authenticated_socket_users.pop(sid, None)
     # Remove this connection from deal-room presence.
     memberships = sid_memberships.pop(sid, set())
 

@@ -303,6 +303,171 @@ def hold_wallet_funds(
         "available_balance": new_available,
         "pending_balance": new_pending,
     }
+
+def hold_external_payment_in_escrow(
+    cursor,
+    *,
+    room_id,
+    room_code,
+    buyer_id,
+    seller_id,
+    payment_attempt_id,
+    held_amount,
+    fee_amount,
+    seller_receive,
+):
+    """
+    Record verified external KHQR funds as held escrow.
+
+    External funds do not change the buyer's wallet balance.
+    The caller must commit or roll back the surrounding
+    database transaction.
+    """
+    held_amount = to_money(
+        held_amount,
+        "held amount",
+    )
+    fee_amount = to_money(
+        fee_amount,
+        "fee amount",
+    )
+    seller_receive = to_money(
+        seller_receive,
+        "seller receive",
+    )
+
+    if held_amount <= 0:
+        raise WalletError(
+            "Held amount must be greater than zero."
+        )
+
+    if seller_receive > held_amount:
+        raise WalletError(
+            "Seller receive cannot exceed the held amount."
+        )
+
+    if seller_receive + fee_amount != held_amount:
+        raise WalletError(
+            "Held amount must equal seller receive plus fee."
+        )
+
+    if not payment_attempt_id:
+        raise WalletError(
+            "A verified payment attempt is required."
+        )
+
+    cursor.execute(
+        """
+        SELECT
+            payment_method,
+            payment_attempt_id,
+            buyer_id,
+            seller_id,
+            held_amount,
+            fee_amount,
+            seller_receive,
+            status
+        FROM deal_escrow
+        WHERE room_id = %s
+        FOR UPDATE
+        """,
+        (room_id,),
+    )
+
+    existing_escrow = cursor.fetchone()
+
+    if existing_escrow:
+        (
+            existing_method,
+            existing_payment_attempt_id,
+            existing_buyer_id,
+            existing_seller_id,
+            existing_held_amount,
+            existing_fee_amount,
+            existing_seller_receive,
+            existing_status,
+        ) = existing_escrow
+
+        same_verified_escrow = (
+            existing_method == "KHQR"
+            and existing_payment_attempt_id
+            == payment_attempt_id
+            and existing_buyer_id == buyer_id
+            and existing_seller_id == seller_id
+            and to_money(existing_held_amount)
+            == held_amount
+            and to_money(existing_fee_amount)
+            == fee_amount
+            and to_money(existing_seller_receive)
+            == seller_receive
+            and existing_status == "Held"
+        )
+
+        if same_verified_escrow:
+            return {
+                "reused": True,
+                "payment_method": "KHQR",
+                "held_amount": held_amount,
+                "fee_amount": fee_amount,
+                "seller_receive": seller_receive,
+            }
+
+        raise WalletError(
+            "A different escrow operation already exists "
+            "for this deal."
+        )
+
+    cursor.execute(
+        """
+        INSERT INTO deal_escrow (
+            room_id,
+            room_code,
+            buyer_id,
+            seller_id,
+            payment_method,
+            payment_attempt_id,
+            held_amount,
+            fee_amount,
+            seller_receive,
+            status,
+            held_at,
+            updated_at
+        )
+        VALUES (
+            %s,
+            %s,
+            %s,
+            %s,
+            'KHQR',
+            %s,
+            %s,
+            %s,
+            %s,
+            'Held',
+            CURRENT_TIMESTAMP,
+            CURRENT_TIMESTAMP
+        )
+        """,
+        (
+            room_id,
+            room_code,
+            buyer_id,
+            seller_id,
+            payment_attempt_id,
+            held_amount,
+            fee_amount,
+            seller_receive,
+        ),
+    )
+
+    return {
+        "reused": False,
+        "payment_method": "KHQR",
+        "held_amount": held_amount,
+        "fee_amount": fee_amount,
+        "seller_receive": seller_receive,
+    }
+
 def credit_wallet_deposit(
     cursor,
     *,
@@ -1201,4 +1366,215 @@ def refund_escrow_to_buyer(
         "retained_fee": fee_amount,
         "available_balance": final_available,
         "pending_balance": final_pending,
+    }
+
+def charge_unfunded_cancellation_fee(
+    cursor,
+    *,
+    room_id,
+    room_code,
+    buyer_id,
+    fee_amount,
+    agreed_fee_payer,
+):
+    """
+    Charge the buyer's available wallet for an approved
+    cancellation while the deal is at Payment but has
+    not yet created or funded escrow.
+
+    The caller owns the surrounding transaction and must
+    commit or roll back.
+    """
+    fee_amount = to_money(
+        fee_amount,
+        "service fee",
+    )
+
+    if fee_amount <= 0:
+        raise WalletError(
+            "The cancellation fee must be greater "
+            "than zero."
+        )
+
+    if agreed_fee_payer not in {
+        "buyer",
+        "seller",
+    }:
+        raise WalletError(
+            "The agreed fee payer is invalid."
+        )
+
+    wallet_reference = (
+        f"deal:{room_code}:"
+        "unfunded_cancel_wallet_fee"
+    )
+    platform_reference = (
+        f"deal:{room_code}:"
+        "unfunded_cancelled_fee"
+    )
+
+    wallet = get_or_create_locked_wallet(
+        cursor,
+        buyer_id,
+    )
+
+    cursor.execute(
+        """
+        SELECT wallet_transaction_id
+        FROM wallet_transactions
+        WHERE reference_key = %s
+        """,
+        (wallet_reference,),
+    )
+
+    wallet_fee_exists = cursor.fetchone() is not None
+
+    cursor.execute(
+        """
+        SELECT platform_fee_transaction_id
+        FROM platform_fee_transactions
+        WHERE reference_key = %s
+        """,
+        (platform_reference,),
+    )
+
+    platform_fee_exists = (
+        cursor.fetchone() is not None
+    )
+
+    if wallet_fee_exists and platform_fee_exists:
+        return {
+            "reused": True,
+            "fee_amount": fee_amount,
+            "available_balance": (
+                wallet["available_balance"]
+            ),
+            "pending_balance": (
+                wallet["pending_balance"]
+            ),
+        }
+
+    if wallet_fee_exists or platform_fee_exists:
+        raise WalletError(
+            "The cancellation fee ledger is incomplete."
+        )
+
+    if wallet["available_balance"] < fee_amount:
+        raise WalletError(
+            "The buyer needs at least "
+            f"${fee_amount:.2f} in available wallet "
+            "balance to complete this cancellation."
+        )
+
+    new_available_balance = (
+        wallet["available_balance"] - fee_amount
+    )
+
+    cursor.execute(
+        """
+        UPDATE user_wallet
+        SET
+            available_balance = %s,
+            updated_at = CURRENT_TIMESTAMP
+        WHERE user_id = %s
+        """,
+        (
+            new_available_balance,
+            buyer_id,
+        ),
+    )
+
+    cursor.execute(
+        """
+        INSERT INTO wallet_transactions (
+            user_id,
+            room_id,
+            room_code,
+            payment_attempt_id,
+            transaction_type,
+            amount,
+            available_change,
+            pending_change,
+            available_balance_after,
+            pending_balance_after,
+            reference_key,
+            description
+        )
+        VALUES (
+            %s,
+            %s,
+            %s,
+            NULL,
+            'Fee',
+            %s,
+            %s,
+            0.00,
+            %s,
+            %s,
+            %s,
+            %s
+        )
+        """,
+        (
+            buyer_id,
+            room_id,
+            room_code,
+            fee_amount,
+            -fee_amount,
+            new_available_balance,
+            wallet["pending_balance"],
+            wallet_reference,
+            (
+                "Service fee for mutually cancelling "
+                f"unfunded deal {room_code}."
+            ),
+        ),
+    )
+
+    cursor.execute(
+        """
+        INSERT INTO platform_fee_transactions (
+            room_id,
+            room_code,
+            transaction_id,
+            charged_user_id,
+            agreed_fee_payer,
+            event_type,
+            payment_method,
+            fee_amount,
+            currency,
+            reference_key
+        )
+        VALUES (
+            %s,
+            %s,
+            NULL,
+            %s,
+            %s,
+            'Cancelled',
+            'Wallet',
+            %s,
+            'USD',
+            %s
+        )
+        """,
+        (
+            room_id,
+            room_code,
+            buyer_id,
+            agreed_fee_payer,
+            fee_amount,
+            platform_reference,
+        ),
+    )
+
+    return {
+        "reused": False,
+        "fee_amount": fee_amount,
+        "available_balance": (
+            new_available_balance
+        ),
+        "pending_balance": (
+            wallet["pending_balance"]
+        ),
     }

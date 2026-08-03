@@ -1,56 +1,117 @@
-import React from "react";
 import "./InvitationCard.css";
-const InvitationCard = ({ invitation, onAccept, onReject }) => {
-  console.log({
-    onAccept,
-    onReject,
-  });
+
+const InvitationCard = ({
+  invitation,
+  onAccept,
+  onReject,
+}) => {
   const handleReject = () => {
     const confirmed = window.confirm(
-      "Are you sure you want to reject this invitation?",
+      "Reject this deal invitation?",
     );
 
-    if (!confirmed) {
-      return;
+    if (confirmed) {
+      onReject(invitation.room_code);
     }
-
-    onReject(invitation.room_code);
   };
+
   const handleAccept = () => {
     const confirmed = window.confirm(
-      "Are you sure you want to accept this invitation?",
+      "Accept this invitation and enter the deal room?",
     );
 
-    if (!confirmed) {
-      return;
+    if (confirmed) {
+      onAccept(invitation.room_code);
     }
-
-    onAccept(invitation.room_code);
   };
+
+  const description =
+    invitation.item_description?.trim() ||
+    "No additional description was provided.";
+
   return (
-    <div className="invitation-card">
+    <article className="invitation-card">
       <div className="invitation-body">
-        <h5 className="invitation-title">{invitation.item_name}</h5>
+        <div className="invitation-header">
+          <div>
+            <span className="invitation-eyebrow">
+              Deal invitation
+            </span>
 
-        <p className="invitation-from">From: {invitation.creator_name}</p>
+            <h5 className="invitation-title">
+              {invitation.item_name}
+            </h5>
+          </div>
 
-        <p className="invitation-description">{invitation.item_description}</p>
+          <span className="invitation-status-badge">
+            {invitation.status}
+          </span>
+        </div>
 
-        <h6 className="invitation-price">${invitation.agreed_price}</h6>
+        <div className="invitation-details">
+          <div className="invitation-detail">
+            <span>From</span>
+            <strong>
+              {invitation.creator_name}
+              {" "}
+              <small>
+                (User #{invitation.created_by})
+              </small>
+            </strong>
+          </div>
 
-        <span className="status-badge">{invitation.status}</span>
+          <div className="invitation-detail">
+            <span>Email</span>
+            <strong>{invitation.creator_email}</strong>
+          </div>
+
+          <div className="invitation-detail">
+            <span>Room code</span>
+            <strong>{invitation.room_code}</strong>
+          </div>
+
+          <div className="invitation-detail">
+            <span>Product type</span>
+            <strong>
+              {invitation.product_type}
+            </strong>
+          </div>
+        </div>
+
+        <div className="invitation-description">
+          <span>Deal details</span>
+          <p>{description}</p>
+        </div>
+
+        <div className="invitation-amount">
+          <span>Proposed amount</span>
+          <strong>
+            $
+            {Number(
+              invitation.agreed_price || 0,
+            ).toFixed(2)}
+          </strong>
+        </div>
 
         <div className="action-row">
-          <button className="accept-btn" onClick={handleAccept}>
-            Accept
+          <button
+            type="button"
+            className="accept-btn"
+            onClick={handleAccept}
+          >
+            Accept & Enter
           </button>
 
-          <button className="reject-btn" onClick={handleReject}>
+          <button
+            type="button"
+            className="reject-btn"
+            onClick={handleReject}
+          >
             Reject
           </button>
         </div>
       </div>
-    </div>
+    </article>
   );
 };
 

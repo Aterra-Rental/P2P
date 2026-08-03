@@ -19,6 +19,7 @@ const CancellationPanel = ({ room, userId }) => {
   const [reason, setReason] = useState("");
   const [loadingAction, setLoadingAction] = useState("");
   const [error, setError] = useState("");
+  const [ showCancellationDetails, setShowCancellationDetails, ] = useState(false);
 
   const loadCancellation = useCallback(async () => {
     try {
@@ -77,6 +78,10 @@ const CancellationPanel = ({ room, userId }) => {
       "deal_cancelled",
       handleCancellationChanged
     );
+    socket.on(
+    "fulfillment_submitted",
+    handleCancellationChanged
+    );
 
     return () => {
       cancelled = true;
@@ -97,6 +102,10 @@ const CancellationPanel = ({ room, userId }) => {
         "deal_cancelled",
         handleCancellationChanged
       );
+      socket.off(
+        "fulfillment_submitted",
+        handleCancellationChanged
+        );
     };
   }, [loadCancellation, room.room_code]);
 
@@ -149,7 +158,16 @@ const CancellationPanel = ({ room, userId }) => {
       rejectDealCancellation(room.room_code)
     );
   };
+  const handleOpenCancellation = () => {
+    setError("");
+    setShowCancellationDetails(true);
+  };
 
+  const handleReturnToDeal = () => {
+    setReason("");
+    setError("");
+    setShowCancellationDetails(false);
+  };
   if (!cancellationState) {
     return (
       <div className="cancellation-panel">
@@ -174,32 +192,76 @@ const CancellationPanel = ({ room, userId }) => {
 
   const isProcessed =
     cancellation?.status === "Processed";
-    const cancellationAllowed = cancellationState.cancellation_allowed;
+
+  const cancellationAllowed =
+    cancellationState.cancellation_allowed;
+
+  const isUnfunded =
+    cancellationState.cancellation_mode === "unfunded";
+
   const isRequester =
     Number(cancellation?.requested_by) ===
     Number(userId);
-
   const requesterRole =
     Number(cancellation?.requested_by) ===
     Number(cancellationState.buyer_id)
       ? "Buyer"
       : "Seller";
 
+    const canOpenCancellation =
+    cancellationAllowed &&
+    (!cancellation || isRejected);
+
+  if (
+    canOpenCancellation &&
+    !showCancellationDetails
+  ) {
+    return (
+      <div className="cancellation-entry">
+        <button
+          type="button"
+          className="cancellation-open-button"
+          onClick={handleOpenCancellation}
+        >
+          Cancel Deal
+        </button>
+      </div>
+    );
+  }
   return (
     <div className="cancellation-panel">
       <div className="cancellation-heading">
         <span>Mutual cancellation</span>
-        <h3>Cancel Funded Deal</h3>
+        <h3>
+          {isUnfunded
+            ? "Cancel Before Payment"
+            : "Cancel Funded Deal"}
+        </h3>
         <p>
-          Cancellation requires approval from both users.
-          The buyer receives the refundable amount and the
-          service fee remains non-refundable.
+          {isUnfunded
+            ? (
+                "Both users must approve. The confirmed " +
+                "platform fee will be charged from the " +
+                "buyer's wallet, and no escrow refund " +
+                "will be created."
+              )
+            : (
+                "Both users must approve. The buyer " +
+                "receives the refundable escrow amount, " +
+                "while the service fee remains " +
+                "non-refundable."
+              )}
         </p>
       </div>
 
       <div className="cancellation-refund-summary">
         <div>
-          <span>Buyer refund</span>
+          <span>
+            {isUnfunded
+              ? "Escrow refund"
+              : "Buyer refund"}
+          </span>
+
           <strong>
             $
             {Number(
@@ -209,7 +271,12 @@ const CancellationPanel = ({ room, userId }) => {
         </div>
 
         <div>
-          <span>Service fee retained</span>
+          <span>
+            {isUnfunded
+              ? "Buyer wallet fee"
+              : "Service fee retained"}
+          </span>
+
           <strong>
             $
             {Number(
@@ -274,14 +341,24 @@ const CancellationPanel = ({ room, userId }) => {
         </div>
       )}
 
-      {cancellationAllowed && (!cancellation || isRejected) && (
-        <div className="cancellation-request-form">
-          {isRejected && (
-            <div className="cancellation-rejected">
-              The previous cancellation request was
-              rejected. Escrow remains protected.
-            </div>
-          )}
+      {cancellationAllowed &&
+        (!cancellation || isRejected) && (
+          <div className="cancellation-request-form">
+            {isRejected && (
+              <div className="cancellation-rejected">
+                {isUnfunded
+                  ? (
+                      "The previous cancellation request " +
+                      "was rejected. The deal remains " +
+                      "active, and no fee was charged."
+                    )
+                  : (
+                      "The previous cancellation request " +
+                      "was rejected. Escrow remains " +
+                      "protected."
+                    )}
+              </div>
+        )}
 
           <label htmlFor="cancellation-reason">
             Reason for cancellation
@@ -303,30 +380,48 @@ const CancellationPanel = ({ room, userId }) => {
               {reason.trim().length}/500 characters
             </small>
 
-            <button
-              type="button"
-              className="cancellation-request-button"
-              disabled={
-                Boolean(loadingAction) ||
-                reason.trim().length < 5
-              }
-              onClick={handleRequest}
-            >
-              {loadingAction === "request"
-                ? "Sending Request..."
-                : "Request Cancellation"}
-            </button>
+            <div className="cancellation-form-actions">
+              <button
+                type="button"
+                className="cancellation-return-button"
+                disabled={Boolean(loadingAction)}
+                onClick={handleReturnToDeal}
+              >
+                Return to Deal
+              </button>
+
+              <button
+                type="button"
+                className="cancellation-request-button"
+                disabled={
+                  Boolean(loadingAction) ||
+                  reason.trim().length < 5
+                }
+                onClick={handleRequest}
+              >
+                {loadingAction === "request"
+                  ? "Sending Request..."
+                  : "Request Cancellation"}
+              </button>
+            </div>
           </div>
         </div>
       )}
-       {!cancellationAllowed && !isProcessed && (
-                <div className="cancellation-rejected">
-                    Cancellation is no longer available because
-                    fulfillment evidence has already been submitted.
-                    Continue through receipt confirmation or dispute
-                    resolution.
-                </div>
-         )}
+      {!cancellationAllowed && !isProcessed && (
+        <div className="cancellation-rejected">
+          {isUnfunded
+            ? (
+                "Cancellation is not available during " +
+                "the current payment state."
+              )
+            : (
+                "Cancellation is no longer available " +
+                "because fulfillment evidence has been " +
+                "submitted. Continue through receipt " +
+                "confirmation or dispute resolution."
+              )}
+        </div>
+      )}
 
         {error && (
         <div className="cancellation-error">

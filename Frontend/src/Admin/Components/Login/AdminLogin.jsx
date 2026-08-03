@@ -58,7 +58,8 @@ const AdminLogin = () => {
                 "admin",
                 JSON.stringify({
                     admin_id: data.admin_id,
-                    email: data.email
+                    email: data.email,
+                    token: data.token,
                 })
             );
 

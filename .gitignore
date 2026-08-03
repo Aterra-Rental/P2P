@@ -21,3 +21,6 @@ Backend/myproject/p2p_deal_app/uploads/
 
 # Local database inspection exports
 current_schema.sql
+
+# Local PostgreSQL backup containing private user data
+Backend/myproject/p2p_deal_app/p2p_deal_db_backup.sql
