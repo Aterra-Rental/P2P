@@ -15,13 +15,20 @@ from routes.deal import deal_bp
 from routes.fee import fee_bp
 from routes.bakong import bakong_bp
 from routes.wallet import wallet_bp
+
 app = Flask(__name__)
 app.config.from_object(Config)
 
+# Enable CORS for both localhost and 127.0.0.1 development servers
 CORS(
     app,
     supports_credentials=True,
-    origins=["http://localhost:5173"],
+    origins=[
+        "http://localhost:5173",
+        "http://127.0.0.1:5173",
+        "http://localhost:3000",
+        "http://127.0.0.1:3000",
+    ],
     methods=["GET", "POST", "PUT", "DELETE", "OPTIONS"],
     allow_headers=["Content-Type", "Authorization"],
 )
@@ -30,6 +37,7 @@ socketio.init_app(
     app,
     cors_allowed_origins="*"
 )
+
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 UPLOAD_FOLDER = os.path.join(BASE_DIR, "uploads")
 
@@ -45,7 +53,10 @@ def uploaded_file(filename):
 
 
 # Register all blueprints
+# Allows requests to both /api/register and /api/auth/register
 app.register_blueprint(auth_bp, url_prefix="/api")
+app.register_blueprint(auth_bp, url_prefix="/api/auth", name="auth_bp_alias")
+
 app.register_blueprint(profile_bp, url_prefix="/api")
 app.register_blueprint(admin_bp, url_prefix="/api/admin")
 app.register_blueprint(verification_bp, url_prefix="/api/admin")
@@ -54,15 +65,11 @@ app.register_blueprint(room_bp, url_prefix="/api")
 app.register_blueprint(faq_bp)
 app.register_blueprint(deal_bp, url_prefix="/api")
 app.register_blueprint(fee_bp, url_prefix="/api")
-app.register_blueprint(wallet_bp,url_prefix="/api",)
-app.register_blueprint(bakong_bp,url_prefix="/api",)
-
-
-
-
-
+app.register_blueprint(wallet_bp, url_prefix="/api")
+app.register_blueprint(bakong_bp, url_prefix="/api")
 
 print("Socket.IO async mode:", socketio.async_mode)
+
 if __name__ == "__main__":
     socketio.run(
         app,

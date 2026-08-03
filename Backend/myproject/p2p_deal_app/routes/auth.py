@@ -1,94 +1,167 @@
 from flask import Blueprint, request, jsonify
-from database import get_db
+from psycopg2 import errors as pg_errors
 import bcrypt
+
+from database import get_db
 from services.auth_token import create_access_token
+from services.validation import normalize_email, validate_email, validate_password
+from services.rate_limiter import is_rate_limited, record_attempt, reset
 from socketio_instance import socketio
+
 auth_bp = Blueprint("auth", __name__)
+
+# --- Rate limit settings (tune these to taste) ---
+REGISTER_MAX_ATTEMPTS = 10
+REGISTER_WINDOW_SECONDS = 60 * 60  # 1 hour, per IP
+
+LOGIN_IP_MAX_ATTEMPTS = 20
+LOGIN_IP_WINDOW_SECONDS = 15 * 60  # 15 minutes, per IP
+
+LOGIN_ACCOUNT_MAX_ATTEMPTS = 5
+LOGIN_ACCOUNT_WINDOW_SECONDS = 15 * 60  # 15 minutes, per email
+
+
+def _client_ip():
+    # Single-process dev deployment, no reverse proxy in front today.
+    # If one is added later, prefer X-Forwarded-For here instead.
+    return request.remote_addr or "unknown"
+
+
+def _error(field, code, message, status):
+    response = jsonify({
+        "success": False,
+        "field": field,
+        "code": code,
+        "message": message,
+    })
+    return response, status
+
+
 @auth_bp.route("/register", methods=["POST"])
 def register():
-    data = request.get_json()
+    ip = _client_ip()
 
-    email = data.get("email")
+    limited, retry_after = is_rate_limited(
+        f"register:{ip}", REGISTER_MAX_ATTEMPTS, REGISTER_WINDOW_SECONDS
+    )
+
+    if limited:
+        response, status = _error(
+            None, "TOO_MANY_ATTEMPTS",
+            "Too many registration attempts. Please try again later.", 429,
+        )
+        response.headers["Retry-After"] = str(retry_after)
+        return response, status
+
+    record_attempt(f"register:{ip}", REGISTER_WINDOW_SECONDS)
+
+    data = request.get_json(silent=True)
+
+    if not data:
+        return _error(None, "INVALID_JSON", "Request body must be valid JSON.", 400)
+
+    email = normalize_email(data.get("email"))
     password = data.get("password")
 
-    if not email or not password:
-        return jsonify({"message": "Email and password are required"}), 400
+    email_valid, email_error = validate_email(email)
+    if not email_valid:
+        return _error("email", "EMAIL_INVALID", email_error, 400)
+
+    password_valid, password_error = validate_password(password)
+    if not password_valid:
+        return _error("password", "PASSWORD_WEAK", password_error, 400)
 
     conn = get_db()
-    print("DSN:", conn.dsn)
     cursor = conn.cursor()
 
-    cursor.execute("SELECT current_database(), current_schema(), version();")
-    print(cursor.fetchone())
-
     try:
-        # Check if email already exists
         cursor.execute(
             "SELECT user_id FROM user_login WHERE email = %s",
-            (email,)
+            (email,),
         )
 
         if cursor.fetchone():
-            return jsonify({"message": "Email already exists"}), 409
+            return _error(
+                "email", "EMAIL_TAKEN",
+                "An account with this email already exists.", 409,
+            )
 
-        # Hash password
         password_hash = bcrypt.hashpw(
-            password.encode("utf-8"),
-            bcrypt.gensalt()
+            password.encode("utf-8"), bcrypt.gensalt()
         ).decode("utf-8")
 
-        # Insert new user
         cursor.execute(
             """
             INSERT INTO user_login (email, passwordhash)
             VALUES (%s, %s)
             RETURNING user_id
             """,
-            (email, password_hash)
+            (email, password_hash),
         )
 
         new_user_id = cursor.fetchone()[0]
-
         conn.commit()
-
-        cursor.execute("SELECT COUNT(*) FROM user_login")
-        print("Rows:", cursor.fetchone()[0])
-
-        cursor.execute("""
-            SELECT user_id, email
-            FROM user_login
-            ORDER BY user_id DESC
-            LIMIT 5
-        """)
-        print(cursor.fetchall())
 
         socketio.emit(
             "new_user_registered",
-            {
-                "user_id": new_user_id,
-                "email": email,
-            },
+            {"user_id": new_user_id, "email": email},
             room="admins",
         )
 
-        return jsonify({"message": "Registration successful"}), 201
+        return jsonify({
+            "success": True,
+            "message": "Registration successful",
+        }), 201
 
-    except Exception as e:
-                conn.rollback()
-                return jsonify({"message": str(e)}), 500
+    except pg_errors.UniqueViolation:
+        conn.rollback()
+        return _error(
+            "email", "EMAIL_TAKEN",
+            "An account with this email already exists.", 409,
+        )
+
+    except Exception:
+        conn.rollback()
+        return _error(
+            None, "SERVER_ERROR",
+            "Something went wrong. Please try again.", 500,
+        )
 
     finally:
-            cursor.close()
-            conn.close()
+        cursor.close()
+        conn.close()
+
+
 @auth_bp.route("/login", methods=["POST"])
 def login():
-    data = request.get_json()
+    ip = _client_ip()
 
-    email = data.get("email")
+    data = request.get_json(silent=True)
+
+    if not data:
+        return _error(None, "INVALID_JSON", "Request body must be valid JSON.", 400)
+
+    email = normalize_email(data.get("email"))
     password = data.get("password")
 
     if not email or not password:
-        return jsonify({"message": "Email and password are required"}), 400
+        return _error(None, "MISSING_FIELDS", "Email and password are required.", 400)
+
+    ip_limited, ip_retry_after = is_rate_limited(
+        f"login_ip:{ip}", LOGIN_IP_MAX_ATTEMPTS, LOGIN_IP_WINDOW_SECONDS
+    )
+    account_limited, account_retry_after = is_rate_limited(
+        f"login_acct:{email}", LOGIN_ACCOUNT_MAX_ATTEMPTS, LOGIN_ACCOUNT_WINDOW_SECONDS
+    )
+
+    if ip_limited or account_limited:
+        retry_after = max(ip_retry_after, account_retry_after)
+        response, status = _error(
+            None, "TOO_MANY_ATTEMPTS",
+            "Too many login attempts. Please try again later.", 429,
+        )
+        response.headers["Retry-After"] = str(retry_after)
+        return response, status
 
     conn = get_db()
     cursor = conn.cursor()
@@ -100,36 +173,38 @@ def login():
             FROM user_login
             WHERE email = %s
             """,
-            (email,)
+            (email,),
         )
 
         user = cursor.fetchone()
 
         if not user:
-            return jsonify({"message": "Invalid email or password"}), 401
+            record_attempt(f"login_ip:{ip}", LOGIN_IP_WINDOW_SECONDS)
+            record_attempt(f"login_acct:{email}", LOGIN_ACCOUNT_WINDOW_SECONDS)
+            return _error(None, "INVALID_CREDENTIALS", "Invalid email or password.", 401)
 
         user_id, user_email, password_hash = user
 
-        if not bcrypt.checkpw(
-            password.encode("utf-8"),
-            password_hash.encode("utf-8")
-        ):
-            return jsonify({"message": "Invalid email or password"}), 401
+        if not bcrypt.checkpw(password.encode("utf-8"), password_hash.encode("utf-8")):
+            record_attempt(f"login_ip:{ip}", LOGIN_IP_WINDOW_SECONDS)
+            record_attempt(f"login_acct:{email}", LOGIN_ACCOUNT_WINDOW_SECONDS)
+            return _error(None, "INVALID_CREDENTIALS", "Invalid email or password.", 401)
 
-        access_token = create_access_token(
-            user_id=user_id,
-            email=user_email,
-        )
+        # Successful login: clear this account's failed-attempt history.
+        reset(f"login_acct:{email}")
+
+        access_token = create_access_token(user_id=user_id, email=user_email)
 
         return jsonify({
+            "success": True,
             "message": "Login successful",
             "user_id": user_id,
             "email": user_email,
             "token": access_token,
         }), 200
 
-    except Exception as e:
-        return jsonify({"message": str(e)}), 500
+    except Exception:
+        return _error(None, "SERVER_ERROR", "Something went wrong. Please try again.", 500)
 
     finally:
         cursor.close()
