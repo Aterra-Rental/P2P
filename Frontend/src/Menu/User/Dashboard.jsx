@@ -11,7 +11,11 @@ const Dashboard = () => {
   const { user, loading, logout, refreshUser } = useAuth();
   const [showUploadOptions, setShowUploadOptions] = useState(false);
   const [imageTimestamp, setImageTimestamp] = useState(Date.now());
-  const [localProfilePic, setLocalProfilePic] = useState(null); // 💡 Local override state
+  
+  const [localProfilePic, setLocalProfilePic] = useState(() => {
+    const userId = localStorage.getItem("user_id");
+    return userId ? localStorage.getItem(`profile_picture_${userId}`) : null;
+  });
 
   const handleLogout = () => {
     logout();
@@ -34,7 +38,7 @@ const Dashboard = () => {
       return;
     }
 
-    // 💡 Instant UI preview update
+    // Instant local preview
     const objectUrl = URL.createObjectURL(file);
     setLocalProfilePic(objectUrl);
 
@@ -63,6 +67,12 @@ const Dashboard = () => {
       await refreshUser();
       setImageTimestamp(Date.now());
 
+      const savedPath = result.profile_picture || result.url || result.path || result.image;
+      if (savedPath) {
+        localStorage.setItem(`profile_picture_${userId}`, savedPath);
+        setLocalProfilePic(null);
+      }
+
       showTopNotification("Profile picture updated successfully.", "success");
       setShowUploadOptions(false);
     } catch (err) {
@@ -71,18 +81,20 @@ const Dashboard = () => {
     }
   };
 
-  // Profile picture resolver prioritizing local preview
   const getProfilePictureUrl = () => {
-    if (localProfilePic) return localProfilePic;
-    if (!user?.profile_picture) return defaultAvatar;
+    const userId = user?.id || user?.user_id || localStorage.getItem("user_id");
+    const cachedPic = userId ? localStorage.getItem(`profile_picture_${userId}`) : null;
+    const picturePath = localProfilePic || user?.profile_picture || cachedPic;
     
-    if (user.profile_picture.startsWith("http")) {
-      return `${user.profile_picture}?t=${imageTimestamp}`;
+    if (!picturePath) return defaultAvatar;
+    
+    if (picturePath.startsWith("http") || picturePath.startsWith("blob:")) {
+      return `${picturePath.includes("?") ? picturePath : `${picturePath}?t=${imageTimestamp}`}`;
     }
 
-    const cleanPath = user.profile_picture.startsWith("/") 
-      ? user.profile_picture 
-      : `/${user.profile_picture}`;
+    const cleanPath = picturePath.startsWith("/") 
+      ? picturePath 
+      : `/${picturePath}`;
 
     return `http://127.0.0.1:8000${cleanPath}?t=${imageTimestamp}`;
   };

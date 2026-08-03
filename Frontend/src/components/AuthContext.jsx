@@ -10,7 +10,6 @@ import {
 import { getUserProfile } from "../lib/profile";
 import { socket } from "../lib/socket";
 
-// Added export here so named import { AuthContext } works
 export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
@@ -35,8 +34,8 @@ export const AuthProvider = ({ children }) => {
     }
 
     try {
+      const cachedPic = localStorage.getItem(`profile_picture_${userId}`);
       const profile = await getUserProfile();
-
       const storedUser = JSON.parse(
         localStorage.getItem("user") || "{}"
       );
@@ -45,32 +44,38 @@ export const AuthProvider = ({ children }) => {
         ? {
             ...storedUser,
             ...profile,
+            profile_picture: profile.profile_picture || profile.url || profile.path || cachedPic || storedUser.profile_picture,
             user_id: Number(userId),
             profile_completed: true,
           }
         : {
             ...storedUser,
+            profile_picture: cachedPic || storedUser.profile_picture,
             user_id: Number(userId),
             profile_completed: false,
           };
 
       setUser(updatedUser);
+      localStorage.setItem("user", JSON.stringify(updatedUser));
 
       return updatedUser;
     } catch (error) {
       console.error("Failed to refresh user:", error);
 
+      const cachedPic = localStorage.getItem(`profile_picture_${userId}`);
       const storedUser = JSON.parse(
         localStorage.getItem("user") || "{}"
       );
 
       const fallbackUser = {
         ...storedUser,
+        profile_picture: cachedPic || storedUser.profile_picture,
         user_id: Number(userId),
         profile_completed: false,
       };
 
       setUser(fallbackUser);
+      localStorage.setItem("user", JSON.stringify(fallbackUser));
 
       return fallbackUser;
     } finally {
@@ -79,12 +84,10 @@ export const AuthProvider = ({ children }) => {
     }
   }, []);
 
-  // Load the account only once when the application starts.
   useEffect(() => {
     refreshUser();
   }, [refreshUser]);
 
-  // Listen globally for profile and verification changes.
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
 
@@ -98,31 +101,14 @@ export const AuthProvider = ({ children }) => {
       });
     };
 
-    const handleUserUpdate = async (data) => {
-      console.log("verification_updated received:", data);
-      if (!data?.user_id) {
-        return;
-      }
-
-      if (String(data.user_id) !== String(userId)) {
-        return;
-      }
-
-      await refreshUser();
-    };
-
     if (socket.connected) {
       joinUserRoom();
     }
 
     socket.on("connect", joinUserRoom);
-    // socket.on("profile_updated", handleUserUpdate);
-    // socket.on("verification_updated", handleUserUpdate);
 
     return () => {
       socket.off("connect", joinUserRoom);
-      // socket.off("profile_updated", handleUserUpdate);
-      // socket.off("verification_updated", handleUserUpdate);
     };
   }, [refreshUser]);
 
@@ -131,6 +117,7 @@ export const AuthProvider = ({ children }) => {
     localStorage.removeItem("email");
     localStorage.removeItem("user");
     localStorage.removeItem("token");
+    // Note: We intentionally do NOT remove profile_picture_${userId} so it stays remembered when logging back in
 
     setUser(null);
   };
