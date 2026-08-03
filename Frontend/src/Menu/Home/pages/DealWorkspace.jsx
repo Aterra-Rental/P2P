@@ -10,6 +10,9 @@ import PaymentPanel from "../components/Deal/PaymentPanel";
 import { getDealRoles } from "../lib/deal";
 import AmountConfirmation from "../components/Deal/AmountConfirmation";
 import FeeConfirmation from "../components/Deal/FeeConfirmation";
+import CancellationPanel from "../components/Deal/CancellationPanel";
+
+
 const DealWorkspace = () => {
   const { roomCode } = useParams();
   const navigate = useNavigate();
@@ -180,13 +183,25 @@ const DealWorkspace = () => {
       );
     }
 
-if (room.current_step === "Payment") {
+          if (room.current_step === "Payment") {
       return (
-  <PaymentPanel
-    room={room}
-    userId={currentUserId}
-  />
-);
+        <PaymentPanel
+          room={room}
+          userId={currentUserId}
+        />
+      );
+    }
+
+    if (
+      room.current_step === "Delivery" ||
+      room.current_step === "Cancelled"
+    ) {
+      return (
+        <CancellationPanel
+          room={room}
+          userId={currentUserId}
+        />
+      );
     }
 
     return (
