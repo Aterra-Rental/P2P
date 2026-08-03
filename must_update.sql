@@ -1045,6 +1045,12 @@ CREATE TABLE IF NOT EXISTS
 -- Indexes
 CREATE UNIQUE INDEX IF NOT EXISTS idx_user_details_username ON public.user_details USING btree (username);
 CREATE INDEX IF NOT EXISTS idx_room_reminders_cooldown ON public.room_reminders USING btree (room_id, sender_id, created_at DESC);
+CREATE INDEX IF NOT EXISTS
+    room_messages_room_message_idx
+ON public.room_messages (
+    room_id,
+    message_id
+);
 CREATE INDEX IF NOT EXISTS idx_room_reminders_unread ON public.room_reminders USING btree (receiver_id, is_read, created_at DESC);
 CREATE INDEX IF NOT EXISTS
     deal_payment_attempt_room_created_idx

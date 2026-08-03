@@ -11,7 +11,7 @@ import { getDealRoles } from "../lib/deal";
 import AmountConfirmation from "../components/Deal/AmountConfirmation";
 import FeeConfirmation from "../components/Deal/FeeConfirmation";
 import CancellationPanel from "../components/Deal/CancellationPanel";
-
+import FulfillmentPanel from "../components/Deal/FulfillmentPanel";
 
 const DealWorkspace = () => {
   const { roomCode } = useParams();
@@ -25,11 +25,11 @@ const DealWorkspace = () => {
   const handleLeaveRoom = () => {
     socket.emit("leave_deal", {
       room_code: roomCode,
-      user_id: currentUserId,
     });
 
     navigate("/deals");
   };
+
   const [loading, setLoading] = useState(true);
   const [remindLoading, setRemindLoading] = useState(false);
   const [remindSuccess, setRemindSuccess] = useState("");
@@ -71,7 +71,6 @@ const DealWorkspace = () => {
     const joinDealRoom = () => {
       socket.emit("join_deal", {
         room_code: roomCode,
-        user_id: currentUserId,
       });
     };
 
@@ -80,13 +79,26 @@ const DealWorkspace = () => {
         fetchWorkspaceData();
       }
     };
+
     const handlePresenceUpdated = (data) => {
-      if (data.room_code === roomCode) {
-        setBothUsersPresent(Boolean(data.both_present));
+      if (data.room_code !== roomCode) {
+        return;
+      }
+
+      const bothPresent = Boolean(data.both_present);
+
+      setBothUsersPresent(bothPresent);
+
+      if (bothPresent) {
+        setRemindCooldown(0);
+        setRemindSuccess("");
+        setRemindError("");
       }
     };
 
-    fetchWorkspaceData();
+    const initialLoadTimer = window.setTimeout(() => {
+      fetchWorkspaceData();
+    }, 0);
 
     if (socket.connected) {
       joinDealRoom();
@@ -101,16 +113,15 @@ const DealWorkspace = () => {
     socket.on("deal_presence_updated", handlePresenceUpdated);
 
     return () => {
+      window.clearTimeout(initialLoadTimer);
+
       socket.off("connect", joinDealRoom);
       socket.off("room_updated", handleDealUpdated);
       socket.off("roles_selected", handleDealUpdated);
       socket.off("role_confirmation_updated", handleDealUpdated);
       socket.off("role_selection_reset", handleDealUpdated);
       socket.off("roles_confirmed", handleDealUpdated);
-      socket.emit("leave_deal", {
-        room_code: roomCode,
-        user_id: currentUserId,
-      });
+      socket.emit("leave_deal", { room_code: roomCode,});
       socket.off("deal_presence_updated", handlePresenceUpdated);
     };
   }, [roomCode, currentUserId]);
@@ -126,9 +137,7 @@ const DealWorkspace = () => {
       setRemindSuccess("");
       setRemindError("");
 
-      const currentUserId = localStorage.getItem("user_id");
-
-      const result = await remindPartner(room.room_code, currentUserId);
+      const result = await remindPartner(room.room_code);
 
       setRemindSuccess(result.message);
     } catch (err) {
@@ -166,42 +175,44 @@ const DealWorkspace = () => {
     }
 
     if (room.current_step === "DealConfirmation") {
-      return (
-        <AmountConfirmation
-          room={room}
-          userId={currentUserId}
-        />
-      );
+      return <AmountConfirmation room={room} userId={currentUserId} />;
     }
 
     if (room.current_step === "FeeConfirmation") {
+      return <FeeConfirmation room={room} userId={currentUserId} />;
+    }
+
+    if (room.current_step === "Payment") {
       return (
-        <FeeConfirmation
-          room={room}
-          userId={currentUserId}
-        />
+        <div className="deal-stage-stack">
+          <CancellationPanel
+            room={room}
+            userId={currentUserId}
+          />
+
+          <PaymentPanel
+            room={room}
+            userId={currentUserId}
+          />
+        </div>
       );
     }
 
-          if (room.current_step === "Payment") {
+    if (room.current_step === "Delivery") {
       return (
-        <PaymentPanel
-          room={room}
-          userId={currentUserId}
-        />
+        <div className="deal-stage-stack">
+          <CancellationPanel
+            room={room}
+            userId={currentUserId}
+          />
+
+          <FulfillmentPanel room={room} />
+        </div>
       );
     }
 
-    if (
-      room.current_step === "Delivery" ||
-      room.current_step === "Cancelled"
-    ) {
-      return (
-        <CancellationPanel
-          room={room}
-          userId={currentUserId}
-        />
-      );
+    if (room.current_step === "Cancelled") {
+      return <CancellationPanel room={room} userId={currentUserId} />;
     }
 
     return (

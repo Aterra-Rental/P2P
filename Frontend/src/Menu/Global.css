@@ -231,131 +231,129 @@ box-shadow:0 0 15px rgba(177,77,255,.25);
    GLOBAL TOP NOTIFICATION
 ========================================== */
 
-.global-top-notification{
 
-    position:fixed;
 
-    top:25px;
-
-    left:50%;
-
-    transform:translateX(-50%);
-
-    display:flex;
-
-    align-items:center;
-
-    gap:14px;
-
-    min-width:380px;
-
-    max-width:550px;
-
-    padding:18px 22px;
-
-    border-radius:16px;
-
-    backdrop-filter:blur(20px);
-
-    background:rgba(18,10,30,.96);
-
-    color:white;
-
-    z-index:9999;
-
-    animation:slideDown .35s ease;
-
+.global-top-notification {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    display: flex;
+    align-items: center;
+    gap: 11px;
+    width: min(410px, calc(100vw - 32px));
+    min-width: 0;
+    padding: 12px 13px;
+    border: 1px solid rgba(168, 85, 247, 0.3);
+    border-radius: 13px;
+    background: rgba(20, 12, 34, 0.96);
+    color: #f8f5ff;
     box-shadow:
-    0 18px 45px rgba(0,0,0,.35);
-
-    border:1px solid rgba(255,255,255,.08);
-
+        0 18px 48px rgba(0, 0, 0, 0.38),
+        inset 0 1px 0 rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(18px);
+    z-index: 9999;
+    animation: notification-enter 0.25s ease-out;
 }
 
-.global-top-notification-icon{
-
-    width:34px;
-
-    height:34px;
-
-    border-radius:50%;
-
-    display:flex;
-
-    align-items:center;
-
-    justify-content:center;
-
-    font-weight:bold;
-
-    color:white;
-
+.global-top-notification-icon {
+    display: grid;
+    width: 32px;
+    height: 32px;
+    flex: 0 0 32px;
+    place-items: center;
+    border-radius: 9px;
+    color: #fff;
+    font-size: 16px;
+    font-weight: 800;
 }
 
-.notification-success .global-top-notification-icon{
-
-    background:#22c55e;
-
+.notification-success {
+    border-color: rgba(34, 197, 94, 0.38);
 }
 
-.notification-warning .global-top-notification-icon{
-
-    background:#f59e0b;
-
+.notification-success .global-top-notification-icon {
+    background: rgba(34, 197, 94, 0.22);
+    color: #86efac;
 }
 
-.notification-error .global-top-notification-icon{
-
-    background:#ef4444;
-
+.notification-warning {
+    border-color: rgba(245, 158, 11, 0.4);
 }
 
-.notification-info .global-top-notification-icon{
-
-    background:#3b82f6;
-
+.notification-warning .global-top-notification-icon {
+    background: rgba(245, 158, 11, 0.2);
+    color: #fcd34d;
 }
 
-.global-top-notification span{
-
-    flex:1;
-
-    font-size:15px;
-
+.notification-error {
+    border-color: rgba(239, 68, 68, 0.4);
 }
 
-.global-top-notification-close{
-
-    background:none;
-
-    border:none;
-
-    color:white;
-
-    font-size:22px;
-
-    cursor:pointer;
-
+.notification-error .global-top-notification-icon {
+    background: rgba(239, 68, 68, 0.2);
+    color: #fca5a5;
 }
 
-@keyframes slideDown{
+.notification-info {
+    border-color: rgba(168, 85, 247, 0.38);
+}
 
-    from{
+.notification-info .global-top-notification-icon {
+    background: rgba(168, 85, 247, 0.2);
+    color: #d8b4fe;
+}
 
-        opacity:0;
+.global-top-notification-message {
+    flex: 1;
+    min-width: 0;
+    color: #eee8f7;
+    font-size: 14px;
+    font-weight: 600;
+    line-height: 1.45;
+    overflow-wrap: anywhere;
+}
 
-        transform:
-        translate(-50%,-45px);
+.global-top-notification-close {
+    display: grid;
+    width: 30px;
+    height: 30px;
+    flex: 0 0 30px;
+    place-items: center;
+    padding: 0;
+    border: 0;
+    border-radius: 8px;
+    background: transparent;
+    color: #a99eb8;
+    font-size: 20px;
+    line-height: 1;
+    cursor: pointer;
+    transition:
+        background 0.2s ease,
+        color 0.2s ease;
+}
 
+.global-top-notification-close:hover {
+    background: rgba(255, 255, 255, 0.08);
+    color: #fff;
+}
+
+@keyframes notification-enter {
+    from {
+        opacity: 0;
+        transform: translateY(-10px) scale(0.98);
     }
 
-    to{
-
-        opacity:1;
-
-        transform:
-        translate(-50%,0);
-
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
     }
+}
 
+@media (max-width: 560px) {
+    .global-top-notification {
+        top: 12px;
+        right: 16px;
+        left: 16px;
+        width: auto;
+    }
 }

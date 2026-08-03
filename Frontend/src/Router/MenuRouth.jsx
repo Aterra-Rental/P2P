@@ -38,21 +38,7 @@ import Status from '../pages/Legal/Status';
 
 
 
-export const showTopNotification = (
-  message,
-  type = "info",
-  duration = 4000
-) => {
-  window.dispatchEvent(
-    new CustomEvent("show-top-notification", {
-      detail: {
-        message,
-        type,
-        duration,
-      },
-    })
-  );
-};
+
 const Layout = () => {
   const location = useLocation();
 
@@ -117,7 +103,9 @@ const Layout = () => {
           {notification.type === "info" && "i"}
         </span>
 
-        <span>{notification.message}</span>
+        <span className="global-top-notification-message">
+          {notification.message}
+        </span>
 
         <button
           type="button"

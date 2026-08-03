@@ -1,47 +1,69 @@
 import { API_URL } from "../../../lib/api";
 
-const getHeaders = () => ({
-    "Content-Type": "application/json",
-});
 
-export const getMessages = async (roomCode) => {
-    const response = await fetch(
-        `${API_URL}/messages/${roomCode}`,
-        {
-            headers: getHeaders(),
-        }
+const getAuthenticatedHeaders = () => {
+  const token = localStorage.getItem("token");
+
+  if (!token) {
+    throw new Error(
+      "Your login session is missing. Please log in again."
     );
+  }
 
-    const data = await response.json();
-
-    if (!response.ok) {
-        console.error("Backend Error:", data);
-        throw new Error(
-            data.message || data.error || "Failed to load messages."
-        );
-    }
-
-    return data;
+  return {
+    "Content-Type": "application/json",
+    Authorization: `Bearer ${token}`,
+  };
 };
 
-export const sendMessage = async (messageData) => {
-    const response = await fetch(
-        `${API_URL}/messages`,
-        {
-            method: "POST",
-            headers: getHeaders(),
-            body: JSON.stringify(messageData),
-        }
+
+const readResponse = async (response) => {
+  let data;
+
+  try {
+    data = await response.json();
+  } catch {
+    throw new Error(
+      `Server returned an invalid response (${response.status}).`
     );
+  }
 
-    const data = await response.json();
+  if (!response.ok) {
+    throw new Error(
+      data.message ||
+        data.error ||
+        `Request failed (${response.status}).`
+    );
+  }
 
-    if (!response.ok) {
-        console.error("Backend Error:", data);
-        throw new Error(
-            data.message || data.error || "Failed to send message."
-        );
+  return data;
+};
+
+
+export const getMessages = async (roomCode) => {
+  const response = await fetch(
+    `${API_URL}/messages/${roomCode}`,
+    {
+      headers: getAuthenticatedHeaders(),
     }
+  );
 
-    return data;
+  return readResponse(response);
+};
+
+
+export const sendMessage = async (
+  roomCode,
+  message
+) => {
+  const response = await fetch(
+    `${API_URL}/messages/${roomCode}`,
+    {
+      method: "POST",
+      headers: getAuthenticatedHeaders(),
+      body: JSON.stringify({ message }),
+    }
+  );
+
+  return readResponse(response);
 };
