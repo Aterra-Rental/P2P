@@ -10,28 +10,29 @@ import {
 import { getUserProfile } from "../lib/profile";
 import { socket } from "../lib/socket";
 
-const AuthContext = createContext(null);
+// Added export here so named import { AuthContext } works
+export const AuthContext = createContext(null);
 
 export const AuthProvider = ({ children }) => {
   const [user, setUser] = useState(null);
   const [loading, setLoading] = useState(true);
-    const refreshInProgress = useRef(false);
+  const refreshInProgress = useRef(false);
+
   const refreshUser = useCallback(async () => {
-   
-  if (refreshInProgress.current) {
-    return null;
-  }
+    if (refreshInProgress.current) {
+      return null;
+    }
 
-  refreshInProgress.current = true;
+    refreshInProgress.current = true;
 
-  const userId = localStorage.getItem("user_id");
+    const userId = localStorage.getItem("user_id");
 
     if (!userId) {
-  setUser(null);
-  setLoading(false);
-  refreshInProgress.current = false;
-  return null;
-}
+      setUser(null);
+      setLoading(false);
+      refreshInProgress.current = false;
+      return null;
+    }
 
     try {
       const profile = await getUserProfile();
@@ -73,9 +74,9 @@ export const AuthProvider = ({ children }) => {
 
       return fallbackUser;
     } finally {
-  refreshInProgress.current = false;
-  setLoading(false);
-}
+      refreshInProgress.current = false;
+      setLoading(false);
+    }
   }, []);
 
   // Load the account only once when the application starts.
@@ -97,18 +98,18 @@ export const AuthProvider = ({ children }) => {
       });
     };
 
-   const handleUserUpdate = async (data) => {
+    const handleUserUpdate = async (data) => {
       console.log("verification_updated received:", data);
-  if (!data?.user_id) {
-    return;
-  }
+      if (!data?.user_id) {
+        return;
+      }
 
-  if (String(data.user_id) !== String(userId)) {
-    return;
-  }
+      if (String(data.user_id) !== String(userId)) {
+        return;
+      }
 
-  await refreshUser();
-};
+      await refreshUser();
+    };
 
     if (socket.connected) {
       joinUserRoom();
@@ -120,8 +121,8 @@ export const AuthProvider = ({ children }) => {
 
     return () => {
       socket.off("connect", joinUserRoom);
-    //   socket.off("profile_updated", handleUserUpdate);
-    //   socket.off("verification_updated", handleUserUpdate);
+      // socket.off("profile_updated", handleUserUpdate);
+      // socket.off("verification_updated", handleUserUpdate);
     };
   }, [refreshUser]);
 
@@ -159,3 +160,5 @@ export const useAuth = () => {
 
   return context;
 };
+
+export default AuthProvider;

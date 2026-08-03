@@ -175,3 +175,45 @@ form {
     border: 1px solid #ddd;
     object-fit: cover;
 }
+/* ===========================
+   GRID & VALIDATION EXTENSIONS
+=========================== */
+
+.FormGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+}
+
+.PhoneInputGroup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.PhonePrefix {
+  padding: 14px 16px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  color: white;
+  font-weight: 600;
+  font-size: 15px;
+}
+
+.fieldError {
+  color: #ff7b7b;
+  font-size: 0.85rem;
+  margin-top: 6px;
+}
+
+.isInvalid {
+  border-color: #ff7b7b !important;
+  box-shadow: 0 0 0 3px rgba(255, 123, 123, 0.2) !important;
+}
+
+@media (max-width: 768px) {
+  .FormGrid {
+    grid-template-columns: 1fr;
+  }
+}
