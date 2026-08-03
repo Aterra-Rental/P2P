@@ -16,7 +16,7 @@ timeout /t 4 /nobreak >nul
 
 echo Opening browser tabs in Chrome...
 start chrome http://localhost:5173/
-start chrome http://localhost:5173/Login
+
 
 echo All services launched successfully!
 

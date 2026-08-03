@@ -27,26 +27,32 @@ const Status = () => {
           <header className="legal-header">
             <h1>P2P System Status</h1>
             <div className="legal-meta">
-              <span>Last updated: August 2026[cite: 2]</span>
-              <span className="env-badge">Development / Demonstration Environment[cite: 2]</span>
+              <span>Last updated: August 2026
+</span>
+              <span className="env-badge">Development / Demonstration Environment
+</span>
             </div>
           </header>
 
           <div className="legal-disclaimer-box">
-            <p>This page reports implementation status for development evaluation, not guaranteed live uptime. The platform does not custody real bank funds.[cite: 2]</p>
+            <p>This page reports implementation status for development evaluation, not guaranteed live uptime. The platform does not custody real bank funds.
+</p>
           </div>
 
           <div className="status-grid">
             {statuses.map((item, index) => (
               <div key={index} className="status-item">
-                <span className="status-label">{item.name}[cite: 2]</span>
-                <span className={`status-badge ${item.type}`}>{item.state}[cite: 2]</span>
+                <span className="status-label">{item.name}
+</span>
+                <span className={`status-badge ${item.type}`}>{item.state}
+</span>
               </div>
             ))}
           </div>
 
           <div className="legal-footer-nav">
-            <Link to="/" className="legal-back-link">← Return to Home[cite: 2]</Link>
+            <Link to="/" className="legal-back-link">← Return to Home
+</Link>
           </div>
         </article>
       </main>
