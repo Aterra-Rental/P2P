@@ -75,7 +75,7 @@
     right: 0;
 
     width: 340px;
-    max-height: 420px;
+     max-height: min(420px, calc(100vh - 96px));
 
     background: var(--bg-primary);
     border: 1px solid var(--border);
@@ -120,7 +120,13 @@
 }
 
 .bell-list {
+    .bell-list {
+    flex: 1;
+    min-height: 0;
+
     overflow-y: auto;
+    overscroll-behavior: contain;
+}
 }
 
 .bell-empty {
@@ -329,4 +335,73 @@
     word-break: break-word;
 
     margin: 0;
+}
+.bell-modal-actions {
+    display: flex;
+    justify-content: flex-end;
+
+    padding-top: 24px;
+    margin-top: 24px;
+
+    border-top: 1px solid var(--border);
+}
+
+.bell-delete-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+
+    min-height: 40px;
+    padding: 0 14px;
+
+    color: #ffb4bd;
+    background: rgba(239, 68, 68, 0.12);
+    border: 1px solid rgba(239, 68, 68, 0.38);
+    border-radius: 10px;
+
+    font: inherit;
+    font-size: 0.85rem;
+    font-weight: 700;
+
+    cursor: pointer;
+    transition: 0.2s ease;
+}
+
+.bell-delete-button:hover:not(:disabled) {
+    color: white;
+    background: rgba(239, 68, 68, 0.24);
+    border-color: rgba(248, 113, 113, 0.75);
+}
+
+.bell-delete-button:disabled {
+    opacity: 0.55;
+    cursor: not-allowed;
+}
+.bell-dropdown-footer {
+  flex-shrink: 0;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.025);
+  border-top: 1px solid var(--border);
+}
+
+.bell-view-all-link {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  color: #d6adff;
+  background: rgba(177, 77, 255, 0.11);
+  border: 1px solid rgba(177, 77, 255, 0.3);
+  border-radius: 10px;
+  font-size: 0.84rem;
+  font-weight: 700;
+  text-decoration: none;
+  transition: 0.2s ease;
+}
+
+.bell-view-all-link:hover {
+  color: #fff;
+  background: rgba(177, 77, 255, 0.22);
+  border-color: rgba(199, 125, 255, 0.6);
 }

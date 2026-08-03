@@ -1,5 +1,9 @@
 from flask import Blueprint, g, jsonify, request
 from services.auth_required import login_required
+from services.notification_service import (
+    create_user_notification,
+    emit_notifications_changed,
+)
 from database import get_db
 import random
 import string
@@ -647,57 +651,86 @@ def update_room(room_code):
 # ======================================================
 # ACCEPT INVITATION
 # ======================================================
-@room_bp.route("/rooms/<room_code>/accept", methods=["POST"])
+@room_bp.route(
+    "/rooms/<room_code>/accept",
+    methods=["POST"],
+)
+@login_required
 def accept_room(room_code):
-    data = request.get_json(silent=True) or {}
-    user_id = data.get("user_id")
-
-    if not user_id:
-        return jsonify({
-            "success": False,
-            "message": "User ID is required."
-        }), 400
+    user_id = g.current_user_id
 
     conn = get_db()
     cur = conn.cursor()
 
     try:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT
+                room_id,
                 created_by,
                 invited_user_id,
                 status
             FROM room
             WHERE room_code = %s
-        """, (room_code,))
+            FOR UPDATE
+            """,
+            (room_code,),
+        )
 
         room = cur.fetchone()
 
         if not room:
             return jsonify({
                 "success": False,
-                "message": "Room not found."
+                "message": "Room not found.",
             }), 404
 
-        created_by, invited_user_id, status = room
+        (
+            room_id,
+            created_by,
+            invited_user_id,
+            status,
+        ) = room
 
-        if str(invited_user_id) != str(user_id):
+        if int(invited_user_id) != int(user_id):
             return jsonify({
                 "success": False,
-                "message": "Only the invited user can accept this room."
+                "message": (
+                    "Only the invited user can "
+                    "accept this room."
+                ),
             }), 403
 
         if status != "Waiting":
             return jsonify({
                 "success": False,
-                "message": "This invitation is no longer waiting."
+                "message": (
+                    "This invitation is no longer waiting."
+                ),
             }), 400
 
-        cur.execute("""
+        cur.execute(
+            """
             UPDATE room
             SET status = 'Accepted'
-            WHERE room_code = %s
-        """, (room_code,))
+            WHERE room_id = %s
+            """,
+            (room_id,),
+        )
+
+        create_user_notification(
+            cur,
+            user_id=created_by,
+            actor_user_id=user_id,
+            notification_type="InvitationAccepted",
+            title="Invitation accepted",
+            message=(
+                "Your invited partner accepted the "
+                f"deal invitation for room {room_code}."
+            ),
+            room_id=room_id,
+            room_code=room_code,
+        )
 
         conn.commit()
 
@@ -708,79 +741,112 @@ def accept_room(room_code):
             status="Accepted",
         )
 
+        emit_notifications_changed([
+            created_by,
+        ])
+
         return jsonify({
             "success": True,
-            "message": "Invitation accepted."
+            "message": "Invitation accepted.",
         }), 200
 
-    except Exception as e:
+    except Exception as error:
         conn.rollback()
         traceback.print_exc()
+
         return jsonify({
             "success": False,
-            "error": str(e),
-            "message": str(e)
+            "error": str(error),
+            "message": str(error),
         }), 500
 
     finally:
         cur.close()
         conn.close()
 
-
 # ======================================================
 # REJECT INVITATION
 # ======================================================
-@room_bp.route("/rooms/<room_code>/reject", methods=["POST"])
+@room_bp.route(
+    "/rooms/<room_code>/reject",
+    methods=["POST"],
+)
+@login_required
 def reject_room(room_code):
-    data = request.get_json(silent=True) or {}
-    user_id = data.get("user_id")
-
-    if not user_id:
-        return jsonify({
-            "success": False,
-            "message": "User ID is required."
-        }), 400
+    user_id = g.current_user_id
 
     conn = get_db()
     cur = conn.cursor()
 
     try:
-        cur.execute("""
+        cur.execute(
+            """
             SELECT
+                room_id,
                 created_by,
                 invited_user_id,
                 status
             FROM room
             WHERE room_code = %s
-        """, (room_code,))
+            FOR UPDATE
+            """,
+            (room_code,),
+        )
 
         room = cur.fetchone()
 
         if not room:
             return jsonify({
                 "success": False,
-                "message": "Room not found."
+                "message": "Room not found.",
             }), 404
 
-        created_by, invited_user_id, status = room
+        (
+            room_id,
+            created_by,
+            invited_user_id,
+            status,
+        ) = room
 
-        if str(invited_user_id) != str(user_id):
+        if int(invited_user_id) != int(user_id):
             return jsonify({
                 "success": False,
-                "message": "Only the invited user can reject this room."
+                "message": (
+                    "Only the invited user can "
+                    "reject this room."
+                ),
             }), 403
 
         if status != "Waiting":
             return jsonify({
                 "success": False,
-                "message": "This invitation is no longer waiting."
+                "message": (
+                    "This invitation is no longer waiting."
+                ),
             }), 400
 
-        cur.execute("""
+        cur.execute(
+            """
             UPDATE room
             SET status = 'Rejected'
-            WHERE room_code = %s
-        """, (room_code,))
+            WHERE room_id = %s
+            """,
+            (room_id,),
+        )
+
+        create_user_notification(
+            cur,
+            user_id=created_by,
+            actor_user_id=user_id,
+            notification_type="InvitationRejected",
+            title="Invitation declined",
+            message=(
+                "Your invited partner declined the "
+                f"deal invitation for room {room_code}."
+            ),
+            room_id=room_id,
+            room_code=room_code,
+        )
 
         conn.commit()
 
@@ -791,18 +857,23 @@ def reject_room(room_code):
             status="Rejected",
         )
 
+        emit_notifications_changed([
+            created_by,
+        ])
+
         return jsonify({
             "success": True,
-            "message": "Invitation rejected."
+            "message": "Invitation rejected.",
         }), 200
 
-    except Exception as e:
+    except Exception as error:
         conn.rollback()
         traceback.print_exc()
+
         return jsonify({
             "success": False,
-            "error": str(e),
-            "message": str(e)
+            "error": str(error),
+            "message": str(error),
         }), 500
 
     finally:
@@ -1005,11 +1076,6 @@ def reinvite_room(room_code):
     finally:
         cur.close()
         conn.close()
-from datetime import datetime, timedelta
-
-
-
-
 
 @room_bp.route("/rooms/<room_code>/remind", methods=["POST"])
 @login_required
@@ -1121,34 +1187,56 @@ def remind_partner(room_code):
         # Save reminder
         # ------------------------------------
 
-        cur.execute("""
-            INSERT INTO room_reminders
-            (
+        cur.execute(
+            """
+            INSERT INTO room_reminders (
                 room_id,
                 sender_id,
                 receiver_id
             )
-            VALUES
-            (%s,%s,%s)
-        """, (
-            room_id,
-            sender_id,
-            receiver_id
-        ))
+            VALUES (%s, %s, %s)
+            """,
+            (
+                room_id,
+                sender_id,
+                receiver_id,
+            ),
+        )
+
+        create_user_notification(
+            cur,
+            user_id=receiver_id,
+            actor_user_id=sender_id,
+            notification_type="DealReminder",
+            title="Partner reminder",
+            message=(
+                "Your partner is waiting for you in "
+                f"deal room {room_code}."
+            ),
+            room_id=room_id,
+            room_code=room_code,
+        )
 
         conn.commit()
 
         socketio.emit(
-        "partner_reminded",
-        {
-            "room_code": room_code,
-            "room_id": room_id,
-            "sender_id": sender_id,
-            "receiver_id": receiver_id,
-            "message": "Your partner reminded you about this deal."
-        },
-        room=f"user_{receiver_id}"
-    )
+            "partner_reminded",
+            {
+                "room_code": room_code,
+                "room_id": room_id,
+                "sender_id": sender_id,
+                "receiver_id": receiver_id,
+                "message": (
+                    "Your partner reminded you "
+                    "about this deal."
+                ),
+            },
+            room=f"user_{receiver_id}",
+        )
+
+        emit_notifications_changed([
+            receiver_id,
+        ])
 
         return jsonify({
                 "success": True,

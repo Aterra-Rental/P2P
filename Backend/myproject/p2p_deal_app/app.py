@@ -17,6 +17,7 @@ from routes.bakong import bakong_bp
 from routes.wallet import wallet_bp
 from routes.message import message_bp
 from routes.announcement import announcement_bp
+from routes.notification import notification_bp
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -79,6 +80,10 @@ app.register_blueprint(
     url_prefix="/api",
 )
 app.register_blueprint(announcement_bp)
+app.register_blueprint(
+    notification_bp,
+    url_prefix="/api",
+)
 
 print("Socket.IO async mode:", socketio.async_mode)
 

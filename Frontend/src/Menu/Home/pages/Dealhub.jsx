@@ -131,7 +131,7 @@ const DealHub = () => {
   }, [refreshData, currentUserId]);
   const handleAccept = async (roomCode) => {
     try {
-      const response = await acceptInvitation(roomCode, currentUserId);
+      const response = await acceptInvitation(roomCode);
 
       console.log(response);
 
@@ -145,7 +145,7 @@ const DealHub = () => {
 
   const handleReject = async (roomCode) => {
     try {
-      const response = await rejectInvitation(roomCode, currentUserId);
+      const response = await rejectInvitation(roomCode);
       console.log(response);
 
       await refreshData(true);

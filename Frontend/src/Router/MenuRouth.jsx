@@ -21,6 +21,7 @@ import ProtectedAdminRoute from '../Admin/Components/ProtectedRoute/ProtectedAdm
 import AdminDashboard from '../Admin/Dashboard/Dashboard.jsx'
 import UsersPage from '../Admin/Users/UsersPage.jsx'
 import ProtectedRoute from '../components/ProtectedRoute.jsx'
+import NotificationPage from '../components/NotificationBell.jsx'
 import TransactionHistory from "../pages/TransactionHistory/TransactionHistory.jsx";
 import TransactionDetails from "../pages/TransactionDetails/TransactionDetails.jsx";
 import DealHub from "../Menu/Home/pages/Dealhub.jsx";
@@ -133,6 +134,7 @@ const Layout = () => {
         <Route path='/Feature' element={<Feature/>}/>
         <Route path='/FQA' element={<FQA/>}/>
         <Route path="/Dashboard" element={ <ProtectedRoute> <Dashboard /> </ProtectedRoute>} />
+        <Route path="/notifications" element={<ProtectedRoute> <NotificationPage /></ProtectedRoute>}/>
         <Route path='/Register' element={<Register/>}/>
         <Route path='/Login' element={<Login/>}/>
         <Route path="/CompleteProfile" element={ <ProtectedRoute> <CompleteProfile /> </ProtectedRoute>} />
@@ -149,23 +151,13 @@ const Layout = () => {
         <Route path="/admin/faq" element={<ProtectedAdminRoute><FaqPage /></ProtectedAdminRoute>}/>
         <Route path="/admin/announcements" element={<ProtectedAdminRoute><AdminAnnouncement /></ProtectedAdminRoute>}/>
         <Route path="/deals" element={ <VerifiedRoute> <DealHub />  </VerifiedRoute> } />
-
-<Route path="/privacy-policy" element={<PrivacyPolicy />} />
-<Route path="/terms-of-service" element={<TermsOfService />} />
-<Route path="/status" element={<Status />} />
-
+        <Route path="/privacy-policy" element={<PrivacyPolicy />} />
+        <Route path="/terms-of-service" element={<TermsOfService />} />
+        <Route path="/status" element={<Status />} />
         <Route path="/settings" element={ <ProtectedRoute> <Settings /> </ProtectedRoute> } />
-
-        {/* Temporary Bakong testing page */}
-      {/* <Route
-          path="/bakong-test"
-          element={<BakongTest />}
-        /> */}
-
         <Route path="*" element={<Home />} />
       </Routes>
-      {!hideWallet && <WalletWidget />}
-      {!hideLayout && <Footer/>}
+{!hideLayout && <Footer/>}
     </>
   )
 }

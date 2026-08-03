@@ -5,6 +5,10 @@ from services.admin_auth_token import (
     AdminAuthenticationError,
     decode_admin_access_token,
 )
+from services.notification_service import (
+    create_announcement_notifications,
+    emit_notifications_changed,
+)
 from socketio_instance import socketio
 
 
@@ -138,7 +142,30 @@ def create_announcement():
             cursor.fetchone()
         )
 
+        personal_notifications = (
+            create_announcement_notifications(
+                cursor,
+                announcement_id=(
+                    announcement["announcement_id"]
+                ),
+                title=announcement["title"],
+                message=announcement["message"],
+                created_at=(
+                    announcement["created_at"]
+                ),
+            )
+        )
+
+        affected_user_ids = [
+            notification["user_id"]
+            for notification in personal_notifications
+        ]
+
         conn.commit()
+
+        emit_notifications_changed(
+            affected_user_ids
+        )
 
         socketio.emit(
             "new_announcement",

@@ -106,15 +106,12 @@ export const getRoom = async (roomCode) => {
 
     return data;
 };
-export const acceptInvitation = async (roomCode, userId) => {
+export const acceptInvitation = async (roomCode) => {
     const response = await fetch(
         `${API_URL}/rooms/${roomCode}/accept`,
         {
             method: "POST",
-            headers: getHeaders(),
-            body: JSON.stringify({
-                user_id: userId,
-            }),
+            headers: getAuthenticatedHeaders(),
         }
     );
 
@@ -122,21 +119,20 @@ export const acceptInvitation = async (roomCode, userId) => {
 
     if (!response.ok) {
         throw new Error(
-            data.message || data.error || "Failed to accept invitation"
+            data.message ||
+            data.error ||
+            "Failed to accept invitation"
         );
     }
 
     return data;
 };
-export const rejectInvitation = async (roomCode, userId) => {
+export const rejectInvitation = async (roomCode) => {
     const response = await fetch(
         `${API_URL}/rooms/${roomCode}/reject`,
         {
             method: "POST",
-            headers: getHeaders(),
-            body: JSON.stringify({
-                user_id: userId,
-            }),
+            headers: getAuthenticatedHeaders(),
         }
     );
 
@@ -144,7 +140,9 @@ export const rejectInvitation = async (roomCode, userId) => {
 
     if (!response.ok) {
         throw new Error(
-            data.message || data.error || "Failed to reject invitation"
+            data.message ||
+            data.error ||
+            "Failed to reject invitation"
         );
     }
 

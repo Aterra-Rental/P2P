@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { NavLink } from "react-router-dom";
 import { Flame } from "lucide-react";
 import "./Navbar.css";
@@ -7,6 +7,10 @@ import NotificationBell from '../Menu/NotificationBell';
 
 const Navbar = () => {
   const [user, setUser] = useState(null);
+  const isLoggedIn = Boolean(
+    localStorage.getItem("token")
+    && localStorage.getItem("user_id")
+  );
   const closeMenu = () => {
     const toggle = document.getElementById("nav-toggle");
     if (toggle) toggle.checked = false;
@@ -85,9 +89,11 @@ const Navbar = () => {
           </li>
         </ul>
 
-        <div className="nav-bell-slot">
-          <NotificationBell />
-        </div>
+        {isLoggedIn && (
+          <div className="nav-bell-slot">
+            <NotificationBell />
+          </div>
+        )}
       </div>
     </nav>
   );

@@ -17,6 +17,10 @@ from flask import (
 
 from database import get_db
 from services.auth_required import login_required
+from services.notification_service import (
+    create_user_notification,
+    emit_notifications_changed,
+)
 from services.wallet_service import (
     WalletError,
     charge_unfunded_cancellation_fee,
@@ -3003,11 +3007,16 @@ def request_cancellation(room_code):
             ),
         )
 
-        conn.commit()
         requester_role = (
             "Buyer"
             if authenticated_user_id == buyer_id
             else "Seller"
+        )
+
+        partner_id = (
+            seller_id
+            if authenticated_user_id == buyer_id
+            else buyer_id
         )
 
         waiting_for = (
@@ -3029,6 +3038,19 @@ def request_cancellation(room_code):
                 f"{requester_role} requested cancellation. "
                 f"Waiting for the {waiting_for} to respond."
             )
+
+        create_user_notification(
+            cursor,
+            user_id=partner_id,
+            actor_user_id=authenticated_user_id,
+            notification_type="CancellationRequested",
+            title="Cancellation requested",
+            message=message,
+            room_id=room_id,
+            room_code=room_code,
+        )
+
+        conn.commit()
         event_data = {
             "room_id": room_id,
             "room_code": room_code,
@@ -3061,6 +3083,9 @@ def request_cancellation(room_code):
                 event_data,
                 room=f"user_{user_id}",
             )
+        emit_notifications_changed([
+            partner_id,
+        ])
 
         return jsonify({
             "success": True,
@@ -3436,8 +3461,6 @@ def confirm_cancellation(room_code):
                 room_id,
             ),
         )
-        conn.commit()
-
         if cancellation_mode == "funded":
             message = (
                 "Deal cancelled by mutual agreement. "
@@ -3456,6 +3479,20 @@ def confirm_cancellation(room_code):
                 "No escrow deposit was made, so there "
                 "is no payment refund."
             )
+
+        for user_id in {buyer_id, seller_id}:
+            create_user_notification(
+                cursor,
+                user_id=user_id,
+                actor_user_id=authenticated_user_id,
+                notification_type="DealCancelled",
+                title="Deal cancelled",
+                message=message,
+                room_id=room_id,
+                room_code=room_code,
+            )
+
+        conn.commit()
 
         event_data = {
             "room_id": room_id,
@@ -3507,6 +3544,11 @@ def confirm_cancellation(room_code):
                 event_data,
                 room=f"user_{user_id}",
             )
+
+        emit_notifications_changed({
+            buyer_id,
+            seller_id,
+        })
 
         return jsonify({
             "success": True,
@@ -3666,13 +3708,24 @@ def reject_cancellation(room_code):
             ),
         )
 
-        conn.commit()
-
         message = (
             "Cancellation request rejected. "
-            "The deal remains active and escrow "
-            "funds remain protected."
+            "The deal remains active, and its "
+            "payment state has not changed."
         )
+
+        create_user_notification(
+            cursor,
+            user_id=requested_by,
+            actor_user_id=authenticated_user_id,
+            notification_type="CancellationRejected",
+            title="Cancellation declined",
+            message=message,
+            room_id=room_id,
+            room_code=room_code,
+        )
+
+        conn.commit()
         event_data = {
             "room_id": room_id,
             "room_code": room_code,
@@ -3700,6 +3753,9 @@ def reject_cancellation(room_code):
                 event_data,
                 room=f"user_{user_id}",
             )
+        emit_notifications_changed([
+            requested_by,
+        ])
 
         return jsonify({
             "success": True,
