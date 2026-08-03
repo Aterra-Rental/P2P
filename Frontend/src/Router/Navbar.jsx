@@ -3,6 +3,8 @@ import { NavLink } from "react-router-dom";
 import { Flame } from "lucide-react";
 import "./Navbar.css";
 import { getUserProfile } from "../lib/profile";
+import NotificationBell from '../Menu/NotificationBell';
+
 const Navbar = () => {
   const [user, setUser] = useState(null);
   const closeMenu = () => {
@@ -10,20 +12,20 @@ const Navbar = () => {
     if (toggle) toggle.checked = false;
   };
   useEffect(() => {
-  const loadUser = async () => {
-    try {
-      const data = await getUserProfile();
+    const loadUser = async () => {
+      try {
+        const data = await getUserProfile();
 
-          if (data) {
-              setUser(data);
-}
-    } catch (err) {
-      console.error(err);
-    }
-  };
+        if (data) {
+          setUser(data);
+        }
+      } catch (err) {
+        console.error(err);
+      }
+    };
 
-  loadUser();
-}, []);
+    loadUser();
+  }, []);
 
   return (
     <nav className="navbar" aria-label="Primary Navigation">
@@ -82,6 +84,10 @@ const Navbar = () => {
             </NavLink>
           </li>
         </ul>
+
+        <div className="nav-bell-slot">
+          <NotificationBell />
+        </div>
       </div>
     </nav>
   );

@@ -15,8 +15,12 @@ from routes.deal import deal_bp
 from routes.fee import fee_bp
 from routes.bakong import bakong_bp
 from routes.wallet import wallet_bp
+<<<<<<< HEAD
 from routes.message import message_bp
 
+=======
+from routes.announcement import announcement_bp
+>>>>>>> 5a7db640 (go home)
 app = Flask(__name__)
 app.config.from_object(Config)
 
@@ -58,7 +62,11 @@ app.register_blueprint(deal_bp, url_prefix="/api")
 app.register_blueprint(fee_bp, url_prefix="/api")
 app.register_blueprint(wallet_bp,url_prefix="/api",)
 app.register_blueprint(bakong_bp,url_prefix="/api",)
+<<<<<<< HEAD
 app.register_blueprint( message_bp, url_prefix="/api",)
+=======
+app.register_blueprint(announcement_bp) 
+>>>>>>> 5a7db640 (go home)
 
 
 

@@ -373,7 +373,7 @@ const UsersPage = () => {
                           </span>
                           <div className="users-name-text">
                             <span className="users-fullname">
-                              {u.fullname || "Unnamed"}
+                              {u.fullname || "Guest"}
                             </span>
                             {u.username && (
                               <span className="users-username">
