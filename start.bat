@@ -1,29 +1,24 @@
-
-
-
 @echo off
-start "Django - Backend" cmd /k "cd Backend\myproject && python manage.py runserver"
-start "Vite - Frontend" cmd /k "cd Frontend && npm run dev"
-timeout /t 3 /nobreak
+title P2P Secure Transaction Platform Launcher
 
+echo Starting P2P Python Backend...
+start "P2P - Backend" cmd /k "cd /d C:\Users\USER\Documents\GitHub\P2P\Backend && python app.py"
 
-start http://localhost:5173/
-start http://localhost:5173/Login
-start http://127.0.0.1:8000/admin/
+echo Starting P2P Vite Frontend...
+start "P2P - Frontend" cmd /k "cd /d C:\Users\USER\Documents\GitHub\P2P\Frontend && npm run dev"
 
+echo Waiting for services to initialize...
+timeout /t 4 /nobreak >nul
 
-// cd P2P\p2p_deal_app             python app.py
-// cd P2P\Frontend                   npm run dev
-// cd P2P\Backend\myproject     python manage.py runserver
+@REM echo Opening browser tabs...
+@REM start http://localhost:5173/
+@REM start http://localhost:5173/Login
 
-// cd "Backend\myproject" 
+echo Opening browser tabs in Chrome...
+start chrome http://localhost:5173/
+start chrome http://localhost:5173/Login
 
-// username : ps : 
-
-// nang 87654321
-// nak 12345678
-
-
+echo All services launched successfully!
 
 
 
@@ -34,11 +29,13 @@ start http://127.0.0.1:8000/admin/
 
 
 
-// Username: Email: Password
-// admin admin@test.com admin1234
+// gmail : ps :    aabbcc@gmail.com aabbcc
 
 
- 
-// username : admin  ps : 12345678
+
+
+
+
+
 
 

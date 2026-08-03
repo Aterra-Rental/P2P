@@ -1,0 +1,235 @@
+/* ===== Legal Pages & System Status (Optimized Line-Height & Spacing) ===== */
+
+.Global .legal-page-container {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 4.5rem 1.25rem 4rem;
+  color: var(--foreground);
+  background-color: var(--background);
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+.Global .legal-header {
+  max-width: 680px;
+  margin: 0 auto 3rem;
+  text-align: center;
+}
+
+.Global .legal-header h1 {
+  font-size: 3rem;
+  line-height: 1.15;
+  font-weight: 700;
+  color: var(--foreground);
+  margin-bottom: 1rem;
+}
+
+.Global .legal-meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  font-weight: var(--font-weight-medium);
+  color: var(--secondary-foreground);
+  background: var(--muted);
+  border: 1px solid var(--border);
+  padding: 0.45rem 1rem;
+  border-radius: 999px;
+  margin-bottom: 1.5rem;
+}
+
+.Global .env-badge {
+  background: linear-gradient(135deg, var(--primary) 0%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-size: 0.75rem;
+}
+
+.Global .legal-disclaimer-box {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-left: 4px solid var(--primary);
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-xl);
+  margin: 0 auto 2rem;
+  max-width: 1100px;
+  backdrop-filter: blur(20px);
+  box-sizing: border-box;
+}
+
+.Global .legal-disclaimer-box p {
+  margin: 0;
+  color: var(--secondary-foreground);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+.Global .legal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.Global .legal-content section {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 1.5rem 1.75rem;
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(20px);
+  transition: .35s;
+}
+
+.Global .legal-content section:hover {
+  border-color: var(--primary);
+}
+
+.Global .legal-content h2 {
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--card-foreground);
+  margin-bottom: 0.5rem;
+  margin-top: 0;
+  line-height: 1.4;
+}
+
+.Global .legal-content p, 
+.Global .legal-content li {
+  color: var(--secondary-foreground);
+  font-size: 0.9rem;
+  line-height: 1.5;
+  margin-bottom: 0.5rem;
+}
+
+.Global .legal-content p:last-child {
+  margin-bottom: 0;
+}
+
+.Global .legal-content ul {
+  padding-left: 1.25rem;
+  margin-bottom: 0;
+  margin-top: 0.25rem;
+}
+
+.Global .legal-content li {
+  margin-bottom: 0.35rem;
+}
+
+.Global .legal-content li:last-child {
+  margin-bottom: 0;
+}
+
+.Global .status-grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1.25rem;
+  margin: 1.5rem 0;
+  max-width: 1100px;
+  width: 100%;
+}
+
+@media (max-width: 860px) {
+  .Global .status-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.Global .status-item {
+  background: var(--card);
+  border: 1px solid var(--border);
+  padding: 1.5rem;
+  border-radius: var(--radius-xl);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  gap: 1.25rem;
+  backdrop-filter: blur(20px);
+  transition: .35s;
+  box-sizing: border-box;
+}
+
+.Global .status-item:hover {
+  border-color: var(--primary);
+  box-shadow: 0 15px 40px var(--ring);
+}
+
+.Global .status-label {
+  font-weight: var(--font-weight-medium);
+  color: var(--card-foreground);
+  font-size: 1rem;
+  line-height: 1.4;
+  margin: 0;
+}
+
+.Global .status-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  align-self: flex-start;
+  font-size: 0.75rem;
+  font-weight: var(--font-weight-medium);
+  padding: 0.4rem 0.9rem;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--muted);
+  color: var(--secondary-foreground);
+  max-width: 100%;
+  white-space: normal;
+  word-break: break-word;
+  line-height: 1.4;
+}
+
+.Global .status-badge.implemented {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--primary);
+}
+
+.Global .status-badge.pending {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--card-foreground);
+}
+
+.Global .status-badge.demo {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--secondary-foreground);
+}
+
+.Global .status-badge.dev {
+  background: var(--muted);
+  border-color: var(--border);
+  color: var(--muted-foreground);
+}
+
+.Global .legal-footer-nav {
+  margin-top: 3rem;
+  padding-top: 1.5rem;
+  border-top: 1px solid var(--border);
+  text-align: center;
+  max-width: 1100px;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.Global .legal-back-link {
+  color: var(--primary);
+  text-decoration: none;
+  font-weight: var(--font-weight-medium);
+  font-size: 0.95rem;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: .35s;
+}
+
+.Global .legal-back-link:hover {
+  color: var(--accent);
+  transform: translateX(-3px);
+}
