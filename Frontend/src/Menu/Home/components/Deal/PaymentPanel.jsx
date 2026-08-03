@@ -1,6 +1,11 @@
 import { useEffect, useState } from "react";
 import { QRCodeSVG } from "qrcode.react";
-import { generateQR, getWallet, payWithWallet } from "../../lib/payment";
+import {
+  generateQR,
+  getWallet,
+  payWithWallet,
+  verifyPayment,
+} from "../../lib/payment";
 import { getFeeAgreement } from "../../lib/deal";
 import "./PaymentPanel.css";
 
@@ -119,6 +124,35 @@ const PaymentPanel = ({ room, userId }) => {
       setCurrentTime(Date.now());
     } catch (err) {
       setError(err.message || "Unable to generate the payment QR.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleVerifyPayment = async () => {
+    if (loading || expired || !paymentQR) {
+      return;
+    }
+
+    try {
+      setLoading(true);
+      setError("");
+
+      const result = await verifyPayment(
+        room.room_code
+      );
+
+      if (!result.verified) {
+        setError(
+          result.message ||
+            "Payment has not been confirmed yet."
+        );
+      }
+    } catch (err) {
+      setError(
+        err.message ||
+          "Unable to verify the payment."
+      );
     } finally {
       setLoading(false);
     }
@@ -314,10 +348,23 @@ const PaymentPanel = ({ room, userId }) => {
           )}
 
           {!expired && (
-            <p className="payment-instruction">
-              Scan this QR using a participating Bakong or Cambodian banking
-              application.
-            </p>
+            <>
+              <p className="payment-instruction">
+                Complete the payment using the displayed QR. Once the transfer
+                is finished, select the button below to continue.
+              </p>
+
+              <button
+                type="button"
+                className="payment-primary-button"
+                disabled={loading}
+                onClick={handleVerifyPayment}
+              >
+                {loading
+                  ? "Checking Payment..."
+                  : "I’ve Sent Payment"}
+              </button>
+            </>
           )}
         </div>
       )}
