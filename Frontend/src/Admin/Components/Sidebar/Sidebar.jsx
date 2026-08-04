@@ -7,7 +7,8 @@ import {
     FaSignOutAlt,
     FaShieldAlt,
     FaQuestionCircle,
-    FaBullhorn
+    FaBullhorn,
+    FaGavel
 } from "react-icons/fa";
 
 import "./Sidebar.css";
@@ -60,7 +61,10 @@ const Sidebar = () => {
                     <FaMoneyCheckAlt />
                     <span>Transactions</span>
                 </NavLink>
-
+                <NavLink to="/admin/disputes">
+                    <FaGavel />
+                    <span>Disputes</span>
+                </NavLink>
                 <NavLink to="/admin/faq">
                     <FaQuestionCircle />
                     <span>FAQ</span>

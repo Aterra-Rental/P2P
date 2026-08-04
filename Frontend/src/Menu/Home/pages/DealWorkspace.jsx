@@ -12,6 +12,7 @@ import AmountConfirmation from "../components/Deal/AmountConfirmation";
 import FeeConfirmation from "../components/Deal/FeeConfirmation";
 import CancellationPanel from "../components/Deal/CancellationPanel";
 import FulfillmentPanel from "../components/Deal/FulfillmentPanel";
+import DisputePanel from "../components/Deal/DisputePanel";
 
 const DealWorkspace = () => {
   const { roomCode } = useParams();
@@ -80,6 +81,30 @@ const DealWorkspace = () => {
       }
     };
 
+    const handleDisputeResolved = (data) => {
+      if (data.room_code !== roomCode) {
+        return;
+      }
+
+      const terminalDecision = [
+        "ReleaseToSeller",
+        "RefundBuyer",
+      ].includes(data.decision);
+
+      if (terminalDecision) {
+        socket.emit("leave_deal", {
+          room_code: roomCode,
+        });
+
+        navigate("/deals", {
+          replace: true,
+        });
+
+        return;
+      }
+
+      fetchWorkspaceData();
+    };
     const handlePresenceUpdated = (data) => {
       if (data.room_code !== roomCode) {
         return;
@@ -106,6 +131,7 @@ const DealWorkspace = () => {
 
     socket.on("connect", joinDealRoom);
     socket.on("room_updated", handleDealUpdated);
+    socket.on("dispute_resolved",handleDisputeResolved);
     socket.on("roles_selected", handleDealUpdated);
     socket.on("role_confirmation_updated", handleDealUpdated);
     socket.on("role_selection_reset", handleDealUpdated);
@@ -117,6 +143,7 @@ const DealWorkspace = () => {
 
       socket.off("connect", joinDealRoom);
       socket.off("room_updated", handleDealUpdated);
+      socket.off("dispute_resolved", handleDisputeResolved);
       socket.off("roles_selected", handleDealUpdated);
       socket.off("role_confirmation_updated", handleDealUpdated);
       socket.off("role_selection_reset", handleDealUpdated);
@@ -124,7 +151,7 @@ const DealWorkspace = () => {
       socket.emit("leave_deal", { room_code: roomCode,});
       socket.off("deal_presence_updated", handlePresenceUpdated);
     };
-  }, [roomCode, currentUserId]);
+  }, [roomCode, currentUserId, navigate]);
 
   if (loading) {
     return <div>Loading deal...</div>;
@@ -207,8 +234,14 @@ const DealWorkspace = () => {
           />
 
           <FulfillmentPanel room={room} />
+
+          <DisputePanel room={room} />
         </div>
       );
+    }
+
+    if (room.current_step === "Dispute") {
+      return <DisputePanel room={room} />;
     }
 
     if (room.current_step === "Cancelled") {

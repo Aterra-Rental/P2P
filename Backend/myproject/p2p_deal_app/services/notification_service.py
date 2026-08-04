@@ -9,6 +9,8 @@ ALLOWED_NOTIFICATION_TYPES = {
     "CancellationRequested",
     "CancellationRejected",
     "DealCancelled",
+    "DisputeOpened",
+    "DisputeResolved",
 }
 
 

@@ -140,6 +140,7 @@ CONSTRAINT room_current_step_check CHECK (
             'FeeConfirmation',
             'Payment',
             'Delivery',
+            'Dispute',
             'Completed',
             'Cancelled'
         ]::text[]
@@ -337,7 +338,7 @@ CREATE TABLE IF NOT EXISTS public.room_reminders (
     receiver_id integer NOT NULL,
     is_read boolean DEFAULT false NOT NULL,
     deleted_at timestamp without time zone,
-    created_at timestamp without time zone
+    created_at timestamp without time zone,
     CONSTRAINT chk_room_reminders_different_users CHECK (sender_id <> receiver_id)
 );
 ALTER TABLE public.user_notifications
@@ -653,6 +654,7 @@ ALTER TABLE public.room
                 'FeeConfirmation',
                 'Payment',
                 'Delivery',
+                'Dispute',
                 'Completed',
                 'Cancelled'
             ]::text[]
@@ -1222,7 +1224,9 @@ CREATE TABLE IF NOT EXISTS public.user_notifications (
                     'InvitationRejected',
                     'CancellationRequested',
                     'CancellationRejected',
-                    'DealCancelled'
+                    'DealCancelled',
+                    'DisputeOpened',
+                    'DisputeResolved'
                 ]::text[]
             )
         ),
@@ -1234,8 +1238,8 @@ CREATE TABLE IF NOT EXISTS public.user_notifications (
         CHECK (length(trim(message)) > 0)
 );
 
--- Expand persistent notification types for room and
--- cancellation workflow events.
+-- Expand persistent notification types for room,
+-- cancellation, and dispute workflow events.
 ALTER TABLE public.user_notifications
 DROP CONSTRAINT IF EXISTS
     user_notifications_type_check;
@@ -1251,7 +1255,9 @@ CHECK (
             'InvitationRejected',
             'CancellationRequested',
             'CancellationRejected',
-            'DealCancelled'
+            'DealCancelled',
+            'DisputeOpened',
+            'DisputeResolved'
         ]::text[]
     )
 );
@@ -1322,3 +1328,156 @@ SELECT setval('public.dispute_resolution_resolution_id_seq', GREATEST(COALESCE((
 SELECT setval('public.faq_questions_question_id_seq', GREATEST(COALESCE((SELECT MAX(question_id) FROM public.faq_questions), 0), 1), EXISTS (SELECT 1 FROM public.faq_questions));
 SELECT setval('public.room_reminders_reminder_id_seq', GREATEST(COALESCE((SELECT MAX(reminder_id) FROM public.room_reminders), 0), 1), EXISTS (SELECT 1 FROM public.room_reminders));
 COMMIT;
+
+-- =====================================================
+-- ADMIN DISPUTE RESOLUTION WORKFLOW
+-- =====================================================
+
+ALTER TABLE public.disputes
+    ADD COLUMN IF NOT EXISTS
+        requested_resolution character varying(30);
+
+ALTER TABLE public.disputes
+    ADD COLUMN IF NOT EXISTS
+        updated_at timestamp without time zone
+        DEFAULT CURRENT_TIMESTAMP;
+
+ALTER TABLE public.disputes
+    ALTER COLUMN status SET DEFAULT 'Open',
+    ALTER COLUMN status SET NOT NULL,
+    ALTER COLUMN reason SET NOT NULL,
+    ALTER COLUMN created_at SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN created_at SET NOT NULL,
+    ALTER COLUMN requested_resolution SET NOT NULL,
+    ALTER COLUMN updated_at SET NOT NULL;
+
+ALTER TABLE public.disputes
+    DROP CONSTRAINT IF EXISTS disputes_status_check;
+
+ALTER TABLE public.disputes
+    ADD CONSTRAINT disputes_status_check
+    CHECK (
+        status IN (
+            'Open',
+            'UnderReview',
+            'Resolved',
+            'Rejected'
+        )
+    );
+
+ALTER TABLE public.disputes
+    DROP CONSTRAINT IF EXISTS
+        disputes_requested_resolution_check;
+
+ALTER TABLE public.disputes
+    ADD CONSTRAINT
+        disputes_requested_resolution_check
+    CHECK (
+        requested_resolution IN (
+            'ReleaseToSeller',
+            'RefundBuyer'
+        )
+    );
+
+ALTER TABLE public.disputes
+    DROP CONSTRAINT IF EXISTS
+        disputes_different_users_check;
+
+ALTER TABLE public.disputes
+    ADD CONSTRAINT disputes_different_users_check
+    CHECK (opened_by <> against_user);
+
+ALTER TABLE public.disputes
+    DROP CONSTRAINT IF EXISTS
+        disputes_reason_not_blank;
+
+ALTER TABLE public.disputes
+    ADD CONSTRAINT disputes_reason_not_blank
+    CHECK (
+        length(trim(reason)) >= 10
+    );
+
+ALTER TABLE public.disputes
+    DROP CONSTRAINT IF EXISTS
+        disputes_closed_state_check;
+
+ALTER TABLE public.disputes
+    ADD CONSTRAINT disputes_closed_state_check
+    CHECK (
+        (
+            status IN ('Open', 'UnderReview')
+            AND closed_at IS NULL
+        )
+        OR
+        (
+            status IN ('Resolved', 'Rejected')
+            AND closed_at IS NOT NULL
+        )
+    );
+
+CREATE UNIQUE INDEX IF NOT EXISTS
+    disputes_one_active_room_unique
+ON public.disputes (room_id)
+WHERE status IN ('Open', 'UnderReview');
+
+CREATE INDEX IF NOT EXISTS
+    disputes_status_created_idx
+ON public.disputes (
+    status,
+    created_at DESC
+);
+
+
+ALTER TABLE public.dispute_resolution
+    ADD COLUMN IF NOT EXISTS
+        seller_release_amount numeric(12,2)
+        DEFAULT 0.00;
+
+ALTER TABLE public.dispute_resolution
+    ADD COLUMN IF NOT EXISTS
+        retained_fee numeric(12,2)
+        DEFAULT 0.00;
+
+ALTER TABLE public.dispute_resolution
+    ALTER COLUMN refund_amount
+        TYPE numeric(12,2)
+        USING refund_amount::numeric(12,2),
+    ALTER COLUMN refund_amount SET DEFAULT 0.00,
+    ALTER COLUMN refund_amount SET NOT NULL,
+    ALTER COLUMN seller_release_amount SET NOT NULL,
+    ALTER COLUMN retained_fee SET NOT NULL,
+    ALTER COLUMN resolution_note SET NOT NULL,
+    ALTER COLUMN resolved_at SET DEFAULT CURRENT_TIMESTAMP,
+    ALTER COLUMN resolved_at SET NOT NULL;
+
+ALTER TABLE public.dispute_resolution
+    DROP CONSTRAINT IF EXISTS
+        dispute_resolution_decision_check;
+
+ALTER TABLE public.dispute_resolution
+    ADD CONSTRAINT
+        dispute_resolution_decision_check
+    CHECK (
+        decision IN (
+            'ReleaseToSeller',
+            'RefundBuyer',
+            'RejectDispute'
+        )
+    );
+
+ALTER TABLE public.dispute_resolution
+    DROP CONSTRAINT IF EXISTS
+        dispute_resolution_amounts_check;
+
+ALTER TABLE public.dispute_resolution
+    ADD CONSTRAINT
+        dispute_resolution_amounts_check
+    CHECK (
+        refund_amount >= 0
+        AND seller_release_amount >= 0
+        AND retained_fee >= 0
+    );
+
+CREATE UNIQUE INDEX IF NOT EXISTS
+    dispute_resolution_dispute_unique
+ON public.dispute_resolution (dispute_id);

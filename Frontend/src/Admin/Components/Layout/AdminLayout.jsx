@@ -66,6 +66,21 @@ const AdminLayout = ({ children }) => {
             );
         };
 
+        const handleDisputesChanged = (data) => {
+            console.log(
+                "Global admin dispute update:",
+                data
+            );
+
+            window.dispatchEvent(
+                new CustomEvent(
+                    "admin-disputes-updated",
+                    {
+                        detail: data
+                    }
+                )
+            );
+        };
         if (socket.connected) {
             joinAdminRoom();
         }
@@ -87,6 +102,10 @@ const AdminLayout = ({ children }) => {
             handleTransactionCompleted
         );
 
+        socket.on(
+            "admin_disputes_changed",
+            handleDisputesChanged
+        );
         return () => {
             socket.off("connect", joinAdminRoom);
 
@@ -103,6 +122,11 @@ const AdminLayout = ({ children }) => {
             socket.off(
                 "transaction_completed",
                 handleTransactionCompleted
+            );
+
+            socket.off(
+                "admin_disputes_changed",
+                handleDisputesChanged
             );
         };
 
