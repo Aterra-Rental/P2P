@@ -99,7 +99,8 @@ export const AuthProvider = ({ children }) => {
     };
   }, [refreshUser]);
 
-  // Join the authenticated personal Socket.IO room.
+  // Join the authenticated personal Socket.IO room and listen for
+  // verification decisions while this connection is active.
   useEffect(() => {
     const userId = localStorage.getItem("user_id");
 
@@ -111,16 +112,32 @@ export const AuthProvider = ({ children }) => {
       socket.emit("join_user");
     };
 
+    const handleVerificationUpdate = (data) => {
+      if (!data?.user_id) {
+        return;
+      }
+
+      if (String(data.user_id) !== String(userId)) {
+        return;
+      }
+
+      // The socket event only signals that something changed;
+      // PostgreSQL/API responses stay authoritative.
+      refreshUser();
+    };
+
     if (socket.connected) {
       joinUserRoom();
     }
 
     socket.on("connect", joinUserRoom);
+    socket.on("verification_updated", handleVerificationUpdate);
 
     return () => {
       socket.off("connect", joinUserRoom);
+      socket.off("verification_updated", handleVerificationUpdate);
     };
-  }, []);
+  }, [refreshUser]);
 
   const logout = () => {
     disconnectSocket();

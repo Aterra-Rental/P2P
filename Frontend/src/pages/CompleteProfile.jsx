@@ -1,20 +1,21 @@
-import React, { useState, useContext } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
-import AuthContext from "../components/AuthContext";
-import apiFetch from "../lib/api";
+import { useAuth } from '../components/AuthContext';
 import './CompleteProfile.css';
+
+const API_BASE = 'http://127.0.0.1:8000/api';
 
 function CompleteProfile() {
   const navigate = useNavigate();
-  const { refreshUser } = useContext(AuthContext);
+  const { user, refreshUser } = useAuth();
 
   const [formData, setFormData] = useState({
-    first_name: '',
-    last_name: '',
+    firstname: '',
+    lastname: '',
     username: '',
     phonenumber: '',
     address: '',
-    date_of_birth: '',
+    dob: '',
   });
 
   const [idFront, setIdFront] = useState(null);
@@ -26,6 +27,17 @@ function CompleteProfile() {
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
   const [serverError, setServerError] = useState('');
+  const [waitingForReview, setWaitingForReview] = useState(false);
+
+  // Once the review outcome comes back (via AuthContext's socket
+  // listener updating `user`), react to it automatically.
+  useEffect(() => {
+    if (!waitingForReview) return;
+
+    if (user?.verify_status === 'Verified') {
+      navigate('/Dashboard', { replace: true });
+    }
+  }, [waitingForReview, user?.verify_status, navigate]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -62,8 +74,8 @@ function CompleteProfile() {
   const validateForm = () => {
     const newErrors = {};
 
-    if (!formData.first_name.trim()) newErrors.first_name = 'First name is required.';
-    if (!formData.last_name.trim()) newErrors.last_name = 'Last name is required.';
+    if (!formData.firstname.trim()) newErrors.firstname = 'First name is required.';
+    if (!formData.lastname.trim()) newErrors.lastname = 'Last name is required.';
 
     if (formData.username.trim() && !/^[a-zA-Z0-9_]{3,30}$/.test(formData.username.trim())) {
       newErrors.username = 'Username must be 3–30 characters (letters, numbers, underscores).';
@@ -86,17 +98,23 @@ function CompleteProfile() {
       newErrors.address = 'Address must be at least 5 characters long.';
     }
 
-    if (!formData.date_of_birth) {
-      newErrors.date_of_birth = 'Date of birth is required.';
-    } else if (new Date(formData.date_of_birth) > new Date()) {
-      newErrors.date_of_birth = 'Date of birth cannot be in the future.';
+    if (!formData.dob) {
+      newErrors.dob = 'Date of birth is required.';
+    } else if (new Date(formData.dob) > new Date()) {
+      newErrors.dob = 'Date of birth cannot be in the future.';
     }
 
-    if (!idFront) newErrors.id_front = 'Front image of National ID is required.';
-    if (!idBack) newErrors.id_back = 'Back image of National ID is required.';
+    if (!idFront) newErrors.national_id_front = 'Front image of National ID is required.';
+    if (!idBack) newErrors.national_id_back = 'Back image of National ID is required.';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const resetForSubmitAgain = () => {
+    setWaitingForReview(false);
+    setErrors({});
+    setServerError('');
   };
 
   const handleSubmit = async (e) => {
@@ -114,17 +132,17 @@ function CompleteProfile() {
     setLoading(true);
     try {
       const dataToSend = new FormData();
-      dataToSend.append('first_name', formData.first_name.trim());
-      dataToSend.append('last_name', formData.last_name.trim());
+      dataToSend.append('firstname', formData.firstname.trim());
+      dataToSend.append('lastname', formData.lastname.trim());
       dataToSend.append('username', formData.username.trim().toLowerCase());
       dataToSend.append('phonenumber', formData.phonenumber.trim());
       dataToSend.append('address', formData.address.trim());
-      dataToSend.append('date_of_birth', formData.date_of_birth);
+      dataToSend.append('dob', formData.dob);
       dataToSend.append('nationalidentity_id', nationalId.trim());
-      dataToSend.append('id_front', idFront);
-      dataToSend.append('id_back', idBack);
+      dataToSend.append('national_id_front', idFront);
+      dataToSend.append('national_id_back', idBack);
 
-      const res = await apiFetch('/routes/profile.py/create_profile', {
+      const res = await fetch(`${API_BASE}/profile`, {
         method: 'POST',
         headers: {
           Authorization: `Bearer ${token}`,
@@ -148,13 +166,44 @@ function CompleteProfile() {
       }
 
       await refreshUser();
-      navigate('/Dashboard');
+      setWaitingForReview(true);
     } catch (err) {
       setServerError('Connection error. Please try again later.');
     } finally {
       setLoading(false);
     }
   };
+
+  if (waitingForReview) {
+    const status = user?.verify_status || 'Pending';
+
+    return (
+      <div className="AuthPage">
+        <div className="AuthCard">
+          {status === 'Rejected' ? (
+            <>
+              <h1>Verification rejected</h1>
+              <p className="AuthSubtitle">
+                An administrator reviewed your submission and could not verify it.
+                Please check your details and submit again.
+              </p>
+              <button type="button" className="PrimaryButton" onClick={resetForSubmitAgain}>
+                Submit again
+              </button>
+            </>
+          ) : (
+            <>
+              <h1>Profile submitted</h1>
+              <p className="AuthSubtitle">
+                Your information is pending review. This page will update
+                automatically once an administrator makes a decision.
+              </p>
+            </>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="AuthPage">
@@ -167,33 +216,33 @@ function CompleteProfile() {
         <form onSubmit={handleSubmit} noValidate>
           <div className="FormGrid">
             <div className="InputGroup">
-              <label htmlFor="first_name">First Name</label>
+              <label htmlFor="firstname">First Name</label>
               <input
-                id="first_name"
+                id="firstname"
                 type="text"
-                name="first_name"
+                name="firstname"
                 placeholder="John"
-                value={formData.first_name}
+                value={formData.firstname}
                 onChange={handleChange}
-                className={errors.first_name ? 'isInvalid' : ''}
+                className={errors.firstname ? 'isInvalid' : ''}
                 disabled={loading}
               />
-              {errors.first_name && <span className="fieldError">{errors.first_name}</span>}
+              {errors.firstname && <span className="fieldError">{errors.firstname}</span>}
             </div>
 
             <div className="InputGroup">
-              <label htmlFor="last_name">Last Name</label>
+              <label htmlFor="lastname">Last Name</label>
               <input
-                id="last_name"
+                id="lastname"
                 type="text"
-                name="last_name"
+                name="lastname"
                 placeholder="Doe"
-                value={formData.last_name}
+                value={formData.lastname}
                 onChange={handleChange}
-                className={errors.last_name ? 'isInvalid' : ''}
+                className={errors.lastname ? 'isInvalid' : ''}
                 disabled={loading}
               />
-              {errors.last_name && <span className="fieldError">{errors.last_name}</span>}
+              {errors.lastname && <span className="fieldError">{errors.lastname}</span>}
             </div>
           </div>
 
@@ -261,47 +310,47 @@ function CompleteProfile() {
           </div>
 
           <div className="InputGroup">
-            <label htmlFor="date_of_birth">Date of Birth</label>
+            <label htmlFor="dob">Date of Birth</label>
             <input
-              id="date_of_birth"
+              id="dob"
               type="date"
-              name="date_of_birth"
-              value={formData.date_of_birth}
+              name="dob"
+              value={formData.dob}
               onChange={handleChange}
-              className={errors.date_of_birth ? 'isInvalid' : ''}
+              className={errors.dob ? 'isInvalid' : ''}
               disabled={loading}
             />
-            {errors.date_of_birth && <span className="fieldError">{errors.date_of_birth}</span>}
+            {errors.dob && <span className="fieldError">{errors.dob}</span>}
           </div>
 
           <div className="FormGrid">
             <div className="InputGroup">
-              <label htmlFor="id_front">National ID (Front Image)</label>
+              <label htmlFor="national_id_front">National ID (Front Image)</label>
               <input
-                id="id_front"
+                id="national_id_front"
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleFileChange(e, setIdFront, setIdFrontPreview, 'id_front')}
-                className={errors.id_front ? 'isInvalid' : ''}
+                onChange={(e) => handleFileChange(e, setIdFront, setIdFrontPreview, 'national_id_front')}
+                className={errors.national_id_front ? 'isInvalid' : ''}
                 disabled={loading}
               />
-              {errors.id_front && <span className="fieldError">{errors.id_front}</span>}
+              {errors.national_id_front && <span className="fieldError">{errors.national_id_front}</span>}
               {idFrontPreview && (
                 <img src={idFrontPreview} alt="ID Front Preview" className="id-preview" />
               )}
             </div>
 
             <div className="InputGroup">
-              <label htmlFor="id_back">National ID (Back Image)</label>
+              <label htmlFor="national_id_back">National ID (Back Image)</label>
               <input
-                id="id_back"
+                id="national_id_back"
                 type="file"
                 accept="image/*"
-                onChange={(e) => handleFileChange(e, setIdBack, setIdBackPreview, 'id_back')}
-                className={errors.id_back ? 'isInvalid' : ''}
+                onChange={(e) => handleFileChange(e, setIdBack, setIdBackPreview, 'national_id_back')}
+                className={errors.national_id_back ? 'isInvalid' : ''}
                 disabled={loading}
               />
-              {errors.id_back && <span className="fieldError">{errors.id_back}</span>}
+              {errors.national_id_back && <span className="fieldError">{errors.national_id_back}</span>}
               {idBackPreview && (
                 <img src={idBackPreview} alt="ID Back Preview" className="id-preview" />
               )}
